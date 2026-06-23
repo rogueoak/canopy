@@ -1,12 +1,23 @@
-<div align="center">
+<p align="center">
+  <img src="assets/logo.svg" alt="Canopy — the rogueoak design system" width="470">
+</p>
 
-# 🌳 Canopy
+<p align="center">
+  <strong>An earthy, tree-themed design system for <a href="https://github.com/rogueoak">rogueoak</a> — built on Radix · shadcn · Tailwind v4 · TypeScript.</strong>
+</p>
 
-**The design system for [rogueoak](https://github.com/rogueoak).**
+<p align="center">
+  <a href="https://github.com/rogueoak/canopy/actions/workflows/ci.yml"><img src="https://github.com/rogueoak/canopy/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://rogueoak.github.io/canopy/"><img src="https://img.shields.io/badge/Storybook-live-FF4785?logo=storybook&logoColor=white" alt="Storybook"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/rogueoak/canopy" alt="License: MIT"></a>
+</p>
 
-Earthy, tree-themed, and built on Radix · shadcn · Tailwind v4 · TypeScript.
-
-</div>
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Tailwind_v4-38BDF8?logo=tailwindcss&logoColor=white" alt="Tailwind v4">
+  <img src="https://img.shields.io/badge/Radix_UI-161618?logo=radixui&logoColor=white" alt="Radix UI">
+  <img src="https://img.shields.io/badge/Style_Dictionary-0B0D0E" alt="Style Dictionary">
+</p>
 
 ---
 
