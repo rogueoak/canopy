@@ -1,0 +1,157 @@
+{
+  "color": {
+    "bg": {
+      "$value": "{color.stone.50}",
+      "$type": "color",
+      "$description": "App background / page canvas."
+    },
+    "surface": {
+      "$value": "{color.base.white}",
+      "$type": "color",
+      "$description": "Default surface (cards, panels)."
+    },
+    "surface-raised": {
+      "$value": "{color.base.white}",
+      "$type": "color",
+      "$description": "Raised surface (popovers, menus) — distinguished by elevation."
+    },
+    "overlay": {
+      "$value": "{color.stone.900}",
+      "$type": "color",
+      "$description": "Scrim/overlay base (used at reduced opacity behind modals)."
+    },
+    "text": {
+      "$value": "{color.stone.900}",
+      "$type": "color",
+      "$description": "Default body text."
+    },
+    "text-muted": {
+      "$value": "{color.stone.600}",
+      "$type": "color",
+      "$description": "Muted/secondary text."
+    },
+    "text-subtle": {
+      "$value": "{color.stone.500}",
+      "$type": "color",
+      "$description": "Subtle/tertiary text (captions, placeholders)."
+    },
+    "text-inverted": {
+      "$value": "{color.stone.50}",
+      "$type": "color",
+      "$description": "Text on dark/inverted surfaces."
+    },
+    "border": {
+      "$value": "{color.stone.200}",
+      "$type": "color",
+      "$description": "Default hairline border."
+    },
+    "border-strong": {
+      "$value": "{color.stone.300}",
+      "$type": "color",
+      "$description": "Stronger border / divider."
+    },
+    "ring": {
+      "$value": "{color.moss.600}",
+      "$type": "color",
+      "$description": "Focus ring."
+    },
+    "ring-offset": {
+      "$value": "{color.base.white}",
+      "$type": "color",
+      "$description": "Focus-ring offset / gap colour — sits between a focus ring and the element on a coloured surface (defaults to the page surface). Pairs with ring."
+    },
+    "primary": {
+      "$value": "{color.moss.600}",
+      "$type": "color",
+      "$description": "Primary brand role (buttons, active states)."
+    },
+    "primary-foreground": {
+      "$value": "{color.moss.50}",
+      "$type": "color",
+      "$description": "Foreground on primary surfaces."
+    },
+    "secondary": {
+      "$value": "{color.bark.600}",
+      "$type": "color",
+      "$description": "Secondary role."
+    },
+    "secondary-foreground": {
+      "$value": "{color.bark.50}",
+      "$type": "color",
+      "$description": "Foreground on secondary surfaces."
+    },
+    "accent": {
+      "$value": "{color.amber.500}",
+      "$type": "color",
+      "$description": "Accent role — FILL use only (amber.500 is ~2.83:1 on bg, below AA for foreground). For accent text/icon/border on a light surface use accent-strong."
+    },
+    "accent-strong": {
+      "$value": "{color.amber.700}",
+      "$type": "color",
+      "$description": "Accent for FOREGROUND use (text/icon/border) on light surfaces — amber.700 reaches AA (~6.15:1 on bg). accent stays the fill role."
+    },
+    "accent-foreground": {
+      "$value": "{color.amber.950}",
+      "$type": "color",
+      "$description": "Foreground on accent (fill) surfaces."
+    },
+    "muted": {
+      "$value": "{color.stone.100}",
+      "$type": "color",
+      "$description": "Muted surface (subtle fills, hover backgrounds)."
+    },
+    "muted-foreground": {
+      "$value": "{color.stone.600}",
+      "$type": "color",
+      "$description": "Foreground on muted surfaces."
+    },
+    "success": {
+      "DEFAULT": {
+        "$value": "{color.success.600}",
+        "$type": "color",
+        "$description": "Success status role. Lives at .DEFAULT (sibling of the success ramp steps) so it emits --color-success (→ bg-success) without colliding with the color.success ramp group."
+      }
+    },
+    "success-foreground": {
+      "$value": "{color.success.50}",
+      "$type": "color",
+      "$description": "Foreground on success surfaces."
+    },
+    "warning": {
+      "DEFAULT": {
+        "$value": "{color.warning.600}",
+        "$type": "color",
+        "$description": "Warning status role (see success.DEFAULT note)."
+      }
+    },
+    "warning-foreground": {
+      "$value": "{color.warning.50}",
+      "$type": "color",
+      "$description": "Foreground on warning surfaces."
+    },
+    "danger": {
+      "DEFAULT": {
+        "$value": "{color.danger.600}",
+        "$type": "color",
+        "$description": "Danger/error status role (see success.DEFAULT note)."
+      }
+    },
+    "danger-foreground": {
+      "$value": "{color.danger.50}",
+      "$type": "color",
+      "$description": "Foreground on danger surfaces."
+    },
+    "info": {
+      "DEFAULT": {
+        "$value": "{color.info.600}",
+        "$type": "color",
+        "$description": "Info status role (see success.DEFAULT note)."
+      }
+    },
+    "info-foreground": {
+      "$value": "{color.info.50}",
+      "$type": "color",
+      "$description": "Foreground on info surfaces."
+    }
+  }
+}

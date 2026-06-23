@@ -1,0 +1,38 @@
+{
+  "radius": {
+    "none": {
+      "$value": "0rem",
+      "$type": "dimension"
+    },
+    "sm": {
+      "$value": "0.25rem",
+      "$type": "dimension",
+      "$description": "4px"
+    },
+    "md": {
+      "$value": "0.5rem",
+      "$type": "dimension",
+      "$description": "8px — default control radius"
+    },
+    "lg": {
+      "$value": "0.75rem",
+      "$type": "dimension",
+      "$description": "12px"
+    },
+    "xl": {
+      "$value": "1rem",
+      "$type": "dimension",
+      "$description": "16px"
+    },
+    "2xl": {
+      "$value": "1.5rem",
+      "$type": "dimension",
+      "$description": "24px"
+    },
+    "full": {
+      "$value": "9999px",
+      "$type": "dimension",
+      "$description": "pill / circle"
+    }
+  }
+}

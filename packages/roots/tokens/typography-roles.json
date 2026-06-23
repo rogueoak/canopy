@@ -1,0 +1,99 @@
+{
+  "text-role": {
+    "display": {
+      "$type": "typography",
+      "$value": {
+        "fontSize": "{text.6xl}",
+        "lineHeight": "{leading.none}",
+        "fontWeight": "{font-weight.bold}",
+        "letterSpacing": "{tracking.tighter}"
+      },
+      "$description": "Display — largest hero/marketing heading. Composes the type primitives so components reference text-display, not raw scale+weight+leading."
+    },
+    "h1": {
+      "$type": "typography",
+      "$value": {
+        "fontSize": "{text.5xl}",
+        "lineHeight": "{leading.tight}",
+        "fontWeight": "{font-weight.bold}",
+        "letterSpacing": "{tracking.tight}"
+      },
+      "$description": "Heading level 1."
+    },
+    "h2": {
+      "$type": "typography",
+      "$value": {
+        "fontSize": "{text.3xl}",
+        "lineHeight": "{leading.tight}",
+        "fontWeight": "{font-weight.semibold}",
+        "letterSpacing": "{tracking.tight}"
+      },
+      "$description": "Heading level 2."
+    },
+    "h3": {
+      "$type": "typography",
+      "$value": {
+        "fontSize": "{text.2xl}",
+        "lineHeight": "{leading.snug}",
+        "fontWeight": "{font-weight.semibold}",
+        "letterSpacing": "{tracking.tight}"
+      },
+      "$description": "Heading level 3."
+    },
+    "h4": {
+      "$type": "typography",
+      "$value": {
+        "fontSize": "{text.xl}",
+        "lineHeight": "{leading.snug}",
+        "fontWeight": "{font-weight.semibold}"
+      },
+      "$description": "Heading level 4."
+    },
+    "body": {
+      "$type": "typography",
+      "$value": {
+        "fontSize": "{text.base}",
+        "lineHeight": "{leading.normal}",
+        "fontWeight": "{font-weight.normal}"
+      },
+      "$description": "Default body / paragraph text."
+    },
+    "body-sm": {
+      "$type": "typography",
+      "$value": {
+        "fontSize": "{text.sm}",
+        "lineHeight": "{leading.normal}",
+        "fontWeight": "{font-weight.normal}"
+      },
+      "$description": "Small body text (secondary copy, dense UI)."
+    },
+    "label": {
+      "$type": "typography",
+      "$value": {
+        "fontSize": "{text.sm}",
+        "lineHeight": "{leading.snug}",
+        "fontWeight": "{font-weight.medium}"
+      },
+      "$description": "Form/control label."
+    },
+    "caption": {
+      "$type": "typography",
+      "$value": {
+        "fontSize": "{text.xs}",
+        "lineHeight": "{leading.snug}",
+        "fontWeight": "{font-weight.normal}"
+      },
+      "$description": "Caption / fine print (use the larger text-subtle colour caveat for tertiary colour)."
+    },
+    "code": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.mono}",
+        "fontSize": "{text.sm}",
+        "lineHeight": "{leading.normal}",
+        "fontWeight": "{font-weight.normal}"
+      },
+      "$description": "Inline / block code — uses the mono family."
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "duration": {
+    "fast": {
+      "$value": "120ms",
+      "$type": "duration",
+      "$description": "Micro-interactions (hover, small state changes)."
+    },
+    "base": {
+      "$value": "200ms",
+      "$type": "duration",
+      "$description": "Default UI transitions."
+    },
+    "slow": {
+      "$value": "320ms",
+      "$type": "duration",
+      "$description": "Larger surfaces (overlays, drawers)."
+    }
+  },
+  "ease": {
+    "standard": {
+      "$value": "cubic-bezier(0.2, 0, 0, 1)",
+      "$type": "cubicBezier",
+      "$description": "Standard ease — most transitions."
+    },
+    "emphasized": {
+      "$value": "cubic-bezier(0.3, 0, 0, 1)",
+      "$type": "cubicBezier",
+      "$description": "Emphasized — entrances that need attention."
+    },
+    "decelerate": {
+      "$value": "cubic-bezier(0, 0, 0, 1)",
+      "$type": "cubicBezier",
+      "$description": "Decelerate — elements entering and settling."
+    }
+  }
+}

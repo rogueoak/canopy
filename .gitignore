@@ -1,6 +1,9 @@
 # Spectra build worktrees
 .worktrees/
 
+# Throwaway palette/foundations exploration page (lives in the main checkout)
+.preview/
+
 # OS
 .DS_Store
 

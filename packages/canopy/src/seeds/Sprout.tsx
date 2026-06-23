@@ -3,8 +3,9 @@ import { tokens } from '@rogueoak/roots';
 /**
  * Sprout — a throwaway PLACEHOLDER component proving the cross-package + token seam.
  *
- * It imports the `color-sample` value straight from `@rogueoak/roots` (the
- * Style-Dictionary-generated typed export) and renders a labelled swatch.
+ * It imports a semantic token value straight from `@rogueoak/roots` (the
+ * Style-Dictionary-generated typed export) and renders a labelled swatch. The value
+ * is a `var(--color-primary)` reference, so the swatch tracks the live token.
  * This is NOT a real component — real Seeds arrive in spec 0005.
  */
 export interface SproutProps {
@@ -12,9 +13,9 @@ export interface SproutProps {
   label?: string;
 }
 
-const SAMPLE = tokens['color-sample'];
+const SAMPLE = tokens['color-primary'];
 
-export function Sprout({ label = 'color-sample' }: SproutProps) {
+export function Sprout({ label = 'color-primary' }: SproutProps) {
   return (
     <span
       data-testid="sprout"

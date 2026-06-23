@@ -6,17 +6,17 @@ import { Sprout } from './Sprout';
 describe('Sprout (skeleton smoke test)', () => {
   it('mounts and renders the sample value sourced from @rogueoak/roots', () => {
     // Non-vacuous guard: the text/style assertions below must not pass on an empty value.
-    expect(tokens['color-sample']).toBeTruthy();
+    expect(tokens['color-primary']).toBeTruthy();
     render(<Sprout />);
     const el = screen.getByTestId('sprout');
     expect(el).toBeInTheDocument();
     // Proves the cross-package + token seam: the rendered value comes from Roots.
-    expect(el).toHaveTextContent(tokens['color-sample']);
+    expect(el).toHaveTextContent(tokens['color-primary']);
   });
 
   it('applies the Roots token as the swatch background', () => {
     render(<Sprout />);
     const swatch = screen.getByTestId('sprout-swatch');
-    expect(swatch).toHaveStyle({ backgroundColor: tokens['color-sample'] });
+    expect(swatch).toHaveStyle({ backgroundColor: tokens['color-primary'] });
   });
 });
