@@ -1,0 +1,5 @@
+# Spectra build worktrees
+.worktrees/
+
+# OS
+.DS_Store
