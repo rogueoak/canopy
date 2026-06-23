@@ -83,27 +83,42 @@ export function Example() {
 ## Storybook
 
 The component showcase — swatches, type specimens, and every component in light and dark —
-will live on **GitHub Pages**, built from Storybook. _(link: coming with the skeleton)_
+lives on **GitHub Pages**, built from Storybook and deployed by CI on every push to `main`:
+**https://rogueoak.github.io/canopy/**. _(Currently shows the skeleton's placeholder
+swatch + component; real foundations land in 0003.)_
 
 ## Development
 
-> _(planned — populated when the repo skeleton lands)_
-
-Canopy is a **pnpm + Turborepo** monorepo. The intended workflow:
+Canopy is a **pnpm + Turborepo** monorepo. Requires Node 20+ and pnpm 9+
+(`npm install -g pnpm`). The workflow:
 
 ```bash
 pnpm install      # install the workspace
-pnpm build        # build tokens, components, and Storybook
-pnpm storybook    # run the showcase locally
-pnpm test         # run the test suite
+pnpm build        # build tokens (Style Dictionary), components (tsup), and Storybook
+pnpm storybook    # run the showcase locally at http://localhost:6006
+pnpm test         # run the test suite (Vitest)
+pnpm lint         # lint the workspace (ESLint + Prettier)
+pnpm changeset    # record a version bump for release
 ```
+
+Layout:
+
+| Path | Package | What it is |
+| --- | --- | --- |
+| `packages/roots` | `@rogueoak/roots` | design tokens → CSS vars, typed TS export, Tailwind v4 preset (Style Dictionary) |
+| `packages/canopy` | `@rogueoak/canopy` | components, built to ESM + types (tsup) |
+| `apps/storybook` | _private_ | the Storybook showcase, deployed to GitHub Pages |
+
+> The skeleton is seeded with a single throwaway sample token (`color-sample`) and a
+> placeholder `Sprout` component — just enough to prove the token → component → Storybook
+> pipeline end to end. Real tokens and components arrive in 0003+.
 
 ## Roadmap
 
 Built foundation-first, so there's **always working software and working docs** at each step:
 
 - [x] **0001 — README & living docs** — this page; kept truthful as the system grows
-- [ ] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
+- [x] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
 - [ ] **0003 — Roots** — the real palette, typography, and spacing (the foundation we lock)
 - [ ] **0004 — Light & dark theming** — semantic theme remap + runtime switching
 - [ ] **0005 — Seeds** — the first components
