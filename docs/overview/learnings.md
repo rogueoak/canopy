@@ -51,6 +51,35 @@ alongside the ramp. Brand roles avoid this naturally by using a *different* name
 scale and a single default, use the `DEFAULT` leaf + a name transform — don't put a value on a
 group node.
 
+## Ship the semantic/composite tier, not just the primitives under it
+
+When a spec scopes a **semantic or composite token tier** (here: text roles `text-h2`/`text-body`
+composed from the size/weight/leading primitives), verify that tier is actually *delivered* — not
+just the primitives. The 0003 build emitted only the type primitives, so components would have
+re-derived heading/body styling by hand, leaking the two-tier boundary that held for colour. In
+Tailwind v4 a composite text role is a `--text-<role>` font-size with **companion vars**
+(`--text-<role>--line-height` / `--font-weight` / `--letter-spacing`, double-dash); our
+single-dash kebab pipeline can't produce them, so the SD format expands DTCG `typography`
+composites itself — kept reference-aware (companions are `var(--primitive)`, never literals).
+
+**Apply it:** check the *highest* tier a spec names is present in the built output, and prove a
+composite expands correctly by grepping the built CSS for the whole rule (`.text-h2 { font-size;
+line-height; font-weight }`), not just the base var.
+
+## Guard cross-cutting a11y criteria with executable tests, and validate a role for all its uses
+
+WCAG AA was "verified" by a hand-typed ratio table in a Storybook story, decoupled from the token
+hexes — a ramp edit (exactly what 0004's dark remap does) keeps the table reading "AA" while real
+contrast drops below 4.5:1. Replaced with a **computed** test that resolves each semantic role to
+its real primitive hex (following the typed export's `var(--…)` references) and computes the WCAG
+ratio. It immediately caught that `accent` (amber.500) is only **2.83:1** on `bg` — fine as a fill
+but failing as a foreground — because the table had only validated the fill use. Fix: add
+`accent-strong` (amber.700, **6.15:1**) for foreground accent, keep `accent` as fill.
+
+**Apply it:** never guard a cross-cutting acceptance criterion (contrast, a11y) with a
+hand-maintained table — compute it from the real token values in a test. And validate a colour
+role for **all** its uses (fill *and* foreground), not just one.
+
 ## Tailwind v4 emits utilities only for class names it sees as literal strings
 
 Tailwind v4 generates utilities by scanning source for **literal** class strings. A story that

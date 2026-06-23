@@ -104,6 +104,10 @@
     }
   },
   "tracking": {
+    "tighter": {
+      "$value": "-0.02em",
+      "$type": "dimension"
+    },
     "tight": {
       "$value": "-0.01em",
       "$type": "dimension"

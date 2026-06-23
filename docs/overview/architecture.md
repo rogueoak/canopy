@@ -46,7 +46,8 @@ DTCG sources under `packages/roots/tokens/`, split by concern:
 | --- | --- |
 | `color/primitive.json` | the eight `50…950` ramps (`moss`/`bark`/`stone`/`amber` + functional) + `base.white` |
 | `color/semantic.json` | light-theme roles that **reference** primitives (surfaces, text, lines, roles, status) |
-| `typography.json` | `font.sans`/`font.mono` family names, `text.*` scale, `font-weight.*`, `leading.*`, `tracking.*` |
+| `typography.json` | `font.sans`/`font.mono` family names, `text.*` scale, `font-weight.*`, `leading.*`, `tracking.*` (incl. `tighter`) |
+| `typography-roles.json` | composite semantic text roles (`text-role.display`/`h1…h4`/`body`/`body-sm`/`label`/`caption`/`code`) that **reference** the type primitives |
 | `space.json` | `space.0…32` (4px base) |
 | `radius.json` | `radius.none…full` |
 | `shadow.json` | `shadow.sm…xl` |
@@ -73,20 +74,46 @@ Two special cases handled in `style-dictionary.config.mjs`:
 - **Spacing** — Tailwind v4 derives every `p-*`/`m-*`/`gap-*` utility from a single `--spacing`
   base (`calc(base * n)`), not per-step vars. The preset emits a literal `--spacing: 0.25rem`
   (the 4px base) so `p-4` = 1rem; the `--space-*` vars still ship in `tokens.css` for direct
-  `var()` use.
+  `var()` use. Because `--spacing: 0.25rem` makes Tailwind generate **every integer step**
+  (`p-1`, `p-7`, `p-13`, …), `space.json` is **curated documentation** of the intended scale,
+  not an enforced allow-list — nothing stops `p-13`.
 - **Functional `.DEFAULT`** — `success`/`warning`/`danger`/`info` are each both a primitive ramp
   (`color.success.50…950`) and a single semantic role. A `$value` can't sit on the
   `color.success` group node (it has children), so the semantic role lives at
   `color.success.DEFAULT`, and a custom `name/kebab-no-default` transform strips the suffix →
-  `--color-success` (→ `bg-success`) coexists with the `--color-success-600` ramp step.
+  `--color-success` (→ `bg-success`) coexists with the `--color-success-600` ramp step. The
+  transform matches on the **token path tail** (last segment === `DEFAULT`), not a string suffix
+  on the rendered name, so an unrelated future `*-default` token can't be renamed by accident.
+
+### Composite text roles (typography tier)
+
+Components style against semantic **text roles** (`text-display`, `text-h1…h4`, `text-body`,
+`text-body-sm`, `text-label`, `text-caption`, `text-code`), not raw scale + weight + leading —
+the same two-tier boundary colour uses. They are authored in `typography-roles.json` as DTCG
+`typography` **composites** whose sub-values *reference* the type primitives
+(`fontSize: {text.3xl}`, `lineHeight: {leading.tight}`, …; `code` also `fontFamily: {font.mono}`).
+
+Each role is emitted as a Tailwind v4 **`--text-<role>` font-size utility with companion vars** —
+`--text-<role>--line-height` / `--font-weight` / `--letter-spacing` — so a single `text-h2`
+utility expands to `.text-h2 { font-size; line-height; font-weight; letter-spacing }`. The
+companion uses a **double-dash** (`--text-h2--line-height`) that our single-dash kebab pipeline
+never produces, so `style-dictionary.config.mjs` expands composites itself (`expandTypographyRole`)
+across all three outputs, staying **reference-aware**: each companion is `var(--<primitive>)`,
+never a flattened literal (the seam hardened in feedback 0001). The authoring path `text-role.*`
+is renamed to `text-*` on emit so the var/utility is `text-h2`, not `text-text-role-h2`. (Tailwind
+v4's `text-*` utility does not expand a font-family companion, so the `code` role pairs
+`text-code font-mono`; the `--text-code--font-family` var still ships for native consumers.)
 
 ### Token ownership & references (the theming seam)
 
 There is **one owner of runtime CSS variables**: `tokens.css`. Its `css/variables` format runs
 with `outputReferences: true`, so a semantic token that references a primitive emits a CSS
 reference — `--color-primary: var(--color-moss-600)` — rather than a flattened literal. A future
-`.dark` block in `tokens.css` remaps the primitives (or the semantic layer), and every dependent
-var (and every Tailwind utility) inherits the change.
+`.dark` block in `tokens.css` (spec 0004) remaps the **semantic layer only** — the primitives
+are shared, theme-agnostic ramps and stay fixed; 0004 re-points each role (`--color-primary`,
+`--color-bg`, …) at a different ramp step. Because semantics are references and the other two
+outputs reference the runtime vars, that single remap cascades to every dependent var and every
+Tailwind utility.
 
 The other two outputs **reference** those runtime vars instead of redeclaring values:
 
@@ -114,6 +141,16 @@ The token key is the **flattened, kebab-cased Style Dictionary path** (`color.mo
 Tailwind namespace so a TS key, a CSS variable, and a utility all share one name. Primitives are
 ramp paths (`color-moss-600`); semantics are role paths (`color-primary`) that reference them.
 Components consume **only** semantic names.
+
+### Interaction-state tokens (decision — deferred to 0004)
+
+`hover` / `active` / `disabled` state roles are **intentionally deferred to spec 0004**
+(theming), not added here. 0004 lands before the first components (0005), so states are ready
+before any Button. The convention recorded for 0004: a state role is named
+`color-<role>-<state>` (e.g. `color-primary-hover`, `color-primary-active`) and points at a
+**deeper ramp step**, with its **light and dark values defined together** in the same pass
+(following the existing semantic reference pattern) — no ad-hoc per-component values. This avoids
+defining states twice (once light here, once dark in 0004).
 
 ### Known follow-up (deferred)
 

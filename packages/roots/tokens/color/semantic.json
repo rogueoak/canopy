@@ -55,6 +55,11 @@
       "$type": "color",
       "$description": "Focus ring."
     },
+    "ring-offset": {
+      "$value": "{color.base.white}",
+      "$type": "color",
+      "$description": "Focus-ring offset / gap colour — sits between a focus ring and the element on a coloured surface (defaults to the page surface). Pairs with ring."
+    },
     "primary": {
       "$value": "{color.moss.600}",
       "$type": "color",
@@ -78,12 +83,17 @@
     "accent": {
       "$value": "{color.amber.500}",
       "$type": "color",
-      "$description": "Accent role (highlights)."
+      "$description": "Accent role — FILL use only (amber.500 is ~2.83:1 on bg, below AA for foreground). For accent text/icon/border on a light surface use accent-strong."
+    },
+    "accent-strong": {
+      "$value": "{color.amber.700}",
+      "$type": "color",
+      "$description": "Accent for FOREGROUND use (text/icon/border) on light surfaces — amber.700 reaches AA (~6.15:1 on bg). accent stays the fill role."
     },
     "accent-foreground": {
       "$value": "{color.amber.950}",
       "$type": "color",
-      "$description": "Foreground on accent surfaces."
+      "$description": "Foreground on accent (fill) surfaces."
     },
     "muted": {
       "$value": "{color.stone.100}",

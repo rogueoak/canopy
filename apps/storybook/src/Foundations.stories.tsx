@@ -96,6 +96,7 @@ const SEMANTIC_GROUPS: { group: string; tokens: { name: string; util?: string }[
       { name: 'border', util: 'bg-border' },
       { name: 'border-strong', util: 'bg-border-strong' },
       { name: 'ring', util: 'bg-ring' },
+      { name: 'ring-offset', util: 'bg-ring-offset' },
     ],
   },
   {
@@ -106,6 +107,7 @@ const SEMANTIC_GROUPS: { group: string; tokens: { name: string; util?: string }[
       { name: 'secondary', util: 'bg-secondary' },
       { name: 'secondary-foreground', util: 'bg-secondary-foreground' },
       { name: 'accent', util: 'bg-accent' },
+      { name: 'accent-strong', util: 'bg-accent-strong' },
       { name: 'accent-foreground', util: 'bg-accent-foreground' },
       { name: 'muted-foreground', util: 'bg-muted-foreground' },
     ],
@@ -158,6 +160,18 @@ function Colours() {
         <Ramp key={r} name={r} />
       ))}
       <h2 style={{ ...h2, marginTop: '2.5rem' }}>Semantic tokens (light)</h2>
+      <p
+        style={{
+          fontSize: 'var(--text-sm)',
+          color: 'var(--color-text-muted)',
+          marginTop: 0,
+          maxWidth: 640,
+        }}
+      >
+        <code>accent</code> (amber.500) is a <strong>fill-only</strong> role — ~2.83:1 on{' '}
+        <code>bg</code>, below AA for text. Use <code>accent-strong</code> (amber.700, ~6.15:1) for
+        accent <strong>text / icon / border</strong> on light surfaces.
+      </p>
       {SEMANTIC_GROUPS.map((g) => (
         <div key={g.group} style={{ marginBottom: '1.75rem' }}>
           <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: '0.75rem' }}>
@@ -202,6 +216,24 @@ const WEIGHTS = [
   ['bold', 'font-bold', 700],
 ] as const;
 
+// Semantic text roles — each `text-<role>` utility applies font-size + line-height +
+// font-weight (+ letter-spacing) in one class. Tailwind v4's text-* utility does NOT
+// expand a font-family companion, so the `code` role pairs `text-code font-mono` (the
+// role token still carries --text-code--font-family for native/non-Tailwind consumers).
+// Full literal class names so Tailwind v4's scanner emits each utility (see Radii note).
+const TEXT_ROLES: [string, string, string][] = [
+  ['display', 'text-display font-sans', 'Grow something calm'],
+  ['h1', 'text-h1 font-sans', 'Grow something calm'],
+  ['h2', 'text-h2 font-sans', 'Grow something calm'],
+  ['h3', 'text-h3 font-sans', 'Grow something calm'],
+  ['h4', 'text-h4 font-sans', 'Grow something calm'],
+  ['body', 'text-body font-sans', 'Canopy is a calm, natural design system for product UI.'],
+  ['body-sm', 'text-body-sm font-sans', 'Canopy is a calm, natural design system for product UI.'],
+  ['label', 'text-label font-sans', 'Field label'],
+  ['caption', 'text-caption font-sans', 'Caption / fine print'],
+  ['code', 'text-code font-mono', "tokens['color-primary']"],
+];
+
 function Typography() {
   return (
     <div style={wrap}>
@@ -238,6 +270,39 @@ function Typography() {
               {util} · {tokenVal(`text-${name}`)}
             </code>
             <span className={`${util} font-sans`}>Grow something</span>
+          </div>
+        ))}
+      </div>
+
+      <h2 style={h2}>Semantic text roles (text-* role utilities)</h2>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 0 }}>
+        Each role composes references to the type primitives, so one utility (e.g.{' '}
+        <code>text-h2</code>) applies font-size, line-height, weight and tracking together.
+        Components style against these, never raw scale + weight + leading.
+      </p>
+      <div style={{ marginBottom: '2rem' }}>
+        {TEXT_ROLES.map(([name, cls, sample]) => (
+          <div
+            key={name}
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '1rem',
+              marginBottom: '0.75rem',
+            }}
+          >
+            <code
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--color-text-subtle)',
+                width: 96,
+                flexShrink: 0,
+              }}
+            >
+              text-{name}
+            </code>
+            <span className={cls}>{sample}</span>
           </div>
         ))}
       </div>
@@ -514,6 +579,7 @@ const CONTRAST: [string, string, string][] = [
   ['primary-foreground on primary', '5.66', 'AA'],
   ['secondary-foreground on secondary', '5.67', 'AA'],
   ['accent-foreground on accent', '5.52', 'AA'],
+  ['accent-strong on bg (fg use)', '6.15', 'AA'],
   ['muted-foreground on muted', '4.94', 'AA'],
   ['success-foreground on success', '4.81', 'AA'],
   ['warning-foreground on warning', '4.95', 'AA'],
