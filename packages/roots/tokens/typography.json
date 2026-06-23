@@ -1,0 +1,120 @@
+{
+  "font": {
+    "sans": {
+      "$value": "Figtree, ui-sans-serif, system-ui, -apple-system, sans-serif",
+      "$type": "fontFamily",
+      "$description": "Default UI/body family — Figtree (variable, self-hosted via @fontsource-variable/figtree)."
+    },
+    "mono": {
+      "$value": "Geist Mono, ui-monospace, SFMono-Regular, Menlo, monospace",
+      "$type": "fontFamily",
+      "$description": "Monospace family for code — Geist Mono (self-hosted via @fontsource-variable/geist-mono)."
+    }
+  },
+  "text": {
+    "xs": {
+      "$value": "0.75rem",
+      "$type": "dimension",
+      "$description": "12px"
+    },
+    "sm": {
+      "$value": "0.875rem",
+      "$type": "dimension",
+      "$description": "14px"
+    },
+    "base": {
+      "$value": "1rem",
+      "$type": "dimension",
+      "$description": "16px"
+    },
+    "lg": {
+      "$value": "1.125rem",
+      "$type": "dimension",
+      "$description": "18px"
+    },
+    "xl": {
+      "$value": "1.25rem",
+      "$type": "dimension",
+      "$description": "20px"
+    },
+    "2xl": {
+      "$value": "1.5rem",
+      "$type": "dimension",
+      "$description": "24px"
+    },
+    "3xl": {
+      "$value": "1.875rem",
+      "$type": "dimension",
+      "$description": "30px"
+    },
+    "4xl": {
+      "$value": "2.25rem",
+      "$type": "dimension",
+      "$description": "36px"
+    },
+    "5xl": {
+      "$value": "3rem",
+      "$type": "dimension",
+      "$description": "48px"
+    },
+    "6xl": {
+      "$value": "3.75rem",
+      "$type": "dimension",
+      "$description": "60px"
+    }
+  },
+  "font-weight": {
+    "normal": {
+      "$value": "400",
+      "$type": "fontWeight"
+    },
+    "medium": {
+      "$value": "500",
+      "$type": "fontWeight"
+    },
+    "semibold": {
+      "$value": "600",
+      "$type": "fontWeight"
+    },
+    "bold": {
+      "$value": "700",
+      "$type": "fontWeight"
+    }
+  },
+  "leading": {
+    "none": {
+      "$value": "1",
+      "$type": "number"
+    },
+    "tight": {
+      "$value": "1.2",
+      "$type": "number"
+    },
+    "snug": {
+      "$value": "1.35",
+      "$type": "number"
+    },
+    "normal": {
+      "$value": "1.55",
+      "$type": "number"
+    },
+    "relaxed": {
+      "$value": "1.75",
+      "$type": "number"
+    }
+  },
+  "tracking": {
+    "tight": {
+      "$value": "-0.01em",
+      "$type": "dimension"
+    },
+    "normal": {
+      "$value": "0em",
+      "$type": "dimension"
+    },
+    "wide": {
+      "$value": "0.04em",
+      "$type": "dimension"
+    }
+  }
+}

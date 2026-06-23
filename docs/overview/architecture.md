@@ -31,36 +31,76 @@ the README; Canopy is the whole system.
 2. `tokens.ts` — a typed `const` export (`tokens['color-sample']`) for programmatic,
    type-safe access. tsup then compiles it in place to `tokens.js` + `tokens.d.ts`.
 3. `tailwind-preset.css` — a Tailwind v4 `@theme inline { … }` block (custom SD format
-   `tailwind/preset-v4`) so utilities like `bg-sample` resolve. CSS-first Tailwind v4 means
+   `tailwind/preset-v4`) so utilities like `bg-primary` resolve. CSS-first Tailwind v4 means
    tokens live in CSS, not a JS config object.
 
 The package `exports` map exposes `.` (typed TS), `./tokens.css`, and `./tailwind-preset.css`.
 This pipeline is the seam that lets a **native (Swift) target** be added later as just
 another Style Dictionary platform — no token rewrite. Only the web platforms are built now.
 
-The skeleton seeds a throwaway primitive (`color.sample` → `#4a7c59`) plus a referencing
-token (`color.sample-ref` → `{color.sample}`) that exercises the reference/theming seam end
-to end; the real palette/type/spacing replace both in 0003.
+### Token sources & categories (0003)
+
+DTCG sources under `packages/roots/tokens/`, split by concern:
+
+| File | Holds |
+| --- | --- |
+| `color/primitive.json` | the eight `50…950` ramps (`moss`/`bark`/`stone`/`amber` + functional) + `base.white` |
+| `color/semantic.json` | light-theme roles that **reference** primitives (surfaces, text, lines, roles, status) |
+| `typography.json` | `font.sans`/`font.mono` family names, `text.*` scale, `font-weight.*`, `leading.*`, `tracking.*` |
+| `space.json` | `space.0…32` (4px base) |
+| `radius.json` | `radius.none…full` |
+| `shadow.json` | `shadow.sm…xl` |
+| `motion.json` | `duration.fast/base/slow`, `ease.standard/emphasized/decelerate` |
+
+### Tailwind v4 namespace mapping
+
+Token paths flatten onto the exact `@theme` variable namespaces Tailwind v4 reads, so the
+`tailwind/preset-v4` format's `--<name>: var(--<name>)` lines generate working utilities:
+
+| Token path | Flattened var | Utility |
+| --- | --- | --- |
+| `color.*` | `--color-*` | `bg-*`, `text-*`, `border-*`, `ring-*` |
+| `font.sans/mono` | `--font-sans/-mono` | `font-sans`, `font-mono` |
+| `text.lg` | `--text-lg` | `text-lg` (font-size) |
+| `font-weight.medium` | `--font-weight-medium` | `font-medium` |
+| `leading.snug` / `tracking.tight` | `--leading-snug` / `--tracking-tight` | `leading-snug` / `tracking-tight` |
+| `radius.md` | `--radius-md` | `rounded-md` |
+| `shadow.md` | `--shadow-md` | `shadow-md` |
+| `ease.standard` | `--ease-standard` | `ease-standard` |
+
+Two special cases handled in `style-dictionary.config.mjs`:
+
+- **Spacing** — Tailwind v4 derives every `p-*`/`m-*`/`gap-*` utility from a single `--spacing`
+  base (`calc(base * n)`), not per-step vars. The preset emits a literal `--spacing: 0.25rem`
+  (the 4px base) so `p-4` = 1rem; the `--space-*` vars still ship in `tokens.css` for direct
+  `var()` use.
+- **Functional `.DEFAULT`** — `success`/`warning`/`danger`/`info` are each both a primitive ramp
+  (`color.success.50…950`) and a single semantic role. A `$value` can't sit on the
+  `color.success` group node (it has children), so the semantic role lives at
+  `color.success.DEFAULT`, and a custom `name/kebab-no-default` transform strips the suffix →
+  `--color-success` (→ `bg-success`) coexists with the `--color-success-600` ramp step.
 
 ### Token ownership & references (the theming seam)
 
 There is **one owner of runtime CSS variables**: `tokens.css`. Its `css/variables` format runs
-with `outputReferences: true`, so a token that references another emits a CSS reference —
-`--color-sample-ref: var(--color-sample)` — rather than a flattened literal. A future `.dark`
-block in `tokens.css` remaps the primitives, and every dependent var (and every Tailwind
-utility) inherits the change.
+with `outputReferences: true`, so a semantic token that references a primitive emits a CSS
+reference — `--color-primary: var(--color-moss-600)` — rather than a flattened literal. A future
+`.dark` block in `tokens.css` remaps the primitives (or the semantic layer), and every dependent
+var (and every Tailwind utility) inherits the change.
 
 The other two outputs **reference** those runtime vars instead of redeclaring values:
 
 - The Tailwind preset uses **`@theme inline`**, mapping each token to `var(--<name>)`
-  (`--color-sample: var(--color-sample)`). This generates utilities (`bg-sample`) that resolve
-  to the runtime vars `tokens.css` owns — no value duplication, no competing `:root`, and dark
-  remaps cascade straight through.
+  (`--color-primary: var(--color-primary)`). This generates utilities (`bg-primary`) that
+  resolve to the runtime vars `tokens.css` owns — no value duplication, no competing `:root`,
+  and dark remaps cascade straight through.
 - The typed TS export is **reference-aware**: a referencing token emits `var(--<ref>)`
-  (`tokens['color-sample-ref'] === 'var(--color-sample)'`) while a primitive keeps its literal
-  (`tokens['color-sample'] === '#4a7c59'`). Implemented with `usesReferences` / `getReferences`
+  (`tokens['color-primary'] === 'var(--color-moss-600)'`) while a primitive keeps its literal
+  (`tokens['color-moss-600'] === '#5a6638'`). Implemented with `usesReferences` / `getReferences`
   from `style-dictionary/utils` (Style Dictionary 4 moved these off the `dictionary` object)
-  over each token's `original.$value`.
+  over each token's `original.$value`. Values are emitted via `JSON.stringify` so a family name
+  that itself contains quotes (the `'Geist Mono'` produced by the `fontFamily/css` transform)
+  can't break the generated string.
 
 A test (`packages/roots/tokens.test.ts`) reads the built `dist/` files and asserts the
 reference survives in all three outputs, so the seam can't silently flatten again. Because it
@@ -69,10 +109,11 @@ before it is tested).
 
 ### Naming convention
 
-The token key is the **flattened, kebab-cased Style Dictionary path** (`color.sample` →
-`color-sample`), intentionally aligned with the CSS-var / Tailwind `--color-*` namespace so a
-TS key, a CSS variable, and a utility all share one name. Spec **0003** formalizes the
-primitive-vs-semantic naming.
+The token key is the **flattened, kebab-cased Style Dictionary path** (`color.moss.600` →
+`color-moss-600`, `color.primary` → `color-primary`), intentionally aligned with the CSS-var /
+Tailwind namespace so a TS key, a CSS variable, and a utility all share one name. Primitives are
+ramp paths (`color-moss-600`); semantics are role paths (`color-primary`) that reference them.
+Components consume **only** semantic names.
 
 ### Known follow-up (deferred)
 
@@ -84,16 +125,25 @@ deferred from this remediation as engineer finding E4, to be picked up in a late
 `@rogueoak/canopy` is a **compiled npm library** (not a shadcn copy-in registry). **tsup**
 builds `src/index.ts` and `src/seeds/index.ts` to ESM + `.d.ts` with subpath exports (`.`
 and `./seeds`); React/react-dom are peer deps. Components consume Roots tokens via the typed
-`@rogueoak/roots` import (the placeholder `Sprout` reads `tokens['color-sample']`), proving
-the cross-package + token seam. Vitest + Testing Library (jsdom) provides the smoke test.
+`@rogueoak/roots` import (the placeholder `Sprout` reads `tokens['color-primary']`, a
+`var(--color-primary)` reference), proving the cross-package + token seam. Vitest + Testing
+Library (jsdom) provides the smoke test.
 
 ## Showcase + theming (Storybook)
 
 **Storybook 8** (`@storybook/react-vite`) with `@tailwindcss/vite`. A global CSS imports
-Tailwind + `@rogueoak/roots/tokens.css` (the runtime `:root` vars) + the Tailwind
-`@theme inline` preset — no hand-written `:root` token block. `@storybook/addon-themes`
-`withThemeByClassName` wires a light/dark toolbar toggle (toggles `.dark`); the theme values
-are intentionally empty until 0004. `storybook build` emits `storybook-static/`.
+Tailwind + the self-hosted fonts (`@fontsource-variable/figtree` + `.../geist-mono`) +
+`@rogueoak/roots/tokens.css` (the runtime `:root` vars) + the Tailwind `@theme inline` preset
+— no hand-written `:root` token block. The **Foundations** stories render the system as a
+living spec (ramps, semantic swatches, type specimen, scale, spacing, radii, elevation, motion,
+contrast table). `@storybook/addon-themes` `withThemeByClassName` wires a light/dark toolbar
+toggle (toggles `.dark`); the theme values are intentionally empty until 0004. `storybook build`
+emits `storybook-static/`.
+
+Tailwind v4 generates utilities by **scanning source for literal class strings**, so the
+Foundations stories that iterate (radii, shadows, leading) carry full literal class names
+(`rounded-md`, `shadow-md`) in their data arrays rather than building them with template
+literals — otherwise the utility wouldn't be emitted.
 
 ## CI / release
 

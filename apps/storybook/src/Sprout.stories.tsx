@@ -17,5 +17,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const CustomLabel: Story = {
-  args: { label: 'roots/color-sample' },
+  args: { label: 'roots/color-primary' },
 };

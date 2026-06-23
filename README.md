@@ -44,13 +44,46 @@ layer: semantic tokens remap per theme, so a component is themed without knowing
 
 ## Tokens & theming
 
-Roots is a **token source of truth**, not hand-written CSS. Tokens are authored once in a
-platform-agnostic format and compiled — via [Style Dictionary](https://styledictionary.com)
-— into the outputs each consumer needs:
+Roots is a **token source of truth**, not hand-written CSS. Tokens are authored once as
+[DTCG](https://design-tokens.github.io/community-group/format/) JSON and compiled — via
+[Style Dictionary](https://styledictionary.com) — into the outputs each consumer needs:
 
-- **CSS custom properties** for runtime theming (light/dark)
-- **A typed TypeScript export** for programmatic access
-- **A Tailwind v4 preset** so utilities map straight onto semantic tokens
+- **CSS custom properties** (`tokens.css`) for runtime theming
+- **A typed TypeScript export** (`tokens`) for programmatic access
+- **A Tailwind v4 `@theme` preset** (`tailwind-preset.css`) so utilities map straight onto tokens
+
+The system is **two-tier**, so theming is a remap of one layer and never touches components:
+
+- **Primitive ramps** — the raw palette, `50…950`: `moss` (brand), `bark`, `stone` (neutrals),
+  `amber` (accent), and desaturated functional ramps `success` / `warning` / `danger` / `info`.
+  Muted & natural; moss/olive brand. Primitives are **never used by components directly**.
+- **Semantic tokens** — light-theme roles that **reference** primitives: surfaces
+  (`color-bg`, `color-surface`, `color-muted`), text (`color-text`, `color-text-muted`,
+  `color-text-subtle`), lines (`color-border`, `color-ring`), roles (`color-primary` +
+  `-foreground`, `secondary`, `accent`) and status (`success`/`warning`/`danger`/`info`).
+  Components consume **only** these. _(Dark theme + runtime switching land in 0004.)_
+
+Alongside colour: **typography** (Figtree sans + Geist Mono, type scale `text-xs…6xl`, weights,
+leading, tracking), **spacing** (4px base), **radii**, **elevation** (`shadow-*`), and **motion**
+(durations + easings). Token names flatten onto Tailwind v4 `@theme` namespaces so utilities
+generate directly: `color-*`→`bg-*`/`text-*`, `radius-md`→`rounded-md`, `text-lg`→`text-lg`,
+`font-sans`→`font-sans`, `shadow-md`→`shadow-md`, and spacing utilities (`p-4`, `gap-2`) derive
+from a single `--spacing` base.
+
+**Fonts are self-hosted** (no CDN). Roots ships the family _names_; consumers install the
+open-licensed [`@fontsource`](https://fontsource.org) packages and import them once:
+
+```bash
+pnpm add @fontsource-variable/figtree @fontsource-variable/geist-mono
+```
+
+```css
+/* in your global stylesheet, alongside the Roots imports */
+@import '@fontsource-variable/figtree';
+@import '@fontsource-variable/geist-mono';
+@import '@rogueoak/roots/tokens.css';
+@import '@rogueoak/roots/tailwind-preset.css';
+```
 
 This pipeline is deliberately built to grow: a **native (Swift) target** can be added later
 as just another output platform, without rewriting a single token. _(native target: planned)_
@@ -84,8 +117,9 @@ export function Example() {
 
 The component showcase — swatches, type specimens, and every component in light and dark —
 lives on **GitHub Pages**, built from Storybook and deployed by CI on every push to `main`:
-**https://rogueoak.github.io/canopy/**. _(Currently shows the skeleton's placeholder
-swatch + component; real foundations land in 0003.)_
+**https://rogueoak.github.io/canopy/**. The **Foundations** section is the living spec —
+colour ramps + semantic swatches, the Figtree type specimen and scale, spacing, radii,
+elevation, motion, and a WCAG AA contrast table. _(Light theme only; dark lands in 0004.)_
 
 ## Development
 
@@ -109,9 +143,9 @@ Layout:
 | `packages/canopy` | `@rogueoak/canopy` | components, built to ESM + types (tsup)                                          |
 | `apps/storybook`  | _private_          | the Storybook showcase, deployed to GitHub Pages                                 |
 
-> The skeleton is seeded with a single throwaway sample token (`color-sample`) and a
-> placeholder `Sprout` component — just enough to prove the token → component → Storybook
-> pipeline end to end. Real tokens and components arrive in 0003+.
+> Roots now ships the **real foundation** (0003): primitive ramps + semantic tokens, type,
+> spacing, radii, elevation, and motion. The placeholder `Sprout` component remains as the
+> token → component → Storybook seam proof; real components arrive in 0005.
 
 ## Roadmap
 
@@ -119,7 +153,7 @@ Built foundation-first, so there's **always working software and working docs** 
 
 - [x] **0001 — README & living docs** — this page; kept truthful as the system grows
 - [x] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
-- [ ] **0003 — Roots** — the real palette, typography, and spacing (the foundation we lock)
+- [x] **0003 — Roots** — the real palette, typography, and spacing (the foundation we lock)
 - [ ] **0004 — Light & dark theming** — semantic theme remap + runtime switching
 - [ ] **0005 — Seeds** — the first components
 - [ ] **Twigs · Branches · Boughs** — composition layers, in turn
