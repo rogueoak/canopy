@@ -1,0 +1,15 @@
+{
+  "$description": "THROWAWAY placeholder token — proves the Style Dictionary pipeline end-to-end. NOT the real palette. Spec 0003 (Roots) replaces this with the real colour/type/spacing foundation.",
+  "color": {
+    "sample": {
+      "$value": "#4a7c59",
+      "$type": "color",
+      "$description": "Placeholder earthy-green primitive. Replaced in 0003."
+    },
+    "sample-ref": {
+      "$value": "{color.sample}",
+      "$type": "color",
+      "$description": "Placeholder semantic token referencing the primitive — proves the reference/theming seam. Replaced in 0003/0004."
+    }
+  }
+}

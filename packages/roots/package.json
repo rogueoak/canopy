@@ -1,0 +1,33 @@
+{
+  "name": "@rogueoak/roots",
+  "version": "0.0.0",
+  "description": "Canopy design tokens — Style Dictionary pipeline (CSS vars, typed TS, Tailwind v4 preset).",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/tokens.d.ts",
+      "import": "./dist/tokens.js"
+    },
+    "./tokens.css": "./dist/tokens.css",
+    "./tailwind-preset.css": "./dist/tailwind-preset.css"
+  },
+  "scripts": {
+    "build": "pnpm clean && style-dictionary build --config style-dictionary.config.mjs && tsup",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "style-dictionary": "^4.3.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

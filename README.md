@@ -29,14 +29,14 @@ below grow from shared roots.
 
 Atomic design, renamed by tree anatomy:
 
-| Atomic layer | Canopy name | What lives here |
-| --- | --- | --- |
-| Design tokens | **Roots** 🌱 | primitive + semantic tokens — colour, type, spacing, radii, elevation, motion. Everything draws nourishment from here. |
-| Atoms | **Seeds** | the smallest components — Button, Input, Label, Icon, Badge |
-| Molecules | **Twigs** | small compositions — FormField, SearchBar, Card |
-| Organisms | **Branches** | larger assemblies — NavBar, DataTable, Dialog |
-| Templates _(later)_ | **Boughs** | page scaffolds and layout patterns |
-| The whole system | **Canopy** | the published library + the Storybook showcase |
+| Atomic layer        | Canopy name  | What lives here                                                                                                        |
+| ------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Design tokens       | **Roots** 🌱 | primitive + semantic tokens — colour, type, spacing, radii, elevation, motion. Everything draws nourishment from here. |
+| Atoms               | **Seeds**    | the smallest components — Button, Input, Label, Icon, Badge                                                            |
+| Molecules           | **Twigs**    | small compositions — FormField, SearchBar, Card                                                                        |
+| Organisms           | **Branches** | larger assemblies — NavBar, DataTable, Dialog                                                                          |
+| Templates _(later)_ | **Boughs**   | page scaffolds and layout patterns                                                                                     |
+| The whole system    | **Canopy**   | the published library + the Storybook showcase                                                                         |
 
 **Components only ever consume Roots semantic tokens** (`color-surface`, `text-primary`,
 `radius-control`) — never raw palette values. Light and dark are a property of the token
@@ -59,9 +59,9 @@ as just another output platform, without rewriting a single token. _(native targ
 
 Canopy publishes under the **`@rogueoak`** npm scope as a small set of versioned packages:
 
-| Package | Holds | Status |
-| --- | --- | --- |
-| `@rogueoak/roots` | design tokens + Tailwind preset | _(planned)_ |
+| Package            | Holds                                        | Status      |
+| ------------------ | -------------------------------------------- | ----------- |
+| `@rogueoak/roots`  | design tokens + Tailwind preset              | _(planned)_ |
 | `@rogueoak/canopy` | components (`/seeds`, `/twigs`, `/branches`) | _(planned)_ |
 
 ## Quick start
@@ -73,7 +73,7 @@ pnpm add @rogueoak/canopy @rogueoak/roots
 ```
 
 ```tsx
-import { Button } from "@rogueoak/canopy/seeds";
+import { Button } from '@rogueoak/canopy/seeds';
 
 export function Example() {
   return <Button>Plant a seed</Button>;
@@ -83,27 +83,42 @@ export function Example() {
 ## Storybook
 
 The component showcase — swatches, type specimens, and every component in light and dark —
-will live on **GitHub Pages**, built from Storybook. _(link: coming with the skeleton)_
+lives on **GitHub Pages**, built from Storybook and deployed by CI on every push to `main`:
+**https://rogueoak.github.io/canopy/**. _(Currently shows the skeleton's placeholder
+swatch + component; real foundations land in 0003.)_
 
 ## Development
 
-> _(planned — populated when the repo skeleton lands)_
-
-Canopy is a **pnpm + Turborepo** monorepo. The intended workflow:
+Canopy is a **pnpm + Turborepo** monorepo. Requires Node 20+ and pnpm 11+
+(`npm install -g pnpm`). The workflow:
 
 ```bash
 pnpm install      # install the workspace
-pnpm build        # build tokens, components, and Storybook
-pnpm storybook    # run the showcase locally
-pnpm test         # run the test suite
+pnpm build        # build tokens (Style Dictionary), components (tsup), and Storybook
+pnpm storybook    # run the showcase locally at http://localhost:6006
+pnpm test         # run the test suite (Vitest)
+pnpm lint         # lint the workspace (ESLint + Prettier)
+pnpm changeset    # record a version bump for release
 ```
+
+Layout:
+
+| Path              | Package            | What it is                                                                       |
+| ----------------- | ------------------ | -------------------------------------------------------------------------------- |
+| `packages/roots`  | `@rogueoak/roots`  | design tokens → CSS vars, typed TS export, Tailwind v4 preset (Style Dictionary) |
+| `packages/canopy` | `@rogueoak/canopy` | components, built to ESM + types (tsup)                                          |
+| `apps/storybook`  | _private_          | the Storybook showcase, deployed to GitHub Pages                                 |
+
+> The skeleton is seeded with a single throwaway sample token (`color-sample`) and a
+> placeholder `Sprout` component — just enough to prove the token → component → Storybook
+> pipeline end to end. Real tokens and components arrive in 0003+.
 
 ## Roadmap
 
 Built foundation-first, so there's **always working software and working docs** at each step:
 
 - [x] **0001 — README & living docs** — this page; kept truthful as the system grows
-- [ ] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
+- [x] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
 - [ ] **0003 — Roots** — the real palette, typography, and spacing (the foundation we lock)
 - [ ] **0004 — Light & dark theming** — semantic theme remap + runtime switching
 - [ ] **0005 — Seeds** — the first components

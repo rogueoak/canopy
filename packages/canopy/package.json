@@ -1,0 +1,44 @@
+{
+  "name": "@rogueoak/canopy",
+  "version": "0.0.0",
+  "description": "Canopy components — built on Roots tokens, Tailwind v4, Radix/shadcn (later).",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./seeds": {
+      "types": "./dist/seeds/index.d.ts",
+      "import": "./dist/seeds/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "@rogueoak/roots": "workspace:*"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "jsdom": "^25.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
