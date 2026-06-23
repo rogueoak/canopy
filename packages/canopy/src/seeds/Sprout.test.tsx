@@ -5,6 +5,8 @@ import { Sprout } from './Sprout';
 
 describe('Sprout (skeleton smoke test)', () => {
   it('mounts and renders the sample value sourced from @rogueoak/roots', () => {
+    // Non-vacuous guard: the text/style assertions below must not pass on an empty value.
+    expect(tokens['color-sample']).toBeTruthy();
     render(<Sprout />);
     const el = screen.getByTestId('sprout');
     expect(el).toBeInTheDocument();

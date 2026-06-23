@@ -30,7 +30,7 @@ the README; Canopy is the whole system.
 1. `tokens.css` — CSS custom properties (`:root { --color-sample: … }`) for runtime theming.
 2. `tokens.ts` — a typed `const` export (`tokens['color-sample']`) for programmatic,
    type-safe access. tsup then compiles it in place to `tokens.js` + `tokens.d.ts`.
-3. `tailwind-preset.css` — a Tailwind v4 `@theme { … }` block (custom SD format
+3. `tailwind-preset.css` — a Tailwind v4 `@theme inline { … }` block (custom SD format
    `tailwind/preset-v4`) so utilities like `bg-sample` resolve. CSS-first Tailwind v4 means
    tokens live in CSS, not a JS config object.
 
@@ -38,8 +38,46 @@ The package `exports` map exposes `.` (typed TS), `./tokens.css`, and `./tailwin
 This pipeline is the seam that lets a **native (Swift) target** be added later as just
 another Style Dictionary platform — no token rewrite. Only the web platforms are built now.
 
-The skeleton seeds exactly one throwaway token (`color.sample` → `#4a7c59`); the real
-palette/type/spacing replace it in 0003.
+The skeleton seeds a throwaway primitive (`color.sample` → `#4a7c59`) plus a referencing
+token (`color.sample-ref` → `{color.sample}`) that exercises the reference/theming seam end
+to end; the real palette/type/spacing replace both in 0003.
+
+### Token ownership & references (the theming seam)
+
+There is **one owner of runtime CSS variables**: `tokens.css`. Its `css/variables` format runs
+with `outputReferences: true`, so a token that references another emits a CSS reference —
+`--color-sample-ref: var(--color-sample)` — rather than a flattened literal. A future `.dark`
+block in `tokens.css` remaps the primitives, and every dependent var (and every Tailwind
+utility) inherits the change.
+
+The other two outputs **reference** those runtime vars instead of redeclaring values:
+
+- The Tailwind preset uses **`@theme inline`**, mapping each token to `var(--<name>)`
+  (`--color-sample: var(--color-sample)`). This generates utilities (`bg-sample`) that resolve
+  to the runtime vars `tokens.css` owns — no value duplication, no competing `:root`, and dark
+  remaps cascade straight through.
+- The typed TS export is **reference-aware**: a referencing token emits `var(--<ref>)`
+  (`tokens['color-sample-ref'] === 'var(--color-sample)'`) while a primitive keeps its literal
+  (`tokens['color-sample'] === '#4a7c59'`). Implemented with `usesReferences` / `getReferences`
+  from `style-dictionary/utils` (Style Dictionary 4 moved these off the `dictionary` object)
+  over each token's `original.$value`.
+
+A test (`packages/roots/tokens.test.ts`) reads the built `dist/` files and asserts the
+reference survives in all three outputs, so the seam can't silently flatten again. Because it
+reads `dist/`, the Turbo `test` task depends on `["^build", "build"]` (each package builds
+before it is tested).
+
+### Naming convention
+
+The token key is the **flattened, kebab-cased Style Dictionary path** (`color.sample` →
+`color-sample`), intentionally aligned with the CSS-var / Tailwind `--color-*` namespace so a
+TS key, a CSS variable, and a utility all share one name. Spec **0003** formalizes the
+primitive-vs-semantic naming.
+
+### Known follow-up (deferred)
+
+A workspace-wide **`typecheck` Turbo task** (`tsc --noEmit` per package) is not yet wired —
+deferred from this remediation as engineer finding E4, to be picked up in a later spec.
 
 ## Component build (Canopy)
 
@@ -52,7 +90,8 @@ the cross-package + token seam. Vitest + Testing Library (jsdom) provides the sm
 ## Showcase + theming (Storybook)
 
 **Storybook 8** (`@storybook/react-vite`) with `@tailwindcss/vite`. A global CSS imports
-Tailwind + `@rogueoak/roots/tokens.css` + the Tailwind preset. `@storybook/addon-themes`
+Tailwind + `@rogueoak/roots/tokens.css` (the runtime `:root` vars) + the Tailwind
+`@theme inline` preset — no hand-written `:root` token block. `@storybook/addon-themes`
 `withThemeByClassName` wires a light/dark toolbar toggle (toggles `.dark`); the theme values
 are intentionally empty until 0004. `storybook build` emits `storybook-static/`.
 
@@ -60,7 +99,8 @@ are intentionally empty until 0004. `storybook build` emits `storybook-static/`.
 
 Two GitHub Actions workflows:
 
-- `ci.yml` (PRs + main): pnpm install → `pnpm build` → `pnpm test` → `pnpm lint`.
+- `ci.yml` (PRs + main): pnpm install → `pnpm build` → `pnpm test` → `pnpm lint` →
+  `pnpm format:check`.
 - `pages.yml` (push main): builds Storybook and deploys `apps/storybook/storybook-static`
   to GitHub Pages (`upload-pages-artifact` + `deploy-pages`, `pages: write` /
   `id-token: write`). **Requires Pages enabled** in repo settings (Source: GitHub Actions).

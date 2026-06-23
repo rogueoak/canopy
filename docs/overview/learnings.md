@@ -21,6 +21,20 @@ boolean `true` in that file. The old `pnpm.onlyBuiltDependencies` field in `pack
 **ignored** in pnpm 11 (it warns and drops it). Symptom if unresolved: `style-dictionary
 build` fails because pnpm's pre-run dep check (`pnpm install`) exits non-zero on every build.
 
+## Token-build formats must honor references, and seams need exercising input
+
+Custom Style Dictionary formats that emit a token's resolved `$value` silently flatten token
+*references* — only the built-in `css/variables` preserves them (via `outputReferences`).
+With a single flat sample token this looks fine and ships green; it would first break in 0004
+when semantic→primitive references and the `.dark` remap arrive — the exact theming seam the
+skeleton exists to prove. Fix: reference-aware custom formats, with `tokens.css` as the single
+owner of runtime `:root` vars and the Tailwind preset using `@theme inline` to reference them.
+See [`docs/feedback/0001-token-reference-seam.md`](../feedback/0001-token-reference-seam.md).
+
+**Apply it:** never prove a seam with degenerate input (a flat token, an empty list). Use
+input that actually exercises the mechanism — here, a token that references another — and add
+a test that asserts the mechanism survives into every generated output.
+
 ## Storybook under pnpm needs a hoist pattern
 
 Storybook's preset loader resolves modules (e.g. `@storybook/react-vite/preset`) from the
