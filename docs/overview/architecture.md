@@ -27,7 +27,8 @@ the README; Canopy is the whole system.
 (`$value`/`$type`) under `packages/roots/tokens/`, then compiled by
 `style-dictionary.config.mjs` into three web outputs in `dist/`:
 
-1. `tokens.css` — CSS custom properties (`:root { --color-sample: … }`) for runtime theming.
+1. `tokens.css` — CSS custom properties: `:root { … }` (light: all primitives + light
+   semantics) plus a `.dark { … }` block (dark: semantic overrides only) for runtime theming.
 2. `tokens.ts` — a typed `const` export (`tokens['color-sample']`) for programmatic,
    type-safe access. tsup then compiles it in place to `tokens.js` + `tokens.d.ts`.
 3. `tailwind-preset.css` — a Tailwind v4 `@theme inline { … }` block (custom SD format
@@ -45,7 +46,8 @@ DTCG sources under `packages/roots/tokens/`, split by concern:
 | File | Holds |
 | --- | --- |
 | `color/primitive.json` | the eight `50…950` ramps (`moss`/`bark`/`stone`/`amber` + functional) + `base.white` |
-| `color/semantic.json` | light-theme roles that **reference** primitives (surfaces, text, lines, roles, status) |
+| `color/semantic.json` | light-theme roles that **reference** primitives (surfaces, text, lines, roles, interaction states, status) |
+| `color/semantic.dark.json` | dark-theme overrides (same paths, dark `$value`s referencing primitives) — drives the `.dark` block (0004) |
 | `typography.json` | `font.sans`/`font.mono` family names, `text.*` scale, `font-weight.*`, `leading.*`, `tracking.*` (incl. `tighter`) |
 | `typography-roles.json` | composite semantic text roles (`text-role.display`/`h1…h4`/`body`/`body-sm`/`label`/`caption`/`code`) that **reference** the type primitives |
 | `space.json` | `space.0…32` (4px base) |
@@ -108,12 +110,14 @@ v4's `text-*` utility does not expand a font-family companion, so the `code` rol
 
 There is **one owner of runtime CSS variables**: `tokens.css`. Its `css/variables` format runs
 with `outputReferences: true`, so a semantic token that references a primitive emits a CSS
-reference — `--color-primary: var(--color-moss-600)` — rather than a flattened literal. A future
-`.dark` block in `tokens.css` (spec 0004) remaps the **semantic layer only** — the primitives
-are shared, theme-agnostic ramps and stay fixed; 0004 re-points each role (`--color-primary`,
-`--color-bg`, …) at a different ramp step. Because semantics are references and the other two
-outputs reference the runtime vars, that single remap cascades to every dependent var and every
-Tailwind utility.
+reference — `--color-primary: var(--color-moss-600)` — rather than a flattened literal. A
+**`.dark` block** in `tokens.css` (spec 0004) remaps the **semantic layer only** — the primitives
+are shared, theme-agnostic ramps and stay fixed; `.dark` re-points each role (`--color-primary`,
+`--color-bg`, …) at a different ramp step (e.g. `--color-primary: var(--color-moss-400)`). Because
+semantics are references and the other two outputs reference the runtime vars, that single remap
+cascades to every dependent var and every Tailwind utility — a UI re-themes by toggling one class
+(`dark`) on a root element, with **zero per-component code**. The Tailwind preset and typed TS
+export are **unchanged** by theming: they reference the runtime vars, which `.dark` overrides.
 
 The other two outputs **reference** those runtime vars instead of redeclaring values:
 
@@ -134,6 +138,41 @@ reference survives in all three outputs, so the seam can't silently flatten agai
 reads `dist/`, the Turbo `test` task depends on `["^build", "build"]` (each package builds
 before it is tested).
 
+### The `:root` / `.dark` emission — `themeConfig` factory (spec 0004; generalized 0003-fix)
+
+Style Dictionary 4 resolves `source`/`include` **per config instance**, not per platform, so
+`tokens.css` is produced by **one light pass + one pass per theme**, orchestrated by
+`packages/roots/build.mjs` (the package `build` script runs `node build.mjs && tsup`):
+
+1. **Light** — the default config (exported from `style-dictionary.config.mjs`) builds all
+   sources _except_ the per-theme `*.<theme>.json` files
+   (`source: ['tokens/**/*.json', '!tokens/**/*.*.json']`) into `:root` (`tokens.css`), the
+   Tailwind preset, and the typed TS export — exactly as 0003.
+2. **Each theme** — produced by a `themeConfig(name, glob)` **factory** (not a hand-written
+   config). The factory sources only that theme's semantic file (e.g.
+   `color/semantic.dark.json`) with `color/primitive.json` as `include` so dark references
+   (`{color.moss.400}`) resolve, and registers a per-theme `css/theme-overrides-<name>` format
+   that emits **only the theme's semantic tokens** (`token.isSource`, so the `include`d
+   primitives are filtered out) as `var(--primitive)` references wrapped in a `.<name> { … }`
+   selector, written to a sidecar `tokens.<name>.css`. The format **hard-errors** if a theme
+   token is a non-reference (a flat hex would silently fork the primitive layer); `darkConfig`'s
+   old dead `outputReferences` option is gone (the custom format does its own ref replacement).
+
+The themes are a small data list — `export const themes = [{ name: 'dark', glob: '…' }]`.
+**Adding a future theme is one entry + one `semantic.<name>.json` file** — no new hand-written
+config, format, or build line. `build.mjs` iterates `themes`, building each sidecar.
+
+`build.mjs` then composes `tokens.css` in a **single write**: it reads the freshly-built light
+`tokens.css` and concatenates each theme sidecar onto it via `writeFileSync` (replacing the old
+append-in-place). This makes the fold a **pure function of the build's outputs — idempotent**: a
+re-run (or watch run) can't double-append a second `.dark` block. The theme passes + fold run in
+a `try/finally` that removes every sidecar even on error, so a throw never leaves a stale sidecar
+or a half-themed file. One file owns `:root` (light) + `.dark` (dark); primitives live once (in
+`:root`), `.dark` carries only the ~37 semantic overrides, all reference-aware
+(`var(--color-stone-950)`, never a flat hex — the seam from feedback 0001). Consumers add
+`@custom-variant dark (&:where(.dark, .dark *))` to their global CSS for the rare explicit
+`dark:` utility; the common path needs none.
+
 ### Naming convention
 
 The token key is the **flattened, kebab-cased Style Dictionary path** (`color.moss.600` →
@@ -142,15 +181,50 @@ Tailwind namespace so a TS key, a CSS variable, and a utility all share one name
 ramp paths (`color-moss-600`); semantics are role paths (`color-primary`) that reference them.
 Components consume **only** semantic names.
 
-### Interaction-state tokens (decision — deferred to 0004)
+### Interaction-state tokens (spec 0004)
 
-`hover` / `active` / `disabled` state roles are **intentionally deferred to spec 0004**
-(theming), not added here. 0004 lands before the first components (0005), so states are ready
-before any Button. The convention recorded for 0004: a state role is named
-`color-<role>-<state>` (e.g. `color-primary-hover`, `color-primary-active`) and points at a
-**deeper ramp step**, with its **light and dark values defined together** in the same pass
-(following the existing semantic reference pattern) — no ad-hoc per-component values. This avoids
-defining states twice (once light here, once dark in 0004).
+`hover` / `active` / `disabled` state roles are defined in 0004 — before the first components
+(0005), so states are ready before any Button, with **light and dark values defined together**
+(no ad-hoc per-component values, no defining states twice).
+
+- **Hover / active** — `color-<role>-<state>` (`color-primary-hover`, `color-primary-active`,
+  same for `secondary`; `color-accent-hover`, `color-danger-hover`) point at an **adjacent ramp
+  step**. In light, hover/active go _deeper_ (e.g. `primary-hover` → `moss-700`, `primary-active`
+  → `moss-800`); in dark, where the base role is a _lighter_ step (`primary` → `moss-400`), they
+  go _lighter still_ (`primary-hover` → `moss-300`, `primary-active` → `moss-500`) so the change
+  stays perceptible against the dark base.
+- **Disabled** — a surface + foreground convention: `color-disabled` (a muted fill) +
+  `color-disabled-foreground` (its text). Components may _also_ use opacity where a control just
+  dims uniformly; the token pair is for when a distinct disabled fill reads better. Light uses
+  `stone-100` / `stone-400`; dark uses `stone-800` / `stone-600`.
+
+Because these are ordinary semantic tokens, they flow through the same `:root` / `.dark` seam and
+every output (utilities `bg-primary-hover`, the typed export, the dark remap) for free.
+
+The contrast guard (`tokens.test.ts`) asserts AA for the foreground each state shows on its
+**hover/active** fill, in **both** themes — a bad state step fails the build. `disabled` is
+deliberately excluded (WCAG 2.1 §1.4.3 exempts disabled controls). Two state steps were nudged
+in the 0003 fix so the near-black `.950` foreground keeps AA: light `accent-hover` lightens
+(`amber-500` → `amber-400`, since accent's foreground is near-black) and dark `secondary-active`
+lifts toward light (`bark-200`) rather than darkening.
+
+### Dark border step (spec 0004; corrected 0003-fix)
+
+Dark `border` → `stone-700` and `border-strong` → `stone-600` (not `stone-800`/`stone-700`). A
+`stone-800` border equals `surface-raised` (also `stone-800`) — a ~1.0:1 invisible hairline on
+popovers/menus — so the step was lifted one rung. Visual depth (border-vs-surface separation) is
+not caught by any text-contrast check, so it is verified by eye in the Theme/Colours stories;
+text-AA passing a 1.0:1 border was the gap feedback 0003 closed.
+
+### Moss-green refinement (spec 0004)
+
+The `moss` brand ramp was re-tuned **greener (less yellow)** in 0004 so the primary reads as
+green, not olive, and so the **light and dark primaries share one hue** (~90°). The ramp is
+anchored at `moss-600 #4c6634` (the light `color-primary`) and `moss-400 #80a85c` (the dark
+`color-primary`), with all eleven `50…950` steps re-derived coherently — luminance is monotonic
+and smooth, and every AA pair re-verified. This is the **only** palette change in 0004; every
+other ramp is unchanged. The dark theme deliberately re-points `color-primary` at the _lighter_
+`moss-400` (not the darker `moss-600`) for legibility on dark surfaces, while keeping the hue.
 
 ### Known follow-up (deferred)
 
@@ -172,10 +246,13 @@ Library (jsdom) provides the smoke test.
 Tailwind + the self-hosted fonts (`@fontsource-variable/figtree` + `.../geist-mono`) +
 `@rogueoak/roots/tokens.css` (the runtime `:root` vars) + the Tailwind `@theme inline` preset
 — no hand-written `:root` token block. The **Foundations** stories render the system as a
-living spec (ramps, semantic swatches, type specimen, scale, spacing, radii, elevation, motion,
-contrast table). `@storybook/addon-themes` `withThemeByClassName` wires a light/dark toolbar
-toggle (toggles `.dark`); the theme values are intentionally empty until 0004. `storybook build`
-emits `storybook-static/`.
+living spec (ramps, semantic swatches incl. interaction states, type specimen, scale, spacing,
+radii, elevation, motion, contrast table, and a **Theme** demo). `@storybook/addon-themes`
+`withThemeByClassName` wires a **functional** light/dark toolbar toggle that toggles `.dark` on
+the preview `<html>` (light default); because `.dark` overrides the semantic runtime vars, every
+story re-themes automatically (the semantic swatches even read their hex live, so the printed
+value flips with the theme). The global CSS adds `@custom-variant dark` for explicit `dark:`
+utilities. `storybook build` emits `storybook-static/`.
 
 Tailwind v4 generates utilities by **scanning source for literal class strings**, so the
 Foundations stories that iterate (radii, shadows, leading) carry full literal class names

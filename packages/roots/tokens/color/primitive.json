@@ -8,47 +8,47 @@
     },
     "moss": {
       "50": {
-        "$value": "#f4f6ea",
+        "$value": "#f1f5e8",
         "$type": "color"
       },
       "100": {
-        "$value": "#e7ebcf",
+        "$value": "#e2eacb",
         "$type": "color"
       },
       "200": {
-        "$value": "#d0d8a6",
+        "$value": "#c7d6a0",
         "$type": "color"
       },
       "300": {
-        "$value": "#b6c17e",
+        "$value": "#a6c077",
         "$type": "color"
       },
       "400": {
-        "$value": "#9da95c",
+        "$value": "#80a85c",
         "$type": "color"
       },
       "500": {
-        "$value": "#828f46",
+        "$value": "#688e45",
         "$type": "color"
       },
       "600": {
-        "$value": "#5a6638",
+        "$value": "#4c6634",
         "$type": "color"
       },
       "700": {
-        "$value": "#48522d",
+        "$value": "#3c5329",
         "$type": "color"
       },
       "800": {
-        "$value": "#394123",
+        "$value": "#2f4121",
         "$type": "color"
       },
       "900": {
-        "$value": "#2d331d",
+        "$value": "#25331c",
         "$type": "color"
       },
       "950": {
-        "$value": "#171b0e",
+        "$value": "#131b0d",
         "$type": "color"
       }
     },

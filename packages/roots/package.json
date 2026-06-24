@@ -19,7 +19,7 @@
     "./tailwind-preset.css": "./dist/tailwind-preset.css"
   },
   "scripts": {
-    "build": "pnpm clean && style-dictionary build --config style-dictionary.config.mjs && tsup",
+    "build": "pnpm clean && node build.mjs && tsup",
     "test": "vitest run",
     "lint": "eslint .",
     "clean": "rm -rf dist"

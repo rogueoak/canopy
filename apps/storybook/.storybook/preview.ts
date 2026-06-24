@@ -12,15 +12,18 @@ const preview: Preview = {
     },
   },
   decorators: [
-    // Light/dark toolbar toggle. Themes are intentionally EMPTY for now —
-    // the semantic remap + dark token values arrive in spec 0004. The toggle
-    // toggles the `.dark` class on the story root so the seam is wired today.
+    // Light/dark toolbar toggle (spec 0004). Functional: toggles the `.dark` class on the
+    // preview `<html>` (`parentSelector` defaults to `html`). Because `tokens.css` `.dark`
+    // overrides the semantic runtime vars, every utility (`bg-primary`, …) and every
+    // `var(--color-*)` read re-resolves under `.dark` — the whole UI re-themes with zero
+    // per-story code. Light is the default.
     withThemeByClassName({
       themes: {
         light: '',
         dark: 'dark',
       },
       defaultTheme: 'light',
+      parentSelector: 'html',
     }),
   ],
 };

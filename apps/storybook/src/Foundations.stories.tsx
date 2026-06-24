@@ -1,12 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useEffect, useRef, useState } from 'react';
 import { tokens } from '@rogueoak/roots';
 
 /**
- * Foundations — the living spec for Canopy Roots (spec 0003).
+ * Foundations — the living spec for Canopy Roots (spec 0003, theming added in 0004).
  *
  * Every swatch/sample is driven by the generated Roots tokens: Tailwind utilities
  * (backed by the @theme preset) where a utility exists, and the runtime CSS vars /
- * typed TS export otherwise. Light theme only — dark values land in 0004.
+ * typed TS export otherwise. Stories read correctly in BOTH themes — toggle Light/Dark
+ * in the toolbar (`.dark` on <html> remaps the semantic vars; see the Theme story).
  */
 
 const RAMP_STEPS = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
@@ -113,6 +115,19 @@ const SEMANTIC_GROUPS: { group: string; tokens: { name: string; util?: string }[
     ],
   },
   {
+    group: 'Interaction states',
+    tokens: [
+      { name: 'primary-hover', util: 'bg-primary-hover' },
+      { name: 'primary-active', util: 'bg-primary-active' },
+      { name: 'secondary-hover', util: 'bg-secondary-hover' },
+      { name: 'secondary-active', util: 'bg-secondary-active' },
+      { name: 'accent-hover', util: 'bg-accent-hover' },
+      { name: 'danger-hover', util: 'bg-danger-hover' },
+      { name: 'disabled', util: 'bg-disabled' },
+      { name: 'disabled-foreground', util: 'bg-disabled-foreground' },
+    ],
+  },
+  {
     group: 'Status',
     tokens: [
       { name: 'success', util: 'bg-success' },
@@ -127,10 +142,34 @@ const SEMANTIC_GROUPS: { group: string; tokens: { name: string; util?: string }[
   },
 ];
 
+// Read the swatch's LIVE computed colour so the hex label is accurate in BOTH themes
+// (the fill already flips via the runtime var; this makes the printed value flip too).
+// rgb→hex; re-reads whenever the `.dark` class on <html> changes.
+const rgbToHex = (rgb: string): string => {
+  const m = /rgba?\(([^)]+)\)/.exec(rgb);
+  if (!m) return rgb;
+  const [r, g, b] = m[1].split(',').map((p) => parseInt(p.trim(), 10));
+  const h = (n: number) => n.toString(16).padStart(2, '0');
+  return `#${h(r)}${h(g)}${h(b)}`;
+};
+
 function SemanticSwatch({ name, util }: { name: string; util?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [hex, setHex] = useState(tokenVal(`color-${name}`));
+  useEffect(() => {
+    const read = () => {
+      if (ref.current) setHex(rgbToHex(getComputedStyle(ref.current).backgroundColor));
+    };
+    read();
+    // Re-read when the theme class on <html> toggles.
+    const obs = new MutationObserver(read);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, [name]);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
       <div
+        ref={ref}
         className={util}
         style={{
           width: 40,
@@ -144,9 +183,7 @@ function SemanticSwatch({ name, util }: { name: string; util?: string }) {
         <code style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>
           color-{name}
         </code>
-        <div style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>
-          {tokenVal(`color-${name}`)}
-        </div>
+        <div style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>{hex}</div>
       </div>
     </div>
   );
@@ -159,7 +196,7 @@ function Colours() {
       {RAMPS.map((r) => (
         <Ramp key={r} name={r} />
       ))}
-      <h2 style={{ ...h2, marginTop: '2.5rem' }}>Semantic tokens (light)</h2>
+      <h2 style={{ ...h2, marginTop: '2.5rem' }}>Semantic tokens</h2>
       <p
         style={{
           fontSize: 'var(--text-sm)',
@@ -168,9 +205,11 @@ function Colours() {
           maxWidth: 640,
         }}
       >
+        Each hex below is read LIVE from the rendered swatch, so it reflects the active theme —
+        toggle Light/Dark in the toolbar and the values flip with the fills. On light,{' '}
         <code>accent</code> (amber.500) is a <strong>fill-only</strong> role — ~2.83:1 on{' '}
-        <code>bg</code>, below AA for text. Use <code>accent-strong</code> (amber.700, ~6.15:1) for
-        accent <strong>text / icon / border</strong> on light surfaces.
+        <code>bg</code>, below AA for text; use <code>accent-strong</code> (amber.700, ~6.15:1) for
+        accent <strong>text / icon / border</strong>.
       </p>
       {SEMANTIC_GROUPS.map((g) => (
         <div key={g.group} style={{ marginBottom: '1.75rem' }}>
@@ -569,27 +608,82 @@ function Motion() {
 
 /* ----------------------------------------------------------------- Contrast */
 
-const CONTRAST: [string, string, string][] = [
-  ['text on bg', '12.39', 'AA'],
-  ['text on surface', '13.49', 'AA'],
-  ['text-muted on surface', '5.94', 'AA'],
-  ['text-muted on bg', '5.45', 'AA'],
-  ['text-subtle on surface', '4.12', 'AA Large'],
-  ['text-subtle on bg', '3.79', 'AA Large'],
-  ['primary-foreground on primary', '5.66', 'AA'],
-  ['secondary-foreground on secondary', '5.67', 'AA'],
-  ['accent-foreground on accent', '5.52', 'AA'],
-  ['accent-strong on bg (fg use)', '6.15', 'AA'],
-  ['muted-foreground on muted', '4.94', 'AA'],
-  ['success-foreground on success', '4.81', 'AA'],
-  ['warning-foreground on warning', '4.95', 'AA'],
-  ['danger-foreground on danger', '6.78', 'AA'],
-  ['info-foreground on info', '6.61', 'AA'],
+// [label, foreground role var, background role var, min ratio]. min 3.0 = AA Large
+// (text-subtle is large-text-only); everything else is AA-normal (4.5). Ratios are
+// COMPUTED LIVE from the resolved CSS vars at render — so the numbers (and pass/fail)
+// flip with the theme instead of being hardcoded light-only strings (feedback 0003).
+const CONTRAST_PAIRS: [string, string, string, number][] = [
+  ['text on bg', 'color-text', 'color-bg', 4.5],
+  ['text on surface', 'color-text', 'color-surface', 4.5],
+  ['text-muted on surface', 'color-text-muted', 'color-surface', 4.5],
+  ['text-muted on bg', 'color-text-muted', 'color-bg', 4.5],
+  ['text-subtle on surface', 'color-text-subtle', 'color-surface', 3.0],
+  ['text-subtle on bg', 'color-text-subtle', 'color-bg', 3.0],
+  ['primary-foreground on primary', 'color-primary-foreground', 'color-primary', 4.5],
+  ['secondary-foreground on secondary', 'color-secondary-foreground', 'color-secondary', 4.5],
+  ['accent-foreground on accent', 'color-accent-foreground', 'color-accent', 4.5],
+  ['accent-strong on bg (fg use)', 'color-accent-strong', 'color-bg', 4.5],
+  ['muted-foreground on muted', 'color-muted-foreground', 'color-muted', 4.5],
+  ['success-foreground on success', 'color-success-foreground', 'color-success', 4.5],
+  ['warning-foreground on warning', 'color-warning-foreground', 'color-warning', 4.5],
+  ['danger-foreground on danger', 'color-danger-foreground', 'color-danger', 4.5],
+  ['info-foreground on info', 'color-info-foreground', 'color-info', 4.5],
 ];
 
+// sRGB → relative luminance → WCAG 2.1 contrast ratio. Mirrors the executable guard in
+// roots/tokens.test.ts so the story documents the same numbers the build asserts.
+const srgbToLinear = (c: number) => {
+  const s = c / 255;
+  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+};
+const luminanceRGB = (r: number, g: number, b: number) =>
+  0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
+const parseRGB = (rgb: string): [number, number, number] => {
+  const m = /rgba?\(([^)]+)\)/.exec(rgb);
+  if (!m) return [0, 0, 0];
+  const [r, g, b] = m[1].split(',').map((p) => parseInt(p.trim(), 10));
+  return [r, g, b];
+};
+const contrastRatio = (a: string, b: string) => {
+  const la = luminanceRGB(...parseRGB(a));
+  const lb = luminanceRGB(...parseRGB(b));
+  const [hi, lo] = la >= lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+type Row = { pair: string; ratio: number; min: number };
+
 function Contrast() {
+  // A hidden probe whose color/background we set to each role var, then read the resolved
+  // rgb() back via getComputedStyle — so the ratio reflects the ACTIVE theme. Recomputes
+  // when the `.dark` class on <html> toggles (same MutationObserver pattern as swatches).
+  const probe = useRef<HTMLDivElement>(null);
+  const [rows, setRows] = useState<Row[]>([]);
+  useEffect(() => {
+    const el = probe.current;
+    if (!el) return;
+    const resolve = (roleVar: string) => {
+      el.style.color = `var(--${roleVar})`;
+      return getComputedStyle(el).color;
+    };
+    const compute = () => {
+      setRows(
+        CONTRAST_PAIRS.map(([pair, fg, bg, min]) => ({
+          pair,
+          min,
+          ratio: contrastRatio(resolve(fg), resolve(bg)),
+        })),
+      );
+    };
+    compute();
+    const obs = new MutationObserver(compute);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <div style={wrap}>
+      <div ref={probe} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} />
       <h2 style={h2}>WCAG AA contrast — text roles</h2>
       <p
         style={{
@@ -599,9 +693,10 @@ function Contrast() {
           maxWidth: 640,
         }}
       >
-        All primary text roles meet WCAG 2.1 AA (≥ 4.5:1) on their intended surfaces.{' '}
-        <code>text-subtle</code> (tertiary text — captions, placeholders) meets AA for large /
-        non-essential text (≥ 3:1); use it only at ≥ 18.66px or ≥ 14px bold for AA-normal contexts.
+        Ratios are computed LIVE from the resolved tokens of the active theme — toggle Light/Dark in
+        the toolbar and the numbers (and pass/fail) flip with the tokens. <code>text-subtle</code>{' '}
+        (tertiary text — captions, placeholders) is held to AA-Large (≥ 3:1); every other pair to
+        AA-normal (≥ 4.5:1).
       </p>
       <table style={{ borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
         <thead>
@@ -612,31 +707,201 @@ function Contrast() {
           </tr>
         </thead>
         <tbody>
-          {CONTRAST.map(([pair, ratio, res]) => (
-            <tr key={pair} style={{ borderTop: '1px solid var(--color-border)' }}>
-              <td
-                style={{
-                  padding: '6px 16px 6px 0',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-xs)',
-                }}
-              >
-                {pair}
-              </td>
-              <td style={{ padding: '6px 16px' }}>{ratio}:1</td>
-              <td
-                style={{
-                  padding: '6px 0',
-                  color: res === 'AA' ? 'var(--color-success)' : 'var(--color-warning)',
-                  fontWeight: 600,
-                }}
-              >
-                {res}
-              </td>
-            </tr>
-          ))}
+          {rows.map(({ pair, ratio, min }) => {
+            const pass = ratio >= min;
+            const label = pass ? (min === 3.0 ? 'AA Large' : 'AA') : 'FAIL';
+            return (
+              <tr key={pair} style={{ borderTop: '1px solid var(--color-border)' }}>
+                <td
+                  style={{
+                    padding: '6px 16px 6px 0',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 'var(--text-xs)',
+                  }}
+                >
+                  {pair}
+                </td>
+                <td style={{ padding: '6px 16px' }}>{ratio.toFixed(2)}:1</td>
+                <td
+                  style={{
+                    padding: '6px 0',
+                    color: pass ? 'var(--color-success)' : 'var(--color-danger)',
+                    fontWeight: 600,
+                  }}
+                >
+                  {label}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------- Theme */
+
+// A small UI built ENTIRELY from semantic utilities / vars (no per-theme code). Toggle
+// the toolbar Light/Dark control: `.dark` on <html> overrides the semantic runtime vars,
+// so every surface/text/role/state below re-resolves automatically. This is the 0004
+// proof — re-theming with only the `.dark` class.
+function ThemeDemo() {
+  return (
+    <div style={wrap}>
+      <h2 style={h2}>Theme — one class re-themes everything</h2>
+      <p
+        style={{
+          fontSize: 'var(--text-sm)',
+          color: 'var(--color-text-muted)',
+          marginTop: 0,
+          maxWidth: 640,
+        }}
+      >
+        Flip the <strong>Light / Dark</strong> toggle in the toolbar. Nothing below has per-theme
+        code — every colour is a semantic token (<code>bg-surface</code>, <code>text-default</code>,{' '}
+        <code>bg-primary</code>, the interaction-state and status roles). Toggling{' '}
+        <code>.dark</code> on <code>&lt;html&gt;</code> remaps the semantic vars, so the whole card
+        re-themes.
+      </p>
+
+      <div
+        style={{
+          maxWidth: 520,
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-md)',
+          padding: '1.5rem',
+        }}
+      >
+        <div style={{ fontSize: 'var(--text-xl)', fontWeight: 600, color: 'var(--color-text)' }}>
+          Project moss
+        </div>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginTop: 4 }}>
+          A calm, natural surface. Body copy uses <code>text-muted</code>; this fine print uses{' '}
+          <span style={{ color: 'var(--color-text-subtle)' }}>text-subtle</span>.
+        </p>
+
+        {/* Role buttons — fills + foregrounds + a hover swatch, all semantic. */}
+        <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+          <span
+            style={{
+              background: 'var(--color-primary)',
+              color: 'var(--color-primary-foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+            }}
+          >
+            Primary
+          </span>
+          <span
+            style={{
+              background: 'var(--color-secondary)',
+              color: 'var(--color-secondary-foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+            }}
+          >
+            Secondary
+          </span>
+          <span
+            style={{
+              background: 'var(--color-accent)',
+              color: 'var(--color-accent-foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+            }}
+          >
+            Accent
+          </span>
+          <span
+            style={{
+              background: 'var(--color-disabled)',
+              color: 'var(--color-disabled-foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+            }}
+          >
+            Disabled
+          </span>
+        </div>
+
+        {/* Interaction-state ramp (base → hover → active), per role. */}
+        <div style={{ marginTop: '1.25rem' }}>
+          <div
+            style={{
+              fontSize: 'var(--text-xs)',
+              color: 'var(--color-text-subtle)',
+              marginBottom: 4,
+            }}
+          >
+            Interaction states (base · hover · active)
+          </div>
+          {(
+            [
+              ['primary', ['primary', 'primary-hover', 'primary-active']],
+              ['secondary', ['secondary', 'secondary-hover', 'secondary-active']],
+            ] as const
+          ).map(([role, steps]) => (
+            <div
+              key={role}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}
+            >
+              <code
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  width: 80,
+                  color: 'var(--color-text-subtle)',
+                }}
+              >
+                {role}
+              </code>
+              {steps.map((s) => (
+                <div
+                  key={s}
+                  title={`color-${s}`}
+                  style={{
+                    width: 48,
+                    height: 28,
+                    background: `var(--color-${s})`,
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Status row. */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1.25rem' }}>
+          {(['success', 'warning', 'danger', 'info'] as const).map((s) => (
+            <span
+              key={s}
+              style={{
+                background: `var(--color-${s})`,
+                color: `var(--color-${s}-foreground)`,
+                padding: '0.25rem 0.625rem',
+                borderRadius: 'var(--radius-full)',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 600,
+              }}
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -651,6 +916,7 @@ const meta = {
 export default meta;
 type Story = StoryObj;
 
+export const Theme_: Story = { name: 'Theme', render: () => <ThemeDemo /> };
 export const Colours_: Story = { name: 'Colours', render: () => <Colours /> };
 export const Typography_: Story = { name: 'Typography', render: () => <Typography /> };
 export const Spacing_: Story = { name: 'Spacing', render: () => <Spacing /> };

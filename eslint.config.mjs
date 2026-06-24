@@ -18,6 +18,14 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Node-context build/config scripts (e.g. style-dictionary.config.mjs, build.mjs)
+    // run under Node, so they get the Node globals (URL, process, …).
+    files: ['**/*.{mjs,js}'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
+  {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },

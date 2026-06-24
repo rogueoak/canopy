@@ -70,6 +70,16 @@
       "$type": "color",
       "$description": "Foreground on primary surfaces."
     },
+    "primary-hover": {
+      "$value": "{color.moss.700}",
+      "$type": "color",
+      "$description": "Primary role — hover state (deeper ramp step in light, lighter in dark)."
+    },
+    "primary-active": {
+      "$value": "{color.moss.800}",
+      "$type": "color",
+      "$description": "Primary role — active/pressed state."
+    },
     "secondary": {
       "$value": "{color.bark.600}",
       "$type": "color",
@@ -79,6 +89,16 @@
       "$value": "{color.bark.50}",
       "$type": "color",
       "$description": "Foreground on secondary surfaces."
+    },
+    "secondary-hover": {
+      "$value": "{color.bark.700}",
+      "$type": "color",
+      "$description": "Secondary role — hover state."
+    },
+    "secondary-active": {
+      "$value": "{color.bark.800}",
+      "$type": "color",
+      "$description": "Secondary role — active/pressed state."
     },
     "accent": {
       "$value": "{color.amber.500}",
@@ -94,6 +114,11 @@
       "$value": "{color.amber.950}",
       "$type": "color",
       "$description": "Foreground on accent (fill) surfaces."
+    },
+    "accent-hover": {
+      "$value": "{color.amber.400}",
+      "$type": "color",
+      "$description": "Accent role — hover state. accent is a fill role with a near-black foreground (accent-foreground = amber.950), so its hover lightens (amber.500 → .400) rather than darkening: amber.600 dropped the foreground to ~3.79:1 (below AA), amber.400 restores it to ~6.40:1 (feedback 0003)."
     },
     "muted": {
       "$value": "{color.stone.100}",
@@ -140,6 +165,21 @@
       "$value": "{color.danger.50}",
       "$type": "color",
       "$description": "Foreground on danger surfaces."
+    },
+    "danger-hover": {
+      "$value": "{color.danger.700}",
+      "$type": "color",
+      "$description": "Danger role — hover state."
+    },
+    "disabled": {
+      "$value": "{color.stone.100}",
+      "$type": "color",
+      "$description": "Disabled surface — a muted fill for disabled controls. Pairs with disabled-foreground; components may also use opacity where a control just dims."
+    },
+    "disabled-foreground": {
+      "$value": "{color.stone.400}",
+      "$type": "color",
+      "$description": "Foreground (text/icon) on disabled surfaces."
     },
     "info": {
       "DEFAULT": {
