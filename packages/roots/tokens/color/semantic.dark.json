@@ -41,14 +41,14 @@
       "$description": "Text on light/inverted surfaces (dark theme)."
     },
     "border": {
-      "$value": "{color.stone.800}",
-      "$type": "color",
-      "$description": "Default hairline border (dark)."
-    },
-    "border-strong": {
       "$value": "{color.stone.700}",
       "$type": "color",
-      "$description": "Stronger border / divider (dark)."
+      "$description": "Default hairline border (dark). stone.700 (not .800) so it stays visibly distinct from surface-raised (stone.800) — a .800 border was a ~1.0:1 invisible hairline on popovers/menus (feedback 0003)."
+    },
+    "border-strong": {
+      "$value": "{color.stone.600}",
+      "$type": "color",
+      "$description": "Stronger border / divider (dark). stone.600 keeps a visible step above the default border on raised surfaces (feedback 0003)."
     },
     "ring": {
       "$value": "{color.moss.400}",
@@ -96,9 +96,9 @@
       "$description": "Secondary role — hover state (dark)."
     },
     "secondary-active": {
-      "$value": "{color.bark.500}",
+      "$value": "{color.bark.200}",
       "$type": "color",
-      "$description": "Secondary role — active/pressed state (dark)."
+      "$description": "Secondary role — active/pressed state (dark). Lifts toward light (base .400 → hover .300 → active .200) so the near-black secondary-foreground (bark.950) keeps AA on the active surface; bark.500 was too dark (~3.77:1, below AA) — feedback 0003."
     },
     "accent": {
       "$value": "{color.amber.400}",

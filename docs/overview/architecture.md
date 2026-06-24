@@ -138,26 +138,40 @@ reference survives in all three outputs, so the seam can't silently flatten agai
 reads `dist/`, the Turbo `test` task depends on `["^build", "build"]` (each package builds
 before it is tested).
 
-### The `:root` / `.dark` emission (spec 0004)
+### The `:root` / `.dark` emission — `themeConfig` factory (spec 0004; generalized 0003-fix)
 
 Style Dictionary 4 resolves `source`/`include` **per config instance**, not per platform, so
-`tokens.css` is produced by **two SD passes**, orchestrated by `packages/roots/build.mjs`
-(the package `build` script runs `node build.mjs && tsup`):
+`tokens.css` is produced by **one light pass + one pass per theme**, orchestrated by
+`packages/roots/build.mjs` (the package `build` script runs `node build.mjs && tsup`):
 
 1. **Light** — the default config (exported from `style-dictionary.config.mjs`) builds all
-   sources _except_ `*.dark.json` (`source: ['tokens/**/*.json', '!tokens/**/*.dark.json']`)
-   into `:root` (`tokens.css`), the Tailwind preset, and the typed TS export — exactly as 0003.
-2. **Dark** — a second config (`darkConfig`) sources only `color/semantic.dark.json`, with
-   `color/primitive.json` as `include` so the dark references (`{color.moss.400}`) resolve. A
-   custom `css/dark-overrides` format emits **only the dark semantic tokens** (`token.isSource`,
-   so the `include`d primitives are filtered out) as `var(--primitive)` references wrapped in a
-   `.dark { … }` selector, written to a sidecar `tokens.dark.css`.
+   sources _except_ the per-theme `*.<theme>.json` files
+   (`source: ['tokens/**/*.json', '!tokens/**/*.*.json']`) into `:root` (`tokens.css`), the
+   Tailwind preset, and the typed TS export — exactly as 0003.
+2. **Each theme** — produced by a `themeConfig(name, glob)` **factory** (not a hand-written
+   config). The factory sources only that theme's semantic file (e.g.
+   `color/semantic.dark.json`) with `color/primitive.json` as `include` so dark references
+   (`{color.moss.400}`) resolve, and registers a per-theme `css/theme-overrides-<name>` format
+   that emits **only the theme's semantic tokens** (`token.isSource`, so the `include`d
+   primitives are filtered out) as `var(--primitive)` references wrapped in a `.<name> { … }`
+   selector, written to a sidecar `tokens.<name>.css`. The format **hard-errors** if a theme
+   token is a non-reference (a flat hex would silently fork the primitive layer); `darkConfig`'s
+   old dead `outputReferences` option is gone (the custom format does its own ref replacement).
 
-`build.mjs` then **appends** the `.dark` sidecar to `tokens.css` and deletes it, so one file
-owns `:root` (light) + `.dark` (dark). Primitives live once (in `:root`); `.dark` carries only
-the ~37 semantic overrides, all reference-aware (`var(--color-stone-950)`, never a flat hex —
-the seam from feedback 0001). Consumers add `@custom-variant dark (&:where(.dark, .dark *))` to
-their global CSS for the rare explicit `dark:` utility; the common path needs none.
+The themes are a small data list — `export const themes = [{ name: 'dark', glob: '…' }]`.
+**Adding a future theme is one entry + one `semantic.<name>.json` file** — no new hand-written
+config, format, or build line. `build.mjs` iterates `themes`, building each sidecar.
+
+`build.mjs` then composes `tokens.css` in a **single write**: it reads the freshly-built light
+`tokens.css` and concatenates each theme sidecar onto it via `writeFileSync` (replacing the old
+append-in-place). This makes the fold a **pure function of the build's outputs — idempotent**: a
+re-run (or watch run) can't double-append a second `.dark` block. The theme passes + fold run in
+a `try/finally` that removes every sidecar even on error, so a throw never leaves a stale sidecar
+or a half-themed file. One file owns `:root` (light) + `.dark` (dark); primitives live once (in
+`:root`), `.dark` carries only the ~37 semantic overrides, all reference-aware
+(`var(--color-stone-950)`, never a flat hex — the seam from feedback 0001). Consumers add
+`@custom-variant dark (&:where(.dark, .dark *))` to their global CSS for the rare explicit
+`dark:` utility; the common path needs none.
 
 ### Naming convention
 
@@ -186,6 +200,21 @@ Components consume **only** semantic names.
 
 Because these are ordinary semantic tokens, they flow through the same `:root` / `.dark` seam and
 every output (utilities `bg-primary-hover`, the typed export, the dark remap) for free.
+
+The contrast guard (`tokens.test.ts`) asserts AA for the foreground each state shows on its
+**hover/active** fill, in **both** themes — a bad state step fails the build. `disabled` is
+deliberately excluded (WCAG 2.1 §1.4.3 exempts disabled controls). Two state steps were nudged
+in the 0003 fix so the near-black `.950` foreground keeps AA: light `accent-hover` lightens
+(`amber-500` → `amber-400`, since accent's foreground is near-black) and dark `secondary-active`
+lifts toward light (`bark-200`) rather than darkening.
+
+### Dark border step (spec 0004; corrected 0003-fix)
+
+Dark `border` → `stone-700` and `border-strong` → `stone-600` (not `stone-800`/`stone-700`). A
+`stone-800` border equals `surface-raised` (also `stone-800`) — a ~1.0:1 invisible hairline on
+popovers/menus — so the step was lifted one rung. Visual depth (border-vs-surface separation) is
+not caught by any text-contrast check, so it is verified by eye in the Theme/Colours stories;
+text-AA passing a 1.0:1 border was the gap feedback 0003 closed.
 
 ### Moss-green refinement (spec 0004)
 

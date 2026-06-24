@@ -176,6 +176,19 @@ const PAIRS: [string, string, number][] = [
   ['color-danger-foreground', 'color-danger', 4.5],
   ['color-info-foreground', 'color-info', 4.5],
   ['color-ring', 'color-bg', 3.0],
+  // Interaction-state surfaces (feedback 0003): a component renders its role foreground
+  // on the hover/active fill too, so those pairs must also reach AA — in BOTH themes.
+  // Guarded here so a bad hover/active ramp step (e.g. one too dark for a near-black
+  // foreground) fails the build instead of shipping an illegible pressed state.
+  ['color-primary-foreground', 'color-primary-hover', 4.5],
+  ['color-primary-foreground', 'color-primary-active', 4.5],
+  ['color-secondary-foreground', 'color-secondary-hover', 4.5],
+  ['color-secondary-foreground', 'color-secondary-active', 4.5],
+  ['color-danger-foreground', 'color-danger-hover', 4.5],
+  ['color-accent-foreground', 'color-accent-hover', 4.5],
+  // `disabled` / `disabled-foreground` are DELIBERATELY excluded: WCAG 2.1 exempts
+  // disabled controls (1.4.3) from the contrast minimum, and the role is intentionally
+  // low-contrast. Its absence here is by design, not an oversight.
 ];
 
 describe('Roots semantic colours — WCAG AA contrast (computed from real hexes)', () => {
@@ -239,18 +252,66 @@ describe('Roots semantic colours — WCAG AA contrast (computed from real hexes)
 });
 
 describe('Roots theming — dark coverage guard', () => {
-  it('overrides every themed semantic colour var in the .dark block (no silent light fallthrough)', () => {
-    const { root, dark } = splitThemeBlocks(read('tokens.css'));
-
-    // Themed semantic vars are the `--color-*` vars in :root that REFERENCE a primitive
-    // (`var(--…)`), i.e. roles — not the primitive ramp literals (shared, theme-agnostic)
-    // and not composite text roles. Every one must have a `.dark` override; otherwise it
-    // would silently keep its light value under `.dark`.
-    const themed = Object.keys(root).filter(
+  // The set of themed semantic vars: `--color-*` vars in :root that REFERENCE a primitive
+  // (`var(--…)`), i.e. roles — not the primitive ramp literals (shared, theme-agnostic)
+  // and not composite text roles.
+  const themedRoles = (root: Record<string, string>) =>
+    Object.keys(root).filter(
       (name) => name.startsWith('color-') && /^var\(--[a-z0-9-]+\)$/i.test(root[name]),
     );
+
+  it('overrides every themed semantic colour var in the .dark block, and adds no dark-only role', () => {
+    const { root, dark } = splitThemeBlocks(read('tokens.css'));
+
+    // Forward: every themed light role MUST have a `.dark` override; otherwise it would
+    // silently keep its light value under `.dark`.
+    const themed = themedRoles(root);
     expect(themed.length).toBeGreaterThan(20); // sanity: the role set is present
     const missing = themed.filter((name) => dark[name] == null);
     expect(missing, `missing .dark override for: ${missing.join(', ')}`).toEqual([]);
+
+    // Reverse: no `.dark` role may exist without a `:root`/light base (a dark-only role
+    // would have nothing to override and reads as a typo/orphan).
+    const orphans = Object.keys(dark).filter((name) => root[name] == null);
+    expect(orphans, `.dark role with no :root/light base: ${orphans.join(', ')}`).toEqual([]);
+  });
+
+  it('makes every dark override differ from its light value (catches copy-paste)', () => {
+    const { root, dark } = splitThemeBlocks(read('tokens.css'));
+    // A dark override re-pointing at the SAME primitive var as light is usually a
+    // copy-paste slip — the role would be visually identical across themes. The lone
+    // legitimate exception is a DELIBERATELY theme-invariant foreground: `accent` is a
+    // fill role with a near-black foreground (amber.950) that reads on the amber fill in
+    // BOTH themes (light fill amber.500, dark fill amber.400), so accent-foreground is
+    // intentionally the same primitive in both. Allowlisted explicitly so any *new*
+    // identical pair still fails.
+    const THEME_INVARIANT = new Set(['color-accent-foreground']);
+    const identical = Object.keys(dark).filter(
+      (name) => dark[name] === root[name] && !THEME_INVARIANT.has(name),
+    );
+    expect(
+      identical,
+      `dark override identical to light (copy-paste?): ${identical.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('points every dark override at a PRIMITIVE ramp path (never another semantic)', () => {
+    const { dark } = splitThemeBlocks(read('tokens.css'));
+    // Each dark value is `var(--<name>)`; the referenced name must be a primitive ramp
+    // step (`color-<ramp>-<step>`), not another semantic role var. Referencing a semantic
+    // would chain the cascade through a second role and is never intended.
+    const RAMP_REF =
+      /^var\(--color-(moss|bark|stone|amber|base|success|warning|danger|info)-[a-z0-9]+\)$/i;
+    const bad = Object.entries(dark)
+      .filter(([name]) => name.startsWith('color-'))
+      .filter(([, value]) => !RAMP_REF.test(value))
+      .map(([name, value]) => `${name}: ${value}`);
+    expect(bad, `dark override not pointing at a primitive ramp: ${bad.join(', ')}`).toEqual([]);
+  });
+
+  it('emits exactly one `.dark {` block in tokens.css (so splitThemeBlocks cannot mis-split)', () => {
+    const css = read('tokens.css');
+    const count = css.match(/\.dark \{/g)?.length ?? 0;
+    expect(count, `expected exactly one .dark block, found ${count}`).toBe(1);
   });
 });

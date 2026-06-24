@@ -71,10 +71,13 @@ per-component code.
 
 - **Dark theme** (`color/semantic.dark.json`) — a dark remap of **every** semantic colour role
   (surfaces invert to `stone-950/900/800`, text lightens to `stone-50/300/400`, borders to
-  `stone-800/700`, `primary` → the lighter `moss-400`, secondary/accent/status retuned), authored
-  as DTCG tokens that **reference** primitives (never flattened). Emitted as a `.dark { … }` block
-  in `tokens.css` that overrides only the semantic runtime vars; primitives (shared ramps) are not
-  repeated.
+  `stone-700/600` — kept a step above `surface-raised` so they stay visible, `primary` → the
+  lighter `moss-400`, secondary/accent/status retuned), authored as DTCG tokens that
+  **reference** primitives (never flattened). Emitted as a `.dark { … }` block in `tokens.css`
+  that overrides only the semantic runtime vars; primitives (shared ramps) are not repeated.
+- **Theme factory** — non-default themes are produced by a `themeConfig(name, glob)` factory and
+  a small `themes` data list, with an idempotent single-write build. Adding a future theme is one
+  list entry + one `semantic.<name>.json` file — no new hand-written config, format, or build line.
 - **Runtime switching** — class-based `.dark` on a root element. Because utilities and the typed
   export reference the runtime vars, toggling `.dark` re-resolves `bg-primary`, `text-default`, …
   automatically. The Tailwind preset and TS export are unchanged. A `@custom-variant dark` is
@@ -85,13 +88,18 @@ per-component code.
   + `color-disabled-foreground` convention. **Light and dark values defined together.**
 - **Moss-green refinement** — the brand `moss` ramp re-tuned greener (less yellow); light primary
   `moss-600 #4c6634` and dark primary `moss-400 #80a85c` share one hue. Only `moss` changed.
-- **AA in both themes** — the executable contrast test now resolves role pairs for **light _and_
+- **AA in both themes** — the executable contrast test resolves role pairs for **light _and_
   dark** (reading the `.dark` block, chasing references to primitive hexes) and asserts AA in each,
-  plus a **coverage guard** that every themed semantic var has a `.dark` override (no silent
-  light fallthrough). Two dark status fills (`danger`/`info`) use the `.300` step (not `.400`) so
-  their near-black foreground reaches AA.
+  including the **interaction-state** surfaces (foreground on `*-hover`/`*-active` for
+  primary/secondary/danger/accent); `disabled` is deliberately excluded (WCAG exempts disabled
+  controls). Coverage guards assert every themed var has a `.dark` override that **differs** from
+  light (no copy-paste, no silent fallthrough, no dark-only orphan), references a **primitive ramp**
+  path, and that exactly one `.dark` block exists. Status fills `danger`/`info` use `.300` in dark,
+  and `accent-hover` (light) / `secondary-active` (dark) were nudged so their near-black foreground
+  reaches AA.
 - **Storybook** — a **functional** Light/Dark toolbar toggle (flips `.dark` on `<html>`); all
-  Foundations stories read correctly in both themes (semantic swatches read their hex live), plus
-  a **Theme** demo card built only from semantic utilities that re-themes with the toggle.
+  Foundations stories read correctly in both themes (semantic swatches read their hex live; the
+  **Contrast** table computes ratios live per theme), plus a **Theme** demo card built only from
+  semantic utilities that re-themes with the toggle.
 
 Not yet built (later specs): real components (0005+), native Swift token target, npm publish.

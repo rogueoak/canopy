@@ -608,27 +608,82 @@ function Motion() {
 
 /* ----------------------------------------------------------------- Contrast */
 
-const CONTRAST: [string, string, string][] = [
-  ['text on bg', '12.39', 'AA'],
-  ['text on surface', '13.49', 'AA'],
-  ['text-muted on surface', '5.94', 'AA'],
-  ['text-muted on bg', '5.45', 'AA'],
-  ['text-subtle on surface', '4.12', 'AA Large'],
-  ['text-subtle on bg', '3.79', 'AA Large'],
-  ['primary-foreground on primary', '5.66', 'AA'],
-  ['secondary-foreground on secondary', '5.67', 'AA'],
-  ['accent-foreground on accent', '5.52', 'AA'],
-  ['accent-strong on bg (fg use)', '6.15', 'AA'],
-  ['muted-foreground on muted', '4.94', 'AA'],
-  ['success-foreground on success', '4.81', 'AA'],
-  ['warning-foreground on warning', '4.95', 'AA'],
-  ['danger-foreground on danger', '6.78', 'AA'],
-  ['info-foreground on info', '6.61', 'AA'],
+// [label, foreground role var, background role var, min ratio]. min 3.0 = AA Large
+// (text-subtle is large-text-only); everything else is AA-normal (4.5). Ratios are
+// COMPUTED LIVE from the resolved CSS vars at render — so the numbers (and pass/fail)
+// flip with the theme instead of being hardcoded light-only strings (feedback 0003).
+const CONTRAST_PAIRS: [string, string, string, number][] = [
+  ['text on bg', 'color-text', 'color-bg', 4.5],
+  ['text on surface', 'color-text', 'color-surface', 4.5],
+  ['text-muted on surface', 'color-text-muted', 'color-surface', 4.5],
+  ['text-muted on bg', 'color-text-muted', 'color-bg', 4.5],
+  ['text-subtle on surface', 'color-text-subtle', 'color-surface', 3.0],
+  ['text-subtle on bg', 'color-text-subtle', 'color-bg', 3.0],
+  ['primary-foreground on primary', 'color-primary-foreground', 'color-primary', 4.5],
+  ['secondary-foreground on secondary', 'color-secondary-foreground', 'color-secondary', 4.5],
+  ['accent-foreground on accent', 'color-accent-foreground', 'color-accent', 4.5],
+  ['accent-strong on bg (fg use)', 'color-accent-strong', 'color-bg', 4.5],
+  ['muted-foreground on muted', 'color-muted-foreground', 'color-muted', 4.5],
+  ['success-foreground on success', 'color-success-foreground', 'color-success', 4.5],
+  ['warning-foreground on warning', 'color-warning-foreground', 'color-warning', 4.5],
+  ['danger-foreground on danger', 'color-danger-foreground', 'color-danger', 4.5],
+  ['info-foreground on info', 'color-info-foreground', 'color-info', 4.5],
 ];
 
+// sRGB → relative luminance → WCAG 2.1 contrast ratio. Mirrors the executable guard in
+// roots/tokens.test.ts so the story documents the same numbers the build asserts.
+const srgbToLinear = (c: number) => {
+  const s = c / 255;
+  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+};
+const luminanceRGB = (r: number, g: number, b: number) =>
+  0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
+const parseRGB = (rgb: string): [number, number, number] => {
+  const m = /rgba?\(([^)]+)\)/.exec(rgb);
+  if (!m) return [0, 0, 0];
+  const [r, g, b] = m[1].split(',').map((p) => parseInt(p.trim(), 10));
+  return [r, g, b];
+};
+const contrastRatio = (a: string, b: string) => {
+  const la = luminanceRGB(...parseRGB(a));
+  const lb = luminanceRGB(...parseRGB(b));
+  const [hi, lo] = la >= lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+type Row = { pair: string; ratio: number; min: number };
+
 function Contrast() {
+  // A hidden probe whose color/background we set to each role var, then read the resolved
+  // rgb() back via getComputedStyle — so the ratio reflects the ACTIVE theme. Recomputes
+  // when the `.dark` class on <html> toggles (same MutationObserver pattern as swatches).
+  const probe = useRef<HTMLDivElement>(null);
+  const [rows, setRows] = useState<Row[]>([]);
+  useEffect(() => {
+    const el = probe.current;
+    if (!el) return;
+    const resolve = (roleVar: string) => {
+      el.style.color = `var(--${roleVar})`;
+      return getComputedStyle(el).color;
+    };
+    const compute = () => {
+      setRows(
+        CONTRAST_PAIRS.map(([pair, fg, bg, min]) => ({
+          pair,
+          min,
+          ratio: contrastRatio(resolve(fg), resolve(bg)),
+        })),
+      );
+    };
+    compute();
+    const obs = new MutationObserver(compute);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <div style={wrap}>
+      <div ref={probe} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} />
       <h2 style={h2}>WCAG AA contrast — text roles</h2>
       <p
         style={{
@@ -638,9 +693,10 @@ function Contrast() {
           maxWidth: 640,
         }}
       >
-        All primary text roles meet WCAG 2.1 AA (≥ 4.5:1) on their intended surfaces.{' '}
-        <code>text-subtle</code> (tertiary text — captions, placeholders) meets AA for large /
-        non-essential text (≥ 3:1); use it only at ≥ 18.66px or ≥ 14px bold for AA-normal contexts.
+        Ratios are computed LIVE from the resolved tokens of the active theme — toggle Light/Dark in
+        the toolbar and the numbers (and pass/fail) flip with the tokens. <code>text-subtle</code>{' '}
+        (tertiary text — captions, placeholders) is held to AA-Large (≥ 3:1); every other pair to
+        AA-normal (≥ 4.5:1).
       </p>
       <table style={{ borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
         <thead>
@@ -651,29 +707,33 @@ function Contrast() {
           </tr>
         </thead>
         <tbody>
-          {CONTRAST.map(([pair, ratio, res]) => (
-            <tr key={pair} style={{ borderTop: '1px solid var(--color-border)' }}>
-              <td
-                style={{
-                  padding: '6px 16px 6px 0',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-xs)',
-                }}
-              >
-                {pair}
-              </td>
-              <td style={{ padding: '6px 16px' }}>{ratio}:1</td>
-              <td
-                style={{
-                  padding: '6px 0',
-                  color: res === 'AA' ? 'var(--color-success)' : 'var(--color-warning)',
-                  fontWeight: 600,
-                }}
-              >
-                {res}
-              </td>
-            </tr>
-          ))}
+          {rows.map(({ pair, ratio, min }) => {
+            const pass = ratio >= min;
+            const label = pass ? (min === 3.0 ? 'AA Large' : 'AA') : 'FAIL';
+            return (
+              <tr key={pair} style={{ borderTop: '1px solid var(--color-border)' }}>
+                <td
+                  style={{
+                    padding: '6px 16px 6px 0',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 'var(--text-xs)',
+                  }}
+                >
+                  {pair}
+                </td>
+                <td style={{ padding: '6px 16px' }}>{ratio.toFixed(2)}:1</td>
+                <td
+                  style={{
+                    padding: '6px 0',
+                    color: pass ? 'var(--color-success)' : 'var(--color-danger)',
+                    fontWeight: 600,
+                  }}
+                >
+                  {label}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -116,9 +116,9 @@
       "$description": "Foreground on accent (fill) surfaces."
     },
     "accent-hover": {
-      "$value": "{color.amber.600}",
+      "$value": "{color.amber.400}",
       "$type": "color",
-      "$description": "Accent role — hover state."
+      "$description": "Accent role — hover state. accent is a fill role with a near-black foreground (accent-foreground = amber.950), so its hover lightens (amber.500 → .400) rather than darkening: amber.600 dropped the foreground to ~3.79:1 (below AA), amber.400 restores it to ~6.40:1 (feedback 0003)."
     },
     "muted": {
       "$value": "{color.stone.100}",

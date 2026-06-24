@@ -80,6 +80,32 @@ but failing as a foreground — because the table had only validated the fill us
 hand-maintained table — compute it from the real token values in a test. And validate a colour
 role for **all** its uses (fill *and* foreground), not just one.
 
+## Guard the full token surface, test visual depth, and make composed build outputs idempotent
+
+The 0004 contrast guard covered base role pairs but **not the interaction-state tokens**
+(`*-hover`, `*-active`) — exactly the surfaces a Button renders its foreground on. A near-black
+`.950` foreground on a too-dark hover/active step shipped green: light `accent-hover` (amber.600)
+was 3.79:1 and dark `secondary-active` (bark.500) 3.77:1, both below AA, undetected because the
+test only checked base roles. Worse, **visual depth is invisible to text-contrast checks**: dark
+`border` mapped to `stone-800` — identical to `surface-raised` — a literal **1.0:1 hairline** that
+every text-AA assertion happily ignores. And `build.mjs` composed `tokens.css` by *appending* the
+`.dark` sidecar, only safe because `clean` ran first; a standalone/watch run double-appended, and
+a throw between append and cleanup left a stale sidecar + half-themed file. Finally the Storybook
+contrast table was light-only hardcoded strings that didn't flip with `.dark`.
+
+Fixes: extend the both-theme guard to foreground-on-`hover`/`-active` (nudging the two failing
+state steps — accent-hover *lightens* since its fg is near-black, secondary-active lifts to
+bark-200); `disabled` stays excluded **with a comment** (WCAG exempts disabled controls); lift
+dark `border`→`stone-700`/`border-strong`→`stone-600` for a visible step; rewrite the build as a
+**single `writeFileSync` of light + theme blocks** (pure function of inputs → idempotent) inside
+`try/finally`; and make the story compute ratios **live per theme** from resolved CSS vars.
+
+**Apply it:** guard the **whole token surface a component will touch** (states, not just base
+roles), in every theme. Test **visual depth** (border-vs-surface separation), not only text
+legibility — a 1.0:1 border passes every contrast check. Composed build artifacts should be
+**pure functions of their inputs** (single write, idempotent), never in-place appends, with
+`try/finally` cleanup. And living-doc tables must be **computed**, never hardcoded, or they drift.
+
 ## Tailwind v4 emits utilities only for class names it sees as literal strings
 
 Tailwind v4 generates utilities by scanning source for **literal** class strings. A story that
