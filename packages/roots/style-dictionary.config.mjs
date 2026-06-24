@@ -240,8 +240,51 @@ StyleDictionary.registerFormat({
   },
 });
 
-export default {
-  source: ['tokens/**/*.json'],
+/**
+ * Custom format: the `.dark` semantic override block (spec 0004).
+ *
+ * The dark theme is a remap of the SEMANTIC layer only — primitives (the shared,
+ * theme-agnostic ramps) are NOT repeated. This format runs over a dictionary built from
+ * the dark semantic source (`semantic.dark.json`) WITH the primitives included as
+ * `include` (so references resolve), then emits ONLY the semantic tokens — each as a
+ * `var(--<primitive>)` reference (reference-aware, never flattened — the seam from
+ * feedback 0001) — wrapped in a `.dark { … }` selector. Appended after `:root` in
+ * `tokens.css`, it overrides the runtime semantic vars so every utility (`bg-primary`)
+ * and dependent var re-resolves under `.dark` with zero per-component code.
+ *
+ * `include` tokens (the primitives) carry `isSource: false`, so filtering on
+ * `token.isSource` keeps only the dark semantic overrides — primitives are not re-emitted.
+ */
+StyleDictionary.registerFormat({
+  name: 'css/dark-overrides',
+  format: ({ dictionary }) => {
+    const lines = dictionary.allTokens
+      .filter((token) => token.isSource)
+      .map((token) => {
+        const original = token.original.$value ?? token.original.value;
+        let value = token.$value ?? token.value;
+        if (usesReferences(original)) {
+          value = String(original);
+          for (const ref of getReferences(original, dictionary.tokens)) {
+            const refPath = ref.path ?? ref.ref;
+            value = value.replaceAll(`{${refPath.join('.')}}`, `var(--${ref.name})`);
+          }
+        }
+        return `  --${token.name}: ${value};`;
+      });
+    return `\n/* Dark theme — semantic remap (spec 0004). Overrides the :root semantic vars;\n   primitives (shared ramps) are NOT repeated. Toggle by adding the \`dark\` class to a\n   root element. */\n.dark {\n${lines.join('\n')}\n}\n`;
+  },
+});
+
+/**
+ * Light build (the default config). The dark semantic source (`*.dark.json`) is
+ * EXCLUDED from `source` so it never pollutes the light `:root` build — it is consumed
+ * only by the separate dark config below. The three outputs (runtime CSS vars, Tailwind
+ * preset, typed TS) are unchanged from 0003: they reference the runtime vars, which the
+ * `.dark` block overrides, so a theme flip cascades to every utility automatically.
+ */
+const lightConfig = {
+  source: ['tokens/**/*.json', '!tokens/**/*.dark.json'],
   platforms: {
     css: {
       transforms: cssTransforms,
@@ -276,3 +319,31 @@ export default {
     },
   },
 };
+
+/**
+ * Dark build (spec 0004). A SEPARATE Style Dictionary instance over the dark semantic
+ * source, with the primitives `include`d so dark references (`{color.moss.400}`)
+ * resolve. The `css/dark-overrides` format emits ONLY the dark semantic tokens
+ * (`token.isSource`) as `var(--primitive)` references wrapped in a `.dark { … }` block —
+ * primitives are not repeated. `build.mjs` runs this after the light build and appends
+ * its single sidecar file (`tokens.dark.css`) to `tokens.css`.
+ */
+export const darkConfig = {
+  include: ['tokens/color/primitive.json'],
+  source: ['tokens/color/semantic.dark.json'],
+  platforms: {
+    dark: {
+      transforms: cssTransforms,
+      buildPath: 'dist/',
+      files: [
+        {
+          destination: 'tokens.dark.css',
+          format: 'css/dark-overrides',
+          options: { outputReferences: true },
+        },
+      ],
+    },
+  },
+};
+
+export default lightConfig;

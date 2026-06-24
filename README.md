@@ -68,11 +68,12 @@ The system is **two-tier**, so theming is a remap of one layer and never touches
 - **Primitive ramps** — the raw palette, `50…950`: `moss` (brand), `bark`, `stone` (neutrals),
   `amber` (accent), and desaturated functional ramps `success` / `warning` / `danger` / `info`.
   Muted & natural; moss/olive brand. Primitives are **never used by components directly**.
-- **Semantic tokens** — light-theme roles that **reference** primitives: surfaces
+- **Semantic tokens** — theme roles that **reference** primitives: surfaces
   (`color-bg`, `color-surface`, `color-muted`), text (`color-text`, `color-text-muted`,
   `color-text-subtle`), lines (`color-border`, `color-ring`), roles (`color-primary` +
-  `-foreground`, `secondary`, `accent`) and status (`success`/`warning`/`danger`/`info`).
-  Components consume **only** these. _(Dark theme + runtime switching land in 0004.)_
+  `-foreground`, `secondary`, `accent`), interaction states (`-hover`/`-active`, plus a
+  `color-disabled` + `-foreground` convention) and status (`success`/`warning`/`danger`/`info`).
+  Components consume **only** these. Each role has a **light and a dark value** — see Theming.
 
 Alongside colour: **typography** (Figtree sans + Geist Mono, type scale `text-xs…6xl`, weights,
 leading, tracking), **spacing** (4px base), **radii**, **elevation** (`shadow-*`), and **motion**
@@ -98,6 +99,44 @@ pnpm add @fontsource-variable/figtree @fontsource-variable/geist-mono
 
 This pipeline is deliberately built to grow: a **native (Swift) target** can be added later
 as just another output platform, without rewriting a single token. _(native target: planned)_
+
+### Theming (light & dark)
+
+The theme is a property of the **token layer**, not your components. `tokens.css` declares the
+light theme on `:root` and a **`.dark`** block that re-points only the **semantic** vars at
+different primitive ramp steps (primitives are the shared, theme-agnostic palette and are not
+repeated). Because every utility (`bg-primary`, `text-default`, …) and `var(--color-*)` read
+resolves through those runtime vars, toggling a single class **re-themes the whole UI with zero
+per-component code**. Light is the default; add `dark` to a root element to flip:
+
+```ts
+// the one-line mechanism — toggle the class on <html> (or any container)
+document.documentElement.classList.toggle('dark');
+```
+
+Optional — respect the OS preference on first paint (before your app hydrates):
+
+```html
+<script>
+  // bootstrap: honour a saved choice, else the OS setting
+  const saved = localStorage.getItem('theme');
+  const dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.classList.toggle('dark', dark);
+</script>
+```
+
+The common path needs **no `dark:` utilities** — semantic tokens auto-flip. For the rare
+explicit case, add Tailwind's dark variant once in your global CSS so `dark:` utilities work:
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+Every semantic role meets **WCAG AA in both themes** — a build-time test computes the real
+contrast ratios for light _and_ dark and fails the build on any regression. Interaction-state
+roles (`color-primary-hover`/`-active`, `secondary`, `accent`, `danger-hover`) and a
+`color-disabled` surface + `color-disabled-foreground` convention are defined with light and
+dark values too, ready for the first components.
 
 ## Distribution
 
@@ -130,7 +169,8 @@ The component showcase — swatches, type specimens, and every component in ligh
 lives on **GitHub Pages**, built from Storybook and deployed by CI on every push to `main`:
 **https://rogueoak.github.io/canopy/**. The **Foundations** section is the living spec —
 colour ramps + semantic swatches, the Figtree type specimen and scale, spacing, radii,
-elevation, motion, and a WCAG AA contrast table. _(Light theme only; dark lands in 0004.)_
+elevation, motion, a WCAG AA contrast table, and a **Theme** demo. Use the toolbar
+**Light / Dark** toggle — every story reads correctly in both themes (it flips `.dark`).
 
 ## Development
 
@@ -154,9 +194,10 @@ Layout:
 | `packages/canopy` | `@rogueoak/canopy` | components, built to ESM + types (tsup)                                          |
 | `apps/storybook`  | _private_          | the Storybook showcase, deployed to GitHub Pages                                 |
 
-> Roots now ships the **real foundation** (0003): primitive ramps + semantic tokens, type,
-> spacing, radii, elevation, and motion. The placeholder `Sprout` component remains as the
-> token → component → Storybook seam proof; real components arrive in 0005.
+> Roots now ships the **real foundation** (0003) plus **light & dark theming** (0004):
+> primitive ramps + semantic tokens (light + dark, with interaction states), type, spacing,
+> radii, elevation, and motion. The placeholder `Sprout` component remains as the token →
+> component → Storybook seam proof; real components arrive in 0005.
 
 ## Roadmap
 
@@ -165,7 +206,7 @@ Built foundation-first, so there's **always working software and working docs** 
 - [x] **0001 — README & living docs** — this page; kept truthful as the system grows
 - [x] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
 - [x] **0003 — Roots** — the real palette, typography, and spacing (the foundation we lock)
-- [ ] **0004 — Light & dark theming** — semantic theme remap + runtime switching
+- [x] **0004 — Light & dark theming** — semantic theme remap + runtime switching
 - [ ] **0005 — Seeds** — the first components
 - [ ] **Twigs · Branches · Boughs** — composition layers, in turn
 

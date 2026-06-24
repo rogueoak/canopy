@@ -1,12 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { useEffect, useRef, useState } from 'react';
 import { tokens } from '@rogueoak/roots';
 
 /**
- * Foundations — the living spec for Canopy Roots (spec 0003).
+ * Foundations — the living spec for Canopy Roots (spec 0003, theming added in 0004).
  *
  * Every swatch/sample is driven by the generated Roots tokens: Tailwind utilities
  * (backed by the @theme preset) where a utility exists, and the runtime CSS vars /
- * typed TS export otherwise. Light theme only — dark values land in 0004.
+ * typed TS export otherwise. Stories read correctly in BOTH themes — toggle Light/Dark
+ * in the toolbar (`.dark` on <html> remaps the semantic vars; see the Theme story).
  */
 
 const RAMP_STEPS = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
@@ -113,6 +115,19 @@ const SEMANTIC_GROUPS: { group: string; tokens: { name: string; util?: string }[
     ],
   },
   {
+    group: 'Interaction states',
+    tokens: [
+      { name: 'primary-hover', util: 'bg-primary-hover' },
+      { name: 'primary-active', util: 'bg-primary-active' },
+      { name: 'secondary-hover', util: 'bg-secondary-hover' },
+      { name: 'secondary-active', util: 'bg-secondary-active' },
+      { name: 'accent-hover', util: 'bg-accent-hover' },
+      { name: 'danger-hover', util: 'bg-danger-hover' },
+      { name: 'disabled', util: 'bg-disabled' },
+      { name: 'disabled-foreground', util: 'bg-disabled-foreground' },
+    ],
+  },
+  {
     group: 'Status',
     tokens: [
       { name: 'success', util: 'bg-success' },
@@ -127,10 +142,34 @@ const SEMANTIC_GROUPS: { group: string; tokens: { name: string; util?: string }[
   },
 ];
 
+// Read the swatch's LIVE computed colour so the hex label is accurate in BOTH themes
+// (the fill already flips via the runtime var; this makes the printed value flip too).
+// rgb→hex; re-reads whenever the `.dark` class on <html> changes.
+const rgbToHex = (rgb: string): string => {
+  const m = /rgba?\(([^)]+)\)/.exec(rgb);
+  if (!m) return rgb;
+  const [r, g, b] = m[1].split(',').map((p) => parseInt(p.trim(), 10));
+  const h = (n: number) => n.toString(16).padStart(2, '0');
+  return `#${h(r)}${h(g)}${h(b)}`;
+};
+
 function SemanticSwatch({ name, util }: { name: string; util?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [hex, setHex] = useState(tokenVal(`color-${name}`));
+  useEffect(() => {
+    const read = () => {
+      if (ref.current) setHex(rgbToHex(getComputedStyle(ref.current).backgroundColor));
+    };
+    read();
+    // Re-read when the theme class on <html> toggles.
+    const obs = new MutationObserver(read);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, [name]);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
       <div
+        ref={ref}
         className={util}
         style={{
           width: 40,
@@ -144,9 +183,7 @@ function SemanticSwatch({ name, util }: { name: string; util?: string }) {
         <code style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)' }}>
           color-{name}
         </code>
-        <div style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>
-          {tokenVal(`color-${name}`)}
-        </div>
+        <div style={{ fontSize: 10, color: 'var(--color-text-subtle)' }}>{hex}</div>
       </div>
     </div>
   );
@@ -159,7 +196,7 @@ function Colours() {
       {RAMPS.map((r) => (
         <Ramp key={r} name={r} />
       ))}
-      <h2 style={{ ...h2, marginTop: '2.5rem' }}>Semantic tokens (light)</h2>
+      <h2 style={{ ...h2, marginTop: '2.5rem' }}>Semantic tokens</h2>
       <p
         style={{
           fontSize: 'var(--text-sm)',
@@ -168,9 +205,11 @@ function Colours() {
           maxWidth: 640,
         }}
       >
+        Each hex below is read LIVE from the rendered swatch, so it reflects the active theme —
+        toggle Light/Dark in the toolbar and the values flip with the fills. On light,{' '}
         <code>accent</code> (amber.500) is a <strong>fill-only</strong> role — ~2.83:1 on{' '}
-        <code>bg</code>, below AA for text. Use <code>accent-strong</code> (amber.700, ~6.15:1) for
-        accent <strong>text / icon / border</strong> on light surfaces.
+        <code>bg</code>, below AA for text; use <code>accent-strong</code> (amber.700, ~6.15:1) for
+        accent <strong>text / icon / border</strong>.
       </p>
       {SEMANTIC_GROUPS.map((g) => (
         <div key={g.group} style={{ marginBottom: '1.75rem' }}>
@@ -641,6 +680,172 @@ function Contrast() {
   );
 }
 
+/* -------------------------------------------------------------------- Theme */
+
+// A small UI built ENTIRELY from semantic utilities / vars (no per-theme code). Toggle
+// the toolbar Light/Dark control: `.dark` on <html> overrides the semantic runtime vars,
+// so every surface/text/role/state below re-resolves automatically. This is the 0004
+// proof — re-theming with only the `.dark` class.
+function ThemeDemo() {
+  return (
+    <div style={wrap}>
+      <h2 style={h2}>Theme — one class re-themes everything</h2>
+      <p
+        style={{
+          fontSize: 'var(--text-sm)',
+          color: 'var(--color-text-muted)',
+          marginTop: 0,
+          maxWidth: 640,
+        }}
+      >
+        Flip the <strong>Light / Dark</strong> toggle in the toolbar. Nothing below has per-theme
+        code — every colour is a semantic token (<code>bg-surface</code>, <code>text-default</code>,{' '}
+        <code>bg-primary</code>, the interaction-state and status roles). Toggling{' '}
+        <code>.dark</code> on <code>&lt;html&gt;</code> remaps the semantic vars, so the whole card
+        re-themes.
+      </p>
+
+      <div
+        style={{
+          maxWidth: 520,
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-md)',
+          padding: '1.5rem',
+        }}
+      >
+        <div style={{ fontSize: 'var(--text-xl)', fontWeight: 600, color: 'var(--color-text)' }}>
+          Project moss
+        </div>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginTop: 4 }}>
+          A calm, natural surface. Body copy uses <code>text-muted</code>; this fine print uses{' '}
+          <span style={{ color: 'var(--color-text-subtle)' }}>text-subtle</span>.
+        </p>
+
+        {/* Role buttons — fills + foregrounds + a hover swatch, all semantic. */}
+        <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+          <span
+            style={{
+              background: 'var(--color-primary)',
+              color: 'var(--color-primary-foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+            }}
+          >
+            Primary
+          </span>
+          <span
+            style={{
+              background: 'var(--color-secondary)',
+              color: 'var(--color-secondary-foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+            }}
+          >
+            Secondary
+          </span>
+          <span
+            style={{
+              background: 'var(--color-accent)',
+              color: 'var(--color-accent-foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+            }}
+          >
+            Accent
+          </span>
+          <span
+            style={{
+              background: 'var(--color-disabled)',
+              color: 'var(--color-disabled-foreground)',
+              padding: '0.5rem 0.875rem',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+            }}
+          >
+            Disabled
+          </span>
+        </div>
+
+        {/* Interaction-state ramp (base → hover → active), per role. */}
+        <div style={{ marginTop: '1.25rem' }}>
+          <div
+            style={{
+              fontSize: 'var(--text-xs)',
+              color: 'var(--color-text-subtle)',
+              marginBottom: 4,
+            }}
+          >
+            Interaction states (base · hover · active)
+          </div>
+          {(
+            [
+              ['primary', ['primary', 'primary-hover', 'primary-active']],
+              ['secondary', ['secondary', 'secondary-hover', 'secondary-active']],
+            ] as const
+          ).map(([role, steps]) => (
+            <div
+              key={role}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}
+            >
+              <code
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  width: 80,
+                  color: 'var(--color-text-subtle)',
+                }}
+              >
+                {role}
+              </code>
+              {steps.map((s) => (
+                <div
+                  key={s}
+                  title={`color-${s}`}
+                  style={{
+                    width: 48,
+                    height: 28,
+                    background: `var(--color-${s})`,
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Status row. */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1.25rem' }}>
+          {(['success', 'warning', 'danger', 'info'] as const).map((s) => (
+            <span
+              key={s}
+              style={{
+                background: `var(--color-${s})`,
+                color: `var(--color-${s}-foreground)`,
+                padding: '0.25rem 0.625rem',
+                borderRadius: 'var(--radius-full)',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 600,
+              }}
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------------------------------------------- Story wiring */
 
 const meta = {
@@ -651,6 +856,7 @@ const meta = {
 export default meta;
 type Story = StoryObj;
 
+export const Theme_: Story = { name: 'Theme', render: () => <ThemeDemo /> };
 export const Colours_: Story = { name: 'Colours', render: () => <Colours /> };
 export const Typography_: Story = { name: 'Typography', render: () => <Typography /> };
 export const Spacing_: Story = { name: 'Spacing', render: () => <Spacing /> };

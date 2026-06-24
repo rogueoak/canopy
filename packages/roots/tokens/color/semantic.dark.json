@@ -1,0 +1,197 @@
+{
+  "color": {
+    "bg": {
+      "$value": "{color.stone.950}",
+      "$type": "color",
+      "$description": "App background / page canvas (dark)."
+    },
+    "surface": {
+      "$value": "{color.stone.900}",
+      "$type": "color",
+      "$description": "Default surface (cards, panels) — dark."
+    },
+    "surface-raised": {
+      "$value": "{color.stone.800}",
+      "$type": "color",
+      "$description": "Raised surface (popovers, menus) — dark, lighter than surface."
+    },
+    "overlay": {
+      "$value": "{color.stone.950}",
+      "$type": "color",
+      "$description": "Scrim/overlay base (dark)."
+    },
+    "text": {
+      "$value": "{color.stone.50}",
+      "$type": "color",
+      "$description": "Default body text (light on dark)."
+    },
+    "text-muted": {
+      "$value": "{color.stone.300}",
+      "$type": "color",
+      "$description": "Muted/secondary text (dark)."
+    },
+    "text-subtle": {
+      "$value": "{color.stone.400}",
+      "$type": "color",
+      "$description": "Subtle/tertiary text — dark (large-text-only)."
+    },
+    "text-inverted": {
+      "$value": "{color.stone.900}",
+      "$type": "color",
+      "$description": "Text on light/inverted surfaces (dark theme)."
+    },
+    "border": {
+      "$value": "{color.stone.800}",
+      "$type": "color",
+      "$description": "Default hairline border (dark)."
+    },
+    "border-strong": {
+      "$value": "{color.stone.700}",
+      "$type": "color",
+      "$description": "Stronger border / divider (dark)."
+    },
+    "ring": {
+      "$value": "{color.moss.400}",
+      "$type": "color",
+      "$description": "Focus ring (dark)."
+    },
+    "ring-offset": {
+      "$value": "{color.stone.950}",
+      "$type": "color",
+      "$description": "Focus-ring offset / gap colour (dark — the page canvas)."
+    },
+    "primary": {
+      "$value": "{color.moss.400}",
+      "$type": "color",
+      "$description": "Primary brand role — a lighter moss step for legibility on dark."
+    },
+    "primary-foreground": {
+      "$value": "{color.moss.950}",
+      "$type": "color",
+      "$description": "Foreground on primary surfaces (dark — near-black on the lighter moss)."
+    },
+    "primary-hover": {
+      "$value": "{color.moss.300}",
+      "$type": "color",
+      "$description": "Primary role — hover state (dark — lighter)."
+    },
+    "primary-active": {
+      "$value": "{color.moss.500}",
+      "$type": "color",
+      "$description": "Primary role — active/pressed state (dark)."
+    },
+    "secondary": {
+      "$value": "{color.bark.400}",
+      "$type": "color",
+      "$description": "Secondary role (dark)."
+    },
+    "secondary-foreground": {
+      "$value": "{color.bark.950}",
+      "$type": "color",
+      "$description": "Foreground on secondary surfaces (dark)."
+    },
+    "secondary-hover": {
+      "$value": "{color.bark.300}",
+      "$type": "color",
+      "$description": "Secondary role — hover state (dark)."
+    },
+    "secondary-active": {
+      "$value": "{color.bark.500}",
+      "$type": "color",
+      "$description": "Secondary role — active/pressed state (dark)."
+    },
+    "accent": {
+      "$value": "{color.amber.400}",
+      "$type": "color",
+      "$description": "Accent role — FILL use on dark surfaces."
+    },
+    "accent-strong": {
+      "$value": "{color.amber.300}",
+      "$type": "color",
+      "$description": "Accent for FOREGROUND use (text/icon/border) on dark surfaces."
+    },
+    "accent-foreground": {
+      "$value": "{color.amber.950}",
+      "$type": "color",
+      "$description": "Foreground on accent (fill) surfaces (dark — near-black on amber)."
+    },
+    "accent-hover": {
+      "$value": "{color.amber.300}",
+      "$type": "color",
+      "$description": "Accent role — hover state (dark)."
+    },
+    "muted": {
+      "$value": "{color.stone.900}",
+      "$type": "color",
+      "$description": "Muted surface (subtle fills, hover backgrounds) — dark."
+    },
+    "muted-foreground": {
+      "$value": "{color.stone.300}",
+      "$type": "color",
+      "$description": "Foreground on muted surfaces (dark)."
+    },
+    "success": {
+      "DEFAULT": {
+        "$value": "{color.success.400}",
+        "$type": "color",
+        "$description": "Success status role (dark) — the lighter .400 reads on dark surfaces."
+      }
+    },
+    "success-foreground": {
+      "$value": "{color.success.950}",
+      "$type": "color",
+      "$description": "Foreground on success (fill) surfaces (dark)."
+    },
+    "warning": {
+      "DEFAULT": {
+        "$value": "{color.warning.400}",
+        "$type": "color",
+        "$description": "Warning status role (dark)."
+      }
+    },
+    "warning-foreground": {
+      "$value": "{color.warning.950}",
+      "$type": "color",
+      "$description": "Foreground on warning (fill) surfaces (dark)."
+    },
+    "danger": {
+      "DEFAULT": {
+        "$value": "{color.danger.300}",
+        "$type": "color",
+        "$description": "Danger/error status role (dark). Uses .300 (not .400 like success/warning) so the near-black .950 foreground reaches AA — danger's hue is darker at .400 (only ~4.03:1)."
+      }
+    },
+    "danger-foreground": {
+      "$value": "{color.danger.950}",
+      "$type": "color",
+      "$description": "Foreground on danger (fill) surfaces (dark)."
+    },
+    "danger-hover": {
+      "$value": "{color.danger.300}",
+      "$type": "color",
+      "$description": "Danger role — hover state (dark — lighter)."
+    },
+    "info": {
+      "DEFAULT": {
+        "$value": "{color.info.300}",
+        "$type": "color",
+        "$description": "Info status role (dark). Uses .300 (not .400) so the near-black .950 foreground reaches AA — info's hue is darker at .400 (only ~4.14:1)."
+      }
+    },
+    "info-foreground": {
+      "$value": "{color.info.950}",
+      "$type": "color",
+      "$description": "Foreground on info (fill) surfaces (dark)."
+    },
+    "disabled": {
+      "$value": "{color.stone.800}",
+      "$type": "color",
+      "$description": "Disabled surface (dark)."
+    },
+    "disabled-foreground": {
+      "$value": "{color.stone.600}",
+      "$type": "color",
+      "$description": "Foreground on disabled surfaces (dark)."
+    }
+  }
+}
