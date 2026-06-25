@@ -16,7 +16,9 @@ export const badgeVariants = cva(
   {
     variants: {
       variant: {
-        neutral: 'bg-muted text-muted-foreground',
+        // Hairline border so the subtle neutral fill stays delineated even on a muted/hover
+        // surface (the role fills below don't need it — their fills carry on any surface).
+        neutral: 'border border-border bg-muted text-muted-foreground',
         primary: 'bg-primary text-primary-foreground',
         success: 'bg-success text-success-foreground',
         warning: 'bg-warning text-warning-foreground',
@@ -47,6 +49,10 @@ export interface BadgeProps
  * recipe: cva variants over semantic tokens, `cn()` class merge, Radix `Slot` for `asChild`,
  * `forwardRef`, and a full spread of native `<span>` props. Renders a `<span>` by default and
  * is themed entirely by tokens — no per-component theme code.
+ *
+ * Accessibility: the badge's meaning must come from its TEXT, not its colour alone. If a badge
+ * ever conveys status by colour with no/again-ambiguous text (e.g. a future dot or count
+ * variant), give it an `aria-label` so it isn't lost to colour-blind or screen-reader users.
  */
 export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant, asChild = false, ...props }, ref) => {
