@@ -220,10 +220,10 @@ Layout:
 
 > Roots ships the **real foundation** (0003) plus **light & dark theming** (0004): primitive
 > ramps + semantic tokens (light + dark, with interaction states), type, spacing, radii,
-> elevation, and motion. The first **Seed** is live (0005): **Button** — the throwaway
-> `Sprout` placeholder is gone, replaced by a real, accessible component and the shared
-> component **recipe** (`cn()`, cva variants over semantic tokens, Radix `Slot` for `asChild`)
-> that Input, Label, and Badge will follow.
+> elevation, and motion. The first **Seeds** are live: **Button** (0005) and **Input** (0006) —
+> the throwaway `Sprout` placeholder is gone, replaced by real, accessible components and the
+> shared component **recipe** (`cn()`, cva variants over semantic tokens, Radix `Slot` for
+> `asChild`) that Label and Badge will follow.
 
 ## Roadmap
 
@@ -233,7 +233,9 @@ Built foundation-first, so there's **always working software and working docs** 
 - [x] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
 - [x] **0003 — Roots** — the real palette, typography, and spacing (the foundation we lock)
 - [x] **0004 — Light & dark theming** — semantic theme remap + runtime switching
-- [x] **0005 — Seeds** — **Button** ships as the first Seed + the component recipe; Input / Label follow
+- [x] **0005 — Seeds** — **Button** ships as the first Seed + the component recipe (cva · `cn` · Slot · semantic tokens)
+- [x] **0006 — Input** — the text-field Seed: sizes, focus ring, `disabled` + `aria-invalid` states
+- [ ] **0007 — Label** — Radix label that pairs with form fields
 - [x] **0008 — Badge** — status/metadata label; first to exercise the semantic status tokens (success / warning / danger / info) in both themes
 - [ ] **Twigs · Branches · Boughs** — composition layers, in turn
 
