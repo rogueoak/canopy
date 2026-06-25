@@ -33,6 +33,26 @@ describe('Button', () => {
     expect(btn).not.toHaveClass('bg-primary');
   });
 
+  it.each([
+    ['secondary', ['bg-secondary', 'text-secondary-foreground', 'hover:bg-secondary-hover']],
+    ['outline', ['border', 'border-border-strong', 'text-text', 'hover:bg-muted']],
+    ['ghost', ['text-text', 'hover:bg-muted', 'active:bg-muted']],
+  ] as const)('maps the %s variant to its token classes', (variant, classes) => {
+    render(<Button variant={variant}>{variant}</Button>);
+    const btn = screen.getByRole('button');
+    expect(btn).toHaveClass(...classes);
+    // a non-default variant never carries the primary fill
+    expect(btn).not.toHaveClass('bg-primary');
+  });
+
+  it('renders the icon size as a square with no horizontal padding', () => {
+    render(<Button size="icon" aria-label="Settings" />);
+    const btn = screen.getByRole('button', { name: 'Settings' });
+    expect(btn).toHaveClass('h-10', 'w-10', 'p-0');
+    // the icon size must not inherit the md text-padding
+    expect(btn).not.toHaveClass('px-4');
+  });
+
   it('includes the focus-visible ring (a11y) and disabled token classes', () => {
     render(<Button>Focus</Button>);
     const btn = screen.getByRole('button');
@@ -72,7 +92,7 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it('activates via the keyboard (focus + Enter and Space)', async () => {
+  it('focuses via Tab and activates on Enter, then on Space (each distinctly)', async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
     render(<Button onClick={onClick}>Key</Button>);
@@ -81,7 +101,9 @@ describe('Button', () => {
     await user.tab();
     expect(btn).toHaveFocus();
 
+    // Assert each key independently so a regression in one is not masked by the other.
     await user.keyboard('{Enter}');
+    expect(onClick).toHaveBeenCalledTimes(1);
     await user.keyboard(' ');
     expect(onClick).toHaveBeenCalledTimes(2);
   });

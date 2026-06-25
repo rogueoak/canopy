@@ -17,7 +17,10 @@
 /* Tailwind-source consumer seam (spec 0005, Decision A). Canopy ships `className` strings;
    the CONSUMER's Tailwind build generates (and tree-shakes) the utilities by scanning
    canopy's component source. Storybook is the first consumer — without this `@source`,
-   Button renders unstyled. Real apps point this at `@rogueoak/canopy` in node_modules. */
+   Button renders unstyled. `@source` takes a PATH (Tailwind v4 has no bare package-name
+   resolution — verified: `@source '@rogueoak/canopy'` emits nothing), so this points at
+   canopy's source by relative path. Real apps point it at `@rogueoak/canopy` in node_modules
+   (see the README) — the path is relative to THIS file, so adjust the depth to match yours. */
 @source '../../../packages/canopy/src';
 
 /* Dark theme (spec 0004). The common path needs NO `dark:` utilities — semantic tokens

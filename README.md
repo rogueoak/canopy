@@ -175,14 +175,17 @@ component source and emits its utilities into _your_ build:
 @import 'tailwindcss';
 @import '@rogueoak/roots/tailwind-preset.css';
 
-/* Generate canopy's component utilities by scanning its source. Without this,
-   canopy components render UNSTYLED — the utilities never get emitted. */
+/* Generate canopy's component utilities by scanning its shipped code. Without this,
+   canopy components render UNSTYLED — the utilities never get emitted. `@source` takes a
+   PATH (Tailwind v4 has no bare-package resolution), RELATIVE TO THIS CSS FILE — adjust the
+   `../` depth so it resolves to canopy in your node_modules. */
 @source '../node_modules/@rogueoak/canopy';
 ```
 
 (Add the `@rogueoak/roots/tokens.css` and `@fontsource` imports too — see
 [Tokens & theming](#tokens--theming).) This is exactly how the Storybook app — Canopy's
-first consumer — is wired. A prebuilt-CSS bundle for non-Tailwind consumers may come later.
+first consumer — is wired (it points `@source` at canopy's source by relative path). A
+prebuilt-CSS bundle for non-Tailwind consumers may come later.
 
 ## Storybook
 

@@ -4,6 +4,7 @@
   "description": "Canopy components — built on Roots tokens, Tailwind v4, Radix/shadcn (later).",
   "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "files": [
     "dist"
   ],

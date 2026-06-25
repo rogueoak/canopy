@@ -171,6 +171,11 @@
       "$type": "color",
       "$description": "Danger role — hover state."
     },
+    "danger-active": {
+      "$value": "{color.danger.800}",
+      "$type": "color",
+      "$description": "Danger role — active/pressed state. Deepens 600 → 700 → 800 like primary/secondary so the destructive button gives press feedback; near-white danger-foreground (danger.50) stays well above AA on the darker fill."
+    },
     "disabled": {
       "$value": "{color.stone.100}",
       "$type": "color",

@@ -155,3 +155,18 @@ never interpolate a class name), `cn()` (`clsx` + `tailwind-merge`) merges them 
 `className` so the caller always wins, and Radix `Slot` powers `asChild` for polymorphism. Style
 **only** with semantic tokens — no palette, no `dark:` on the common path — so light/dark stays a
 property of the token layer and the component never knows its theme.
+
+## Guard interaction-state tokens for within-theme distinctness
+
+A role's hover/active fills must differ from its **base within the same theme** — and the AA
++ dark-coverage guards did not check that. Dark `danger-hover` was left equal to dark `danger`
+(both `danger.300`), so the destructive button's hover was invisible in dark, yet every test
+passed: the contrast guard only checks legibility, the coverage guard only checks dark differs
+from light (feedback 0004). A swatch grid renders each token alone, so the collision is
+invisible there too — only the first interactive component using the role revealed it.
+
+**Apply it:** when adding any `-hover`/`-active` interaction token, assert base/hover/active
+resolve to distinct hexes in *each* theme (added to `tokens.test.ts`). And expect the first
+real component to exercise a role to surface token gaps the Foundations stories cannot — treat
+that component as the token layer's true acceptance test, and fix gaps at the token layer (so
+every component inherits the fix) rather than patching the component.

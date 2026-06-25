@@ -22,7 +22,8 @@ export const buttonVariants = cva(
         outline:
           'border border-border-strong bg-transparent text-text hover:bg-muted active:bg-muted',
         ghost: 'bg-transparent text-text hover:bg-muted active:bg-muted',
-        destructive: 'bg-danger text-danger-foreground hover:bg-danger-hover',
+        destructive:
+          'bg-danger text-danger-foreground hover:bg-danger-hover active:bg-danger-active',
       },
       size: {
         sm: 'h-8 px-3 text-sm',
@@ -43,6 +44,12 @@ export interface ButtonProps
   /**
    * Render as the single child element instead of a `<button>` (Radix `Slot`), merging
    * button classes/props onto it. Use for link-styled buttons: `<Button asChild><a … /></Button>`.
+   *
+   * Two caveats when `asChild` renders a non-`<button>` element:
+   * - `ref` is still typed `HTMLButtonElement` (the default element); narrow it at the call
+   *   site if you need the child's element type.
+   * - native `<button>` semantics don't apply — `disabled` (and the `disabled:*` styles) are
+   *   inert on, e.g., an `<a>`. Use `aria-disabled` + your own guard for a disabled link.
    */
   asChild?: boolean;
 }
