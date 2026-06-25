@@ -22,6 +22,7 @@ export default defineConfig({
     '@radix-ui/react-checkbox',
     '@radix-ui/react-switch',
     '@radix-ui/react-radio-group',
+    '@radix-ui/react-select',
     'class-variance-authority',
     'clsx',
     'tailwind-merge',

@@ -14,3 +14,25 @@ export { Switch } from './Switch';
 export type { SwitchProps } from './Switch';
 export { RadioGroup, RadioGroupItem } from './RadioGroup';
 export type { RadioGroupProps, RadioGroupItemProps } from './RadioGroup';
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
+} from './Select';
+export type {
+  SelectProps,
+  SelectTriggerProps,
+  SelectContentProps,
+  SelectItemProps,
+  SelectValueProps,
+  SelectGroupProps,
+  SelectLabelProps,
+  SelectSeparatorProps,
+} from './Select';
