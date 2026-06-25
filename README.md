@@ -235,7 +235,7 @@ Built foundation-first, so there's **always working software and working docs** 
 - [x] **0004 — Light & dark theming** — semantic theme remap + runtime switching
 - [x] **0005 — Seeds** — **Button** ships as the first Seed + the component recipe (cva · `cn` · Slot · semantic tokens)
 - [x] **0006 — Input** — the text-field Seed: sizes, focus ring, `disabled` + `aria-invalid` states
-- [ ] **0007 — Label** — Radix label that pairs with form fields
+- [x] **0007 — Label** — accessible, themed form **Label** (Radix Label; `htmlFor` focus; optional required `*`)
 - [x] **0008 — Badge** — status/metadata label; first to exercise the semantic status tokens (success / warning / danger / info) in both themes
 - [ ] **Twigs · Branches · Boughs** — composition layers, in turn
 
