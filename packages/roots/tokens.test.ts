@@ -185,6 +185,7 @@ const PAIRS: [string, string, number][] = [
   ['color-secondary-foreground', 'color-secondary-hover', 4.5],
   ['color-secondary-foreground', 'color-secondary-active', 4.5],
   ['color-danger-foreground', 'color-danger-hover', 4.5],
+  ['color-danger-foreground', 'color-danger-active', 4.5],
   ['color-accent-foreground', 'color-accent-hover', 4.5],
   // `disabled` / `disabled-foreground` are DELIBERATELY excluded: WCAG 2.1 exempts
   // disabled controls (1.4.3) from the contrast minimum, and the role is intentionally
@@ -313,5 +314,71 @@ describe('Roots theming — dark coverage guard', () => {
     const css = read('tokens.css');
     const count = css.match(/\.dark \{/g)?.length ?? 0;
     expect(count, `expected exactly one .dark block, found ${count}`).toBe(1);
+  });
+});
+
+describe('Roots interaction states — base/hover/active are distinct within each theme', () => {
+  // The contrast guard proves each fill is legible; this proves the three states of a role
+  // actually DIFFER inside a theme. The dark-coverage guard only compares dark-vs-light, so a
+  // hover that collided with its OWN base in one theme (dark `danger-hover` == dark `danger`,
+  // which made the destructive button's hover invisible in dark — feedback 0004) slipped
+  // straight through. This closes that gap in both themes.
+  const FAMILIES: [string, string[]][] = [
+    ['primary', ['color-primary', 'color-primary-hover', 'color-primary-active']],
+    ['secondary', ['color-secondary', 'color-secondary-hover', 'color-secondary-active']],
+    ['danger', ['color-danger', 'color-danger-hover', 'color-danger-active']],
+  ];
+
+  const distinctFailures = (label: string, resolve: (n: string) => string) => {
+    const fails: string[] = [];
+    for (const [role, steps] of FAMILIES) {
+      // Call with a single arg — `steps.map(resolve)` would pass the index as `resolve`'s
+      // second param (its `seen` accumulator), breaking the cycle guard.
+      const hexes = steps.map((step) => resolve(step));
+      for (let i = 0; i < hexes.length; i++) {
+        for (let j = i + 1; j < hexes.length; j++) {
+          if (hexes[i] === hexes[j]) {
+            fails.push(
+              `${label}: ${role} — ${steps[i]} and ${steps[j]} both resolve to ${hexes[i]}`,
+            );
+          }
+        }
+      }
+    }
+    return fails;
+  };
+
+  it('light: each role base/hover/active resolves to a different hex', async () => {
+    const { tokens } = await import('./dist/tokens.js');
+    const t = tokens as Record<string, string>;
+    const resolve = (name: string, seen = new Set<string>()): string => {
+      if (seen.has(name)) throw new Error(`reference cycle at ${name}`);
+      seen.add(name);
+      const raw = t[name];
+      if (raw == null) throw new Error(`unknown token: ${name}`);
+      const ref = /^var\(--([^)]+)\)$/.exec(raw.trim());
+      return ref ? resolve(ref[1], seen) : raw;
+    };
+    const fails = distinctFailures('light', resolve);
+    expect(fails, fails.join('\n')).toEqual([]);
+  });
+
+  it('dark: each role base/hover/active resolves to a different hex', () => {
+    const { root, dark } = splitThemeBlocks(read('tokens.css'));
+    const resolveVar = (name: string, seen = new Set<string>()): string => {
+      if (seen.has(name)) throw new Error(`reference cycle at ${name}`);
+      seen.add(name);
+      const raw = root[name];
+      if (raw == null) throw new Error(`unknown :root var: ${name}`);
+      const ref = /^var\(--([a-z0-9-]+)\)$/i.exec(raw);
+      return ref ? resolveVar(ref[1], seen) : raw;
+    };
+    const resolveDark = (name: string): string => {
+      const raw = dark[name] ?? root[name];
+      const ref = /^var\(--([a-z0-9-]+)\)$/i.exec(raw);
+      return ref ? resolveVar(ref[1]) : raw;
+    };
+    const fails = distinctFailures('dark', resolveDark);
+    expect(fails, fails.join('\n')).toEqual([]);
   });
 });

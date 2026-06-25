@@ -4,6 +4,7 @@
   "description": "Canopy components — built on Roots tokens, Tailwind v4, Radix/shadcn (later).",
   "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "files": [
     "dist"
   ],
@@ -27,11 +28,16 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@rogueoak/roots": "workspace:*"
+    "@radix-ui/react-slot": "^1.3.0",
+    "@rogueoak/roots": "workspace:*",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "jsdom": "^25.0.1",

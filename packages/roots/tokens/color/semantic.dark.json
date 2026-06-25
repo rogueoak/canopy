@@ -167,9 +167,14 @@
       "$description": "Foreground on danger (fill) surfaces (dark)."
     },
     "danger-hover": {
-      "$value": "{color.danger.300}",
+      "$value": "{color.danger.200}",
       "$type": "color",
-      "$description": "Danger role — hover state (dark — lighter)."
+      "$description": "Danger role — hover state (dark). Lifts toward light (base .300 → hover .200 → active .100), NOT .300 — at .300 it collided with the .300 base and the destructive hover was invisible in dark (feedback 0004). Going lighter keeps the near-black danger-foreground (danger.950) above AA on the fill."
+    },
+    "danger-active": {
+      "$value": "{color.danger.100}",
+      "$type": "color",
+      "$description": "Danger role — active/pressed state (dark). Continues the lighten-on-press path (.300 → .200 → .100) the dark theme uses where the foreground is near-black (cf. secondary .400 → .300 → .200); danger.950 stays well above AA on danger.100."
     },
     "info": {
       "DEFAULT": {

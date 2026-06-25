@@ -1,2 +1,2 @@
-export { Sprout } from './Sprout';
-export type { SproutProps } from './Sprout';
+export { Button, buttonVariants } from './Button';
+export type { ButtonProps } from './Button';
