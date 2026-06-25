@@ -19,6 +19,7 @@ export default defineConfig({
     '@rogueoak/roots',
     '@radix-ui/react-slot',
     '@radix-ui/react-label',
+    '@radix-ui/react-switch',
     'class-variance-authority',
     'clsx',
     'tailwind-merge',
