@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRef } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Input } from './Input';
 
 describe('Input', () => {
@@ -26,6 +26,14 @@ describe('Input', () => {
     const input = screen.getByRole<HTMLInputElement>('textbox');
     await user.type(input, 'maple');
     expect(input.value).toBe('maple');
+  });
+
+  it('fires onChange for each keystroke (controlled path)', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Input aria-label="Field" onChange={onChange} />);
+    await user.type(screen.getByRole('textbox'), 'oak');
+    expect(onChange).toHaveBeenCalledTimes(3);
   });
 
   it('does not accept input when disabled', async () => {

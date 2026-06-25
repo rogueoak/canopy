@@ -15,10 +15,11 @@ import { cn } from '../lib/cn';
  * keeping a11y and styling in lockstep with no extra prop.
  */
 export const inputVariants = cva(
-  // Base — shared by every size. Border + surface + text tokens; subtle placeholder; the
+  // Base — shared by every size. Border + surface + text tokens; muted placeholder (text-muted,
+  // not text-subtle: subtle is AA-Large-only and placeholder is small text — review 0006); the
   // focus-visible ring (a11y); the disabled token pair (not opacity); and the aria-invalid
   // danger overrides for border + ring.
-  'flex w-full rounded-md border border-border bg-surface px-3 text-sm text-text placeholder:text-text-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger',
+  'flex w-full rounded-md border border-border bg-surface px-3 text-sm text-text placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger',
   {
     variants: {
       size: {
