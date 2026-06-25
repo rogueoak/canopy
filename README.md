@@ -218,30 +218,25 @@ Layout:
 | `packages/canopy` | `@rogueoak/canopy` | components, built to ESM + types (tsup)                                          |
 | `apps/storybook`  | _private_          | the Storybook showcase, deployed to GitHub Pages                                 |
 
-> Roots ships the **real foundation** (0003) plus **light & dark theming** (0004): primitive
-> ramps + semantic tokens (light + dark, with interaction states), type, spacing, radii,
-> elevation, and motion. The first **Seeds** are live: **Button** (0005) and **Input** (0006) —
-> the throwaway `Sprout` placeholder is gone, replaced by real, accessible components and the
+> Roots ships the **real foundation** plus **light & dark theming**: primitive ramps + semantic
+> tokens (light + dark, with interaction states), type, spacing, radii, elevation, and motion.
+> The first **Seeds** are live — **Button**, **Input**, **Label**, and **Badge** — built on the
 > shared component **recipe** (`cn()`, cva variants over semantic tokens, Radix `Slot` for
-> `asChild`) that Label and Badge will follow.
+> `asChild`). More atoms are in progress.
 
 ## Roadmap
 
 Built foundation-first, so there's **always working software and working docs** at each step:
 
-- [x] **0001 — README & living docs** — this page; kept truthful as the system grows
-- [x] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
-- [x] **0003 — Roots** — the real palette, typography, and spacing (the foundation we lock)
-- [x] **0004 — Light & dark theming** — semantic theme remap + runtime switching
-- [x] **0005 — Seeds** — **Button** ships as the first Seed + the component recipe (cva · `cn` · Slot · semantic tokens)
-- [x] **0006 — Input** — the text-field Seed: sizes, focus ring, `disabled` + `aria-invalid` states
-- [ ] **0007 — Label** — Radix label that pairs with form fields
-- [x] **0008 — Badge** — status/metadata label; first to exercise the semantic status tokens (success / warning / danger / info) in both themes
-- [ ] **Twigs · Branches · Boughs** — composition layers, in turn
+- [x] **Roots** — tokens: palette, typography, spacing, radii, elevation, motion; light & dark theming
+- [x] **Seeds** — the atoms; first batch live (**Button · Input · Label · Badge**), more in progress
+- [ ] **Twigs** — molecules (FormField, SearchBar, Card)
+- [ ] **Branches** — organisms (NavBar, Dialog, DataTable)
+- [ ] **Boughs** — page scaffolds and layout patterns
 
-Development follows the [Spectra protocol](docs/spectra/protocol.md): every change is specced
-in [`docs/specs/`](docs/specs), built and tested before merge, and **this README is updated
-with each build** so the docs never outrun the software.
+Development follows the [Spectra protocol](docs/spectra/protocol.md): every change is built and
+tested before merge, and **this README is updated as the system grows** so the docs never
+outrun the software.
 
 ## License
 

@@ -247,7 +247,11 @@ property of the token layer (0004), not the component.
 
 - **`cn()`** (`src/lib/cn.ts`) — `twMerge(clsx(inputs))`. `clsx` resolves conditional/array/object
   class inputs; `tailwind-merge` de-dupes conflicting Tailwind utilities so a caller's `className`
-  always overrides a component's defaults (e.g. caller `px-10` drops the recipe's `px-4`).
+  always overrides a component's defaults (e.g. caller `px-10` drops the recipe's `px-4`). `twMerge`
+  is extended (`extendTailwindMerge`) to register the Roots typography roles (`text-display` /
+  `h1…h4` / `body` / `body-sm` / `label` / `caption` / `code`) in the `font-size` group — otherwise
+  it treats a composite role like `text-label` as a colour and drops it when combined with a real
+  colour (`text-text`); the extension keeps the role and colour axes orthogonal (spec 0007).
 - **cva variants** — `class-variance-authority` maps `variant` × `size` onto token-utility
   strings, with `defaultVariants`. Crucially every class string is a **full literal** — Tailwind
   v4's scanner only emits utilities it finds as literal strings in source, so a dynamically built

@@ -143,8 +143,9 @@ SearchBar) builds on. Reuses the 0005 recipe verbatim; no new infra or deps.
 
 - **Input** (`@rogueoak/canopy/seeds`) — a native `<input>` with sizes `sm` / `md` (default) /
   `lg` by height (`h-8` / `h-10` / `h-12`, `px-3`); the `border-border` / `bg-surface` / `text-text`
-  token set with a `placeholder:text-text-subtle` placeholder; the same focus-visible ring as Button;
-  a `disabled` state on the `bg-disabled` / `text-disabled-foreground` pair (plus `cursor-not-allowed`).
+  token set with a `placeholder:text-text-muted` placeholder (AA-normal; `text-subtle` is AA-Large-only);
+  the same focus-visible ring as Button; a `disabled` state on the `bg-disabled` / `text-disabled-foreground`
+  pair (plus `cursor-not-allowed`).
   The **invalid** state is the native `aria-invalid` attribute, styled via Tailwind's `aria-invalid:`
   variant (`aria-invalid:border-danger aria-invalid:ring-danger`) — the accessible attribute and the
   danger styling stay in lockstep with no extra prop. `forwardRef<HTMLInputElement>` + full native
@@ -154,9 +155,48 @@ SearchBar) builds on. Reuses the 0005 recipe verbatim; no new infra or deps.
 - **Stories** — a `Seeds/Input` section: a controls Playground plus Default, WithPlaceholder, Focused
   (interactive), Invalid (`aria-invalid`), Disabled, and Sizes; both themes via the toolbar toggle.
 - **Tests** — Vitest + Testing Library + `user-event`: renders a native input (`type` defaults to text);
-  `user.type` updates the value; `disabled` blocks input; `aria-invalid` applies the danger classes; each
-  size maps to its height; `cn` merges a caller `className`; native props (`type` / `placeholder` / `name`)
-  spread; ref forwards to the underlying input.
+  `user.type` updates the value; `onChange` fires per keystroke; `disabled` blocks input; `aria-invalid`
+  applies the danger classes; each size maps to its height; `cn` merges a caller `className`; native props
+  (`type` / `placeholder` / `name`) spread; ref forwards to the underlying input.
 
-Not yet built (later specs): Label / Badge + the rest of the atom catalogue
-(0007+), Twigs / Branches / Boughs, native Swift token target, npm publish.
+## Seeds: Label (0007)
+
+The form-field label atom — the foundation of accessible forms, built on the 0005 recipe.
+
+- **Label** (`@rogueoak/canopy/seeds`) — built on `@radix-ui/react-label`, so an `htmlFor`
+  pointing at a control's `id` both associates the two for assistive tech and focuses that
+  control on click. Styled with the semantic typography `label` role (`text-label`, which carries
+  its own medium weight) plus `text-text` — no per-component theme code; light **and** dark via the
+  token layer. `forwardRef`
+  + full native `<label>` prop spread + `cn()` merge. Optional `required` prop renders a trailing
+  danger-coloured `*` as `aria-hidden`, so the visual asterisk never pollutes the accessible name
+  (signal the requirement via the field's own `required` / `aria-required`).
+- **Recipe extension (shared infra):** `cn()`'s `tailwind-merge` is now extended to register the
+  Roots typography roles (`text-display` / `h1…h4` / `body` / `body-sm` / `label` / `caption` /
+  `code`) in the `font-size` group. Without this, tailwind-merge misclassifies a role like
+  `text-label` as a colour and silently drops it when combined with a real colour (`text-text`).
+  Label is the first Seed to pair a typography role with a colour. Dep added to canopy:
+  `@radix-ui/react-label` (also added to tsup's `external`).
+- **Stories** — a `Seeds/Label` section: standalone, required, and paired with a native `<input>`
+  via `htmlFor` (canopy Input ships separately in 0006); both themes via the toolbar toggle.
+- **Tests** — render, `htmlFor` association + click-to-focus, the `required` indicator keeps the
+  control's accessible name clean, caller `className` override, ref forwarding.
+
+## Seeds: Badge (0008)
+
+The status/metadata label atom — the first component to exercise the semantic status roles
+end-to-end, built on the 0005 recipe (no new deps; reuses Radix `Slot` for `asChild`).
+
+- **Badge** (`@rogueoak/canopy/seeds`) — a presentational `<span>` pill (`rounded-full px-2.5
+  py-0.5 text-xs font-medium`). Variants `neutral` (default) / `primary` / `success` / `warning` /
+  `danger` / `info` map to the role fills + `-foreground` pairs; `neutral` carries a hairline
+  `border border-border` so its subtle fill stays delineated on muted/hover surfaces. `asChild`
+  (Radix `Slot`), `forwardRef<HTMLSpanElement>`, native span prop spread, `cn()` merge. Meaning
+  comes from the text (colour alone is never the only signal). Semantic tokens only — both themes.
+- **Stories** — a `Seeds/Badge` section: every variant plus an `asChild` link; both themes.
+- **Tests** — default + each variant (`it.each`), the neutral-drop negative assertion, `asChild`
+  renders the child with no wrapper span, ref forwarding.
+
+Not yet built (later specs): the rest of the atom catalogue (0009+ — Checkbox, Switch, Textarea,
+Select, Tooltip, Avatar, Separator, Spinner, Skeleton, Kbd), Twigs / Branches / Boughs, the native
+Swift token target, and npm publish.
