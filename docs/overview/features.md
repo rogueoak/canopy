@@ -102,4 +102,39 @@ per-component code.
   **Contrast** table computes ratios live per theme), plus a **Theme** demo card built only from
   semantic utilities that re-themes with the toggle.
 
-Not yet built (later specs): real components (0005+), native Swift token target, npm publish.
+## Seeds: Button + the component recipe (0005)
+
+The first real **Seed** — and the shared **component recipe** every later atom follows. The
+throwaway `Sprout` placeholder is removed.
+
+- **Button** (`@rogueoak/canopy/seeds`) — variants `primary` (default) / `secondary` /
+  `outline` / `ghost` / `destructive`; sizes `sm` / `md` (default) / `lg` / `icon`; hover +
+  active via the 0004 interaction tokens; a `disabled` state using the `bg-disabled` /
+  `text-disabled-foreground` token pair (not opacity); a focus-visible ring on the `ring` /
+  `ring-offset` tokens; and `asChild` (Radix `Slot`) for polymorphism (e.g. a link styled as a
+  button). `forwardRef` + full native `<button>` prop spread. Styled **only** with semantic-token
+  utilities — no palette, no per-component theme code, no `dark:` on the common path — so it
+  works in light **and** dark via the token layer (0004).
+- **The recipe (shared infra, lives here):** a `cn()` util (`clsx` + `tailwind-merge`, so a
+  caller `className` always wins over defaults); `class-variance-authority` (cva) mapping
+  `variant` × `size` to **full literal** token-utility strings (Tailwind v4's scanner needs
+  literals); Radix primitives where behaviour/a11y warrant (`@radix-ui/react-slot` for `asChild`).
+  Deps added to canopy: `@radix-ui/react-slot`, `class-variance-authority`, `clsx`,
+  `tailwind-merge` (React stays a peer). Input / Label / Badge (0006–0008) reuse this recipe.
+- **Tailwind-source consumer seam (Decision A)** — canopy ships `className` strings, not a
+  prebuilt stylesheet. The consumer runs Tailwind v4 + the roots preset and adds
+  `@source '…/@rogueoak/canopy'` so the component utilities generate (and tree-shake) in their
+  own build, and their `.dark` flips canopy too. Storybook is the **first consumer**: its global
+  CSS adds `@source '../../../packages/canopy/src'` — without it Button renders unstyled. Documented
+  in the README quick start.
+- **Stories** — a `Seeds/Button` section: a controls Playground plus Variants, Sizes, States
+  (default · hover · disabled), `asChild` (a styled `<a>`), and With-icon stories; every story
+  reads correctly in both themes via the toolbar toggle (no per-story theme code).
+- **Tests** — Vitest + Testing Library + `user-event`: renders children; default and chosen
+  variant/size map to the expected token classes; the focus-ring + disabled token classes are
+  present; `cn` merges a caller `className` over defaults; pointer click fires `onClick`; disabled
+  blocks it; keyboard focus + Enter/Space activate; `asChild` renders the child element (anchor)
+  carrying the button classes; ref forwards to the underlying button.
+
+Not yet built (later specs): Input / Label / Badge + the rest of the atom catalogue
+(0006+), Twigs / Branches / Boughs, native Swift token target, npm publish.

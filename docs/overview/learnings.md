@@ -132,3 +132,26 @@ project root, which breaks under pnpm's isolated node_modules — `storybook bui
 `Cannot find module '@storybook/react-vite/preset'`. Fix: add `.npmrc` with
 `public-hoist-pattern[]=*storybook*` (and `@storybook/*`) so Storybook packages are hoisted
 where the loader looks.
+
+## Components ship class names; the consumer's Tailwind build emits the CSS
+
+Canopy's distribution model (spec 0005, Decision A — "Tailwind-source") is that components ship
+`className` strings, **not** a prebuilt stylesheet. The utilities only exist once a Tailwind v4
+build **scans canopy's source** and emits them — so every consumer (Storybook included) must add
+`@source` pointing at `@rogueoak/canopy` alongside the roots preset import. Forget it and
+components render **unstyled** with no error — nothing fails, the classes are just absent.
+
+**Apply it:** the `@source` line is part of the public wiring, not an internal detail — document
+it in the README and treat Storybook's `.storybook/tailwind.css` as the reference consumer setup.
+Verify styling by grepping the built `storybook-static` CSS for the component's utilities (e.g.
+`bg-primary{background-color:var(--color-primary)}`); their presence proves the seam end-to-end
+without a browser.
+
+## The component recipe: cva literals + cn() + Slot
+
+The first Seed (Button) locks the pattern later atoms copy: `cva` maps `variant` × `size` to
+**full literal** token-utility strings (the Tailwind-scanner constraint applies inside cva too —
+never interpolate a class name), `cn()` (`clsx` + `tailwind-merge`) merges them with the caller's
+`className` so the caller always wins, and Radix `Slot` powers `asChild` for polymorphism. Style
+**only** with semantic tokens — no palette, no `dark:` on the common path — so light/dark stays a
+property of the token layer and the component never knows its theme.

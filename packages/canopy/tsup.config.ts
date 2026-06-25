@@ -9,5 +9,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   sourcemap: false,
-  external: ['react', 'react-dom', '@rogueoak/roots'],
+  external: ['react', 'react-dom', '@rogueoak/roots', '@radix-ui/react-slot'],
 });

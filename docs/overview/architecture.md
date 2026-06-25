@@ -235,10 +235,42 @@ deferred from this remediation as engineer finding E4, to be picked up in a late
 
 `@rogueoak/canopy` is a **compiled npm library** (not a shadcn copy-in registry). **tsup**
 builds `src/index.ts` and `src/seeds/index.ts` to ESM + `.d.ts` with subpath exports (`.`
-and `./seeds`); React/react-dom are peer deps. Components consume Roots tokens via the typed
-`@rogueoak/roots` import (the placeholder `Sprout` reads `tokens['color-primary']`, a
-`var(--color-primary)` reference), proving the cross-package + token seam. Vitest + Testing
-Library (jsdom) provides the smoke test.
+and `./seeds`); React/react-dom are peer deps, and the Radix runtime deps
+(`@radix-ui/react-slot`) plus `@rogueoak/roots` are `external` (resolved at the consumer's
+install, never bundled). Vitest + Testing Library + `user-event` (jsdom) drive the component tests.
+
+### The component recipe (spec 0005)
+
+Established with Button and followed by every later atom. The rule is **semantic-token utilities
+only** — no palette values, no inline hex, no `dark:` on the common path — so light/dark is a
+property of the token layer (0004), not the component.
+
+- **`cn()`** (`src/lib/cn.ts`) — `twMerge(clsx(inputs))`. `clsx` resolves conditional/array/object
+  class inputs; `tailwind-merge` de-dupes conflicting Tailwind utilities so a caller's `className`
+  always overrides a component's defaults (e.g. caller `px-10` drops the recipe's `px-4`).
+- **cva variants** — `class-variance-authority` maps `variant` × `size` onto token-utility
+  strings, with `defaultVariants`. Crucially every class string is a **full literal** — Tailwind
+  v4's scanner only emits utilities it finds as literal strings in source, so a dynamically built
+  `bg-${role}` would never generate (the same constraint the Foundations data arrays already obey).
+- **Radix where behaviour/a11y warrant** — `@radix-ui/react-slot` powers `asChild`: when set, the
+  component renders `Slot` (merging its classes/props onto the single child element) instead of the
+  native tag, so a `<a>` can be styled as a Button without nesting an anchor in a button.
+- **`forwardRef` + native prop spread** — components forward a ref to the underlying element and
+  spread the rest of the native props, so they are drop-in for the host element.
+
+### Tailwind-source distribution (Decision A — spec 0005)
+
+Canopy ships **`className` strings, not CSS**. The consumer's own Tailwind v4 build generates (and
+tree-shakes) the component utilities by scanning canopy's source, and the consumer's `.dark` flips
+canopy along with the rest of their UI. Wiring is one global-CSS block: `@import 'tailwindcss'`,
+`@import '@rogueoak/roots/tailwind-preset.css'`, and **`@source` pointing at `@rogueoak/canopy`**
+(real apps: `'../node_modules/@rogueoak/canopy'`). Without the `@source`, components render
+unstyled because the utilities are never emitted. **Storybook is the first consumer** and wires
+this exact seam — `apps/storybook/.storybook/tailwind.css` adds
+`@source '../../../packages/canopy/src'` (the path to canopy's component source from that file),
+so a built Storybook contains Button's utilities (`bg-primary`, `hover:bg-primary-hover`,
+`disabled:bg-disabled`, the focus ring, …), all resolving to the runtime token vars. A
+prebuilt-CSS bundle for non-Tailwind consumers is deferred. Documented in the README quick start.
 
 ## Showcase + theming (Storybook)
 

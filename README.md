@@ -163,6 +163,27 @@ export function Example() {
 }
 ```
 
+### Wiring the styles (the Tailwind-source seam)
+
+Canopy ships **`className` strings** (Tailwind v4 utilities), not a prebuilt stylesheet —
+so your build generates and tree-shakes only the utilities you actually use, and your
+`.dark` flips canopy too. You wire this once in your global CSS: import Tailwind and the
+Roots preset, then add `@source` pointing at `@rogueoak/canopy` so Tailwind scans canopy's
+component source and emits its utilities into _your_ build:
+
+```css
+@import 'tailwindcss';
+@import '@rogueoak/roots/tailwind-preset.css';
+
+/* Generate canopy's component utilities by scanning its source. Without this,
+   canopy components render UNSTYLED — the utilities never get emitted. */
+@source '../node_modules/@rogueoak/canopy';
+```
+
+(Add the `@rogueoak/roots/tokens.css` and `@fontsource` imports too — see
+[Tokens & theming](#tokens--theming).) This is exactly how the Storybook app — Canopy's
+first consumer — is wired. A prebuilt-CSS bundle for non-Tailwind consumers may come later.
+
 ## Storybook
 
 The component showcase — swatches, type specimens, and every component in light and dark —
@@ -194,10 +215,12 @@ Layout:
 | `packages/canopy` | `@rogueoak/canopy` | components, built to ESM + types (tsup)                                          |
 | `apps/storybook`  | _private_          | the Storybook showcase, deployed to GitHub Pages                                 |
 
-> Roots now ships the **real foundation** (0003) plus **light & dark theming** (0004):
-> primitive ramps + semantic tokens (light + dark, with interaction states), type, spacing,
-> radii, elevation, and motion. The placeholder `Sprout` component remains as the token →
-> component → Storybook seam proof; real components arrive in 0005.
+> Roots ships the **real foundation** (0003) plus **light & dark theming** (0004): primitive
+> ramps + semantic tokens (light + dark, with interaction states), type, spacing, radii,
+> elevation, and motion. The first **Seed** is live (0005): **Button** — the throwaway
+> `Sprout` placeholder is gone, replaced by a real, accessible component and the shared
+> component **recipe** (`cn()`, cva variants over semantic tokens, Radix `Slot` for `asChild`)
+> that Input, Label, and Badge will follow.
 
 ## Roadmap
 
@@ -207,7 +230,7 @@ Built foundation-first, so there's **always working software and working docs** 
 - [x] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
 - [x] **0003 — Roots** — the real palette, typography, and spacing (the foundation we lock)
 - [x] **0004 — Light & dark theming** — semantic theme remap + runtime switching
-- [ ] **0005 — Seeds** — the first components
+- [x] **0005 — Seeds** — **Button** ships as the first Seed + the component recipe; Input / Label / Badge follow
 - [ ] **Twigs · Branches · Boughs** — composition layers, in turn
 
 Development follows the [Spectra protocol](docs/spectra/protocol.md): every change is specced
