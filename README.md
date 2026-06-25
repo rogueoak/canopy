@@ -233,7 +233,8 @@ Built foundation-first, so there's **always working software and working docs** 
 - [x] **0002 — Repo skeleton** — monorepo, token pipeline, Storybook, CI to GitHub Pages
 - [x] **0003 — Roots** — the real palette, typography, and spacing (the foundation we lock)
 - [x] **0004 — Light & dark theming** — semantic theme remap + runtime switching
-- [x] **0005 — Seeds** — **Button** ships as the first Seed + the component recipe; Input / Label / Badge follow
+- [x] **0005 — Seeds** — **Button** ships as the first Seed + the component recipe; Input / Label follow
+- [x] **0008 — Badge** — status/metadata label; first to exercise the semantic status tokens (success / warning / danger / info) in both themes
 - [ ] **Twigs · Branches · Boughs** — composition layers, in turn
 
 Development follows the [Spectra protocol](docs/spectra/protocol.md): every change is specced
