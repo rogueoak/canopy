@@ -1,7 +1,7 @@
 <!-- spectra:start -->
 ## Spectra protocol
 
-This repo uses **Spectra** — spec-driven development with learning feedback loops.
+This repo uses **Spectra** - spec-driven development with learning feedback loops.
 Read `docs/spectra/protocol.md` and follow it for every change:
 
 - **Trivial** change → implement directly. **Feature** → spec in `docs/specs/` (get
