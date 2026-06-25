@@ -165,8 +165,9 @@ The form-field label atom — the foundation of accessible forms, built on the 0
 
 - **Label** (`@rogueoak/canopy/seeds`) — built on `@radix-ui/react-label`, so an `htmlFor`
   pointing at a control's `id` both associates the two for assistive tech and focuses that
-  control on click. Styled with the semantic typography `label` role (`text-label font-medium
-  text-text`) — no per-component theme code; light **and** dark via the token layer. `forwardRef`
+  control on click. Styled with the semantic typography `label` role (`text-label`, which carries
+  its own medium weight) plus `text-text` — no per-component theme code; light **and** dark via the
+  token layer. `forwardRef`
   + full native `<label>` prop spread + `cn()` merge. Optional `required` prop renders a trailing
   danger-coloured `*` as `aria-hidden`, so the visual asterisk never pollutes the accessible name
   (signal the requirement via the field's own `required` / `aria-required`).
