@@ -187,3 +187,23 @@ was not needed. Prefer this attribute-driven pattern for future state-bearing Se
 attribute), which clashes with the recipe's `size` cva variant. Resolve by omitting the native
 name so the variant owns it: `Omit<React.InputHTMLAttributes<…>, 'size'> & VariantProps<…>`.
 Watch for the same collision on any future Seed whose variant reuses a native attribute name.
+
+## Teach `cn()` about Roots typography roles (the role-vs-colour merge collision)
+
+The Roots typography **roles** are composite `text-*` utilities that set font-size / line-height /
+font-weight (`text-label`, `text-h2`, …) — they share the `text-` prefix with colour utilities
+(`text-text`, `text-danger`) but target different CSS properties, so in the browser a role and a
+colour happily coexist. `tailwind-merge`, however, doesn't know the custom role values, so it
+misclassifies a role like `text-label` into its `text-color` group; when `cn('text-label text-text')`
+runs, the two "conflict" and one is **silently dropped before it ever reaches the DOM** (last one
+wins). Button never tripped this because it never pairs a role with a colour on one element; Label
+(`text-label … text-text`) is the first, and its render came out without its font-size.
+
+**Apply it:** `cn()` (`src/lib/cn.ts`) now uses `extendTailwindMerge` to register every Roots role
+in the `font-size` group, so a role and a colour are orthogonal — a Seed can carry both, and a
+caller can still override either axis independently (`className="text-danger"` swaps the colour and
+keeps the role; `text-h2` swaps the role and keeps the colour). Fixed once in the shared util, so
+every Seed inherits it. The lesson generalises: when a design-token namespace overloads a Tailwind
+prefix (`text-`, `bg-`, …) with a meaning tailwind-merge can't infer, teach the merge — don't work
+around it per component.
+>>>>>>> 93b7d85 (docs(overview): reflect Label (0007) + the cn() typography-role merge fix)
