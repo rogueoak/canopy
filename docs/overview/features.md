@@ -136,5 +136,27 @@ throwaway `Sprout` placeholder is removed.
   blocks it; keyboard focus + Enter/Space activate; `asChild` renders the child element (anchor)
   carrying the button classes; ref forwards to the underlying button.
 
-Not yet built (later specs): Input / Label / Badge + the rest of the atom catalogue
-(0006+), Twigs / Branches / Boughs, native Swift token target, npm publish.
+## Seeds: Input (0006)
+
+The text-field **Seed** — the field primitive every form control and Twig (FormField,
+SearchBar) builds on. Reuses the 0005 recipe verbatim; no new infra or deps.
+
+- **Input** (`@rogueoak/canopy/seeds`) — a native `<input>` with sizes `sm` / `md` (default) /
+  `lg` by height (`h-8` / `h-10` / `h-12`, `px-3`); the `border-border` / `bg-surface` / `text-text`
+  token set with a `placeholder:text-text-subtle` placeholder; the same focus-visible ring as Button;
+  a `disabled` state on the `bg-disabled` / `text-disabled-foreground` pair (plus `cursor-not-allowed`).
+  The **invalid** state is the native `aria-invalid` attribute, styled via Tailwind's `aria-invalid:`
+  variant (`aria-invalid:border-danger aria-invalid:ring-danger`) — the accessible attribute and the
+  danger styling stay in lockstep with no extra prop. `forwardRef<HTMLInputElement>` + full native
+  `<input>` prop spread (`type` defaults to `'text'`). Semantic tokens only — light **and** dark via 0004.
+- **API note** — `InputProps` omits the native numeric `size` attribute so the cva `size` variant owns
+  the name (`Omit<React.InputHTMLAttributes, 'size'>`). Exports `Input`, `inputVariants`, `InputProps`.
+- **Stories** — a `Seeds/Input` section: a controls Playground plus Default, WithPlaceholder, Focused
+  (interactive), Invalid (`aria-invalid`), Disabled, and Sizes; both themes via the toolbar toggle.
+- **Tests** — Vitest + Testing Library + `user-event`: renders a native input (`type` defaults to text);
+  `user.type` updates the value; `disabled` blocks input; `aria-invalid` applies the danger classes; each
+  size maps to its height; `cn` merges a caller `className`; native props (`type` / `placeholder` / `name`)
+  spread; ref forwards to the underlying input.
+
+Not yet built (later specs): Label / Badge + the rest of the atom catalogue
+(0007+), Twigs / Branches / Boughs, native Swift token target, npm publish.

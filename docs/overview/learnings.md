@@ -170,3 +170,20 @@ resolve to distinct hexes in *each* theme (added to `tokens.test.ts`). And expec
 real component to exercise a role to surface token gaps the Foundations stories cannot — treat
 that component as the token layer's true acceptance test, and fix gaps at the token layer (so
 every component inherits the fix) rather than patching the component.
+
+## Drive component state from native ARIA attributes, not a bespoke prop
+
+Input's invalid state is the native `aria-invalid` attribute styled through Tailwind v4's
+`aria-invalid:` variant (`aria-invalid:border-danger aria-invalid:ring-danger`) rather than a
+custom `invalid` boolean. The accessible attribute *is* the styling trigger, so the two can
+never drift, the caller uses a standard form a11y attribute, and no extra prop or effect is
+needed. Verified the variant compiles by grepping the built CSS for the escaped selector
+`.aria-invalid\:border-danger` (Tailwind v4 escapes `:` as `\:`), so `aria-[invalid=true]:`
+was not needed. Prefer this attribute-driven pattern for future state-bearing Seeds.
+
+## Native HTML attribute names can collide with cva variant names
+
+`React.InputHTMLAttributes<HTMLInputElement>` already declares `size` (the numeric HTML input
+attribute), which clashes with the recipe's `size` cva variant. Resolve by omitting the native
+name so the variant owns it: `Omit<React.InputHTMLAttributes<…>, 'size'> & VariantProps<…>`.
+Watch for the same collision on any future Seed whose variant reuses a native attribute name.
