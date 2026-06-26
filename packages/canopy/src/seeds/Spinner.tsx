@@ -38,11 +38,13 @@ export interface SpinnerProps
  * size variants, `cn()` class merge, `forwardRef`, and a full spread of native `<span>` props.
  * Pure CSS/SVG — no Radix, no dependency.
  *
- * Renders a `<span role="status">` wrapper carrying an `aria-label` (default `"Loading"`,
- * overridable via the native `aria-label` prop) plus a visually-hidden (`sr-only`) copy of that
- * label, so assistive tech announces the busy state. Inside sits an inline SVG — a faint circle
+ * Renders a `<span role="status">` whose accessible name comes from a SINGLE source — a
+ * visually-hidden (`sr-only`) text node holding the label (default `"Loading"`, overridable via
+ * the native `aria-label` prop). The label is NOT also set as an `aria-label` attribute: the
+ * `sr-only` text is what a polite live region announces on mount, and duplicating it as an
+ * attribute makes some screen readers say it twice. Inside sits an inline SVG — a faint circle
  * track and a brighter arc — drawn with `currentColor` and spun with `animate-spin`. The SVG is
- * `aria-hidden` so the status is announced once, from the label.
+ * `aria-hidden` so the status is announced once.
  *
  * Colour: the indicator inherits `currentColor`, so set a text-colour token on the Spinner (or an
  * ancestor) to tint it — `<Spinner className="text-primary" />`. Themed entirely by tokens — no
@@ -54,15 +56,9 @@ export interface SpinnerProps
 export const Spinner = React.forwardRef<HTMLSpanElement, SpinnerProps>(
   ({ className, size, 'aria-label': ariaLabel = 'Loading', ...props }, ref) => {
     return (
-      <span
-        ref={ref}
-        role="status"
-        aria-label={ariaLabel}
-        className={cn('inline-flex', className)}
-        {...props}
-      >
+      <span ref={ref} role="status" className={cn('inline-flex', className)} {...props}>
         <svg
-          className={cn(spinnerVariants({ size }))}
+          className={spinnerVariants({ size })}
           viewBox="0 0 24 24"
           fill="none"
           aria-hidden="true"

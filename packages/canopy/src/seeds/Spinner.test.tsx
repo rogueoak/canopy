@@ -4,21 +4,20 @@ import { describe, expect, it } from 'vitest';
 import { Spinner } from './Spinner';
 
 describe('Spinner', () => {
-  it('renders a status region with the default accessible name', () => {
+  it('renders a status live region whose label is the sr-only text (single source)', () => {
     render(<Spinner />);
-    const spinner = screen.getByRole('status', { name: 'Loading' });
+    const spinner = screen.getByRole('status');
     expect(spinner.tagName).toBe('SPAN');
+    // The label lives ONLY in the sr-only text node (no duplicate aria-label attribute), so a
+    // polite live region announces it once on mount.
+    expect(spinner).not.toHaveAttribute('aria-label');
+    expect(screen.getByText('Loading')).toHaveClass('sr-only');
   });
 
-  it('echoes the default label into a visually-hidden (sr-only) copy', () => {
-    render(<Spinner />);
-    const srText = screen.getByText('Loading');
-    expect(srText).toHaveClass('sr-only');
-  });
-
-  it('uses a custom aria-label as the accessible name and the sr-only text', () => {
+  it('uses a custom label (via the aria-label prop) as the sr-only text', () => {
     render(<Spinner aria-label="Saving changes" />);
-    expect(screen.getByRole('status', { name: 'Saving changes' })).toBeInTheDocument();
+    const spinner = screen.getByRole('status');
+    expect(spinner).not.toHaveAttribute('aria-label');
     expect(screen.getByText('Saving changes')).toHaveClass('sr-only');
   });
 
@@ -54,8 +53,11 @@ describe('Spinner', () => {
     const { container } = render(<Spinner className="text-primary" />);
     const spinner = screen.getByRole('status');
     expect(spinner).toHaveClass('text-primary');
-    const circle = container.querySelector('circle');
-    expect(circle).toHaveAttribute('stroke', 'currentColor');
+    // BOTH stroked shapes (track circle + arc path) must inherit currentColor — assert each so a
+    // regression that drops it on just one is caught.
+    const stroked = container.querySelectorAll('[stroke]');
+    expect(stroked.length).toBeGreaterThanOrEqual(2);
+    stroked.forEach((el) => expect(el).toHaveAttribute('stroke', 'currentColor'));
   });
 
   it('merges a caller className over the defaults (cn / tailwind-merge)', () => {
