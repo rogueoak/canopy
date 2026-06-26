@@ -11,42 +11,44 @@ Independently shippable: one component, one PR. Follows the 0005 recipe — pure
 ## Outcome
 
 - `@rogueoak/canopy/seeds` exports a themed `Skeleton`.
-- Pure CSS shimmer/pulse on a muted fill; respects reduced-motion.
-- Stories (block · text lines · avatar/circle · card composition · reduced-motion · both themes)
-  and tests (render · reduced-motion · a11y-neutral).
-- README/Storybook updated; `0018` ticked.
+- Pure CSS pulse on a `muted-raised` fill; respects reduced-motion.
+- Stories (block · text lines · avatar/circle · card composition · both themes) and tests
+  (render · reduced-motion · a11y-neutral).
+- Storybook updated.
 
 ## Scope
 
 ### In
-- **Skeleton** — a block element with a `muted` fill and an animated shimmer/pulse; sizing and
+- **Skeleton** — a block element with a `muted-raised` fill and an `animate-pulse`; sizing and
   shape come from passed `className` (width/height/rounded), so it composes into any
   placeholder. Decorative/`aria-hidden` by default (the loading region announces busy-ness, not
-  the skeleton). Respects `prefers-reduced-motion` (shimmer reduced/stilled). Forwards `ref`,
+  the skeleton). Respects `prefers-reduced-motion` (the pulse is stilled). Forwards `ref`,
   spreads native props.
 - No new dep (pure CSS).
-- Stories: single block, stacked text lines, circle (avatar), a card composition,
-  reduced-motion — light and dark.
+- Stories: single block, stacked text lines, circle (avatar), a card composition — light and dark.
 - Tests: render, reduced-motion respected, decorative (aria-hidden) by default.
 
 ### Out
 - **Prebuilt skeleton templates** (SkeletonCard, SkeletonTable) → later Twig compositions.
+- **A sweeping shimmer band** → out of scope; the pulse (opacity) is the chosen treatment.
 - **Spinner** (0017) — sibling loading atom, separate spec.
 
 ## Approach
 
-Follows the **0005 recipe**: cva (minimal — mostly a base) → semantic-token utilities, `cn()`
-for merging, semantic tokens only, theme-agnostic by construction. Fill uses `muted`; the
-shimmer sweeps a subtly lighter band and is gated behind `motion-safe` /
-`prefers-reduced-motion` so reduced-motion users see a static or gently-pulsed block. Vitest +
-Testing Library verifies the reduced-motion path and aria-hidden default.
+Follows the **0005 recipe**: `cn()` merge, semantic-token utilities only, theme-agnostic by
+construction. Fill uses **`muted-raised`** (not base `muted`, which collapses to the same
+`stone.900` as `surface` in dark and would make a skeleton on a card invisible — feedback 0006);
+`muted-raised` steps off both the page canvas and a raised surface in either theme. The pulse is
+`animate-pulse`, gated with `motion-reduce:animate-none` so reduced-motion users see a static
+block. Vitest + Testing Library verifies the reduced-motion class and the aria-hidden default.
 
 ## Acceptance
 
 - [ ] `Skeleton` exported from `@rogueoak/canopy/seeds`, semantic tokens only, light **and** dark.
-- [ ] Uses the `muted` token; shimmer/pulse respects `prefers-reduced-motion`.
+- [ ] Uses the `muted-raised` token (visible on any surface in both themes); the pulse respects
+      `prefers-reduced-motion`.
 - [ ] Decorative (`aria-hidden`) by default; shape/size driven by `className`.
 - [ ] Forwards `ref`, spreads native props.
-- [ ] Stories cover block/text/circle/card + reduced-motion in both themes; tests pass.
-- [ ] README/Storybook updated; `0018` ticked.
+- [ ] Stories cover block/text/circle/card in both themes; tests pass.
+- [ ] Storybook updated.
 - [ ] Developer sign-off in Storybook.

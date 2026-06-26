@@ -8,12 +8,17 @@ import { cn } from '../lib/cn';
  * dynamically. There is no `dark:` here: light/dark flips automatically through the token
  * layer (spec 0004).
  *
- * `animate-pulse` is the shimmer; `motion-reduce:animate-none` stills it for readers who set
- * `prefers-reduced-motion: reduce`, leaving a static muted block. Shape and size are NOT baked
- * in — the caller drives them through `className` (`h-4 w-32` for a text line, `h-10 w-10
+ * Fill is `bg-muted-raised`, NOT `bg-muted`: in dark, base `muted` collapses to the same
+ * `stone.900` as `surface`, so a skeleton on a card/panel would be invisible. `muted-raised`
+ * (stone.100 / stone.700) steps off BOTH the page canvas and a raised surface in either theme,
+ * so the placeholder is always visible (feedback 0006 — a "one step off the surface" fill).
+ *
+ * `animate-pulse` is the pulse; `motion-reduce:animate-none` stills it for readers who set
+ * `prefers-reduced-motion: reduce`, leaving a static block. Shape and size are NOT baked in —
+ * the caller drives them through `className` (`h-4 w-32` for a text line, `h-10 w-10
  * rounded-full` for an avatar), which `cn()` merges over this base.
  */
-const skeletonBase = 'animate-pulse rounded-md bg-muted motion-reduce:animate-none';
+const skeletonBase = 'animate-pulse rounded-md bg-muted-raised motion-reduce:animate-none';
 
 /**
  * SkeletonProps — the native `<div>` attributes, verbatim. Skeleton adds no bespoke props

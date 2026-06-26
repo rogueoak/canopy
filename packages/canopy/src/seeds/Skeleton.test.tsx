@@ -8,7 +8,7 @@ describe('Skeleton', () => {
     const { container } = render(<Skeleton data-testid="sk" />);
     const el = container.firstElementChild as HTMLElement;
     expect(el.tagName).toBe('DIV');
-    expect(el).toHaveClass('animate-pulse', 'rounded-md', 'bg-muted');
+    expect(el).toHaveClass('animate-pulse', 'rounded-md', 'bg-muted-raised');
   });
 
   it('stills the pulse for reduced-motion readers', () => {
@@ -36,7 +36,7 @@ describe('Skeleton', () => {
     expect(el).toHaveClass('h-10', 'w-10', 'rounded-full');
     expect(el).not.toHaveClass('rounded-md');
     // the animation base survives the merge
-    expect(el).toHaveClass('animate-pulse', 'bg-muted');
+    expect(el).toHaveClass('animate-pulse', 'bg-muted-raised');
   });
 
   it('spreads native div props', () => {
