@@ -28,6 +28,16 @@ describe('Switch', () => {
     expect(sw).toHaveAttribute('aria-checked', 'false');
   });
 
+  it('toggles via the keyboard (focus + Space)', async () => {
+    const user = userEvent.setup();
+    render(<Switch aria-label="Notifications" />);
+    const sw = screen.getByRole('switch');
+    await user.tab();
+    expect(sw).toHaveFocus();
+    await user.keyboard(' ');
+    expect(sw).toHaveAttribute('aria-checked', 'true');
+  });
+
   it('fires onCheckedChange with the next value (controlled path)', async () => {
     const user = userEvent.setup();
     const onCheckedChange = vi.fn();
