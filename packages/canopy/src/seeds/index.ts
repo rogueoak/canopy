@@ -38,3 +38,5 @@ export type {
 } from './Select';
 export { Separator } from './Separator';
 export type { SeparatorProps } from './Separator';
+export { Spinner, spinnerVariants } from './Spinner';
+export type { SpinnerProps } from './Spinner';
