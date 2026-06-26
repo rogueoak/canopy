@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     'seeds/index': 'src/seeds/index.ts',
+    'twigs/index': 'src/twigs/index.ts',
   },
   format: ['esm'],
   dts: true,

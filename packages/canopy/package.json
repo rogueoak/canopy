@@ -16,6 +16,10 @@
     "./seeds": {
       "types": "./dist/seeds/index.d.ts",
       "import": "./dist/seeds/index.js"
+    },
+    "./twigs": {
+      "types": "./dist/twigs/index.d.ts",
+      "import": "./dist/twigs/index.js"
     }
   },
   "scripts": {
