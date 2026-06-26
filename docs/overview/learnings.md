@@ -241,8 +241,10 @@ disabling — yes → `opacity-50` + `cursor-not-allowed`; no (an empty field) �
 
 `React.ElementRef` is deprecated in React 19.2. New Radix-based Seeds should type their forwarded
 ref with `React.ComponentRef<typeof X>` (the drop-in replacement) rather than
-`React.ElementRef<typeof X>`. The already-merged Batch 1 Seeds still use `ElementRef`; a consistency
-sweep across them is pending (deferred, not an oversight).
+`React.ElementRef<typeof X>`. The consistency sweep is now **done** — every Seed uses
+`React.ComponentRef`; the five older Batch 1 Seeds that still used `ElementRef` (Label, Switch,
+Checkbox, RadioGroup, Select) were converted in the Seeds-layer closeout (a type-only change — both
+resolve to the same element type, so behaviour and tests are unchanged).
 
 **Apply it:** in any new `forwardRef` over a Radix primitive, write
 `React.forwardRef<React.ComponentRef<typeof X>, …>`; don't copy `ElementRef` from the older Seeds.
@@ -263,3 +265,21 @@ lifted — stays open; the dark border carries the lift for now, no shadow token
 assume "one step up" is the same lightness direction everywhere — give the raised surface its own
 token (`color-muted-raised`) and add an AA pair for the foreground that renders on it. Fix it at the
 token layer the first time a portalled component needs it, so later portalled Seeds inherit it.
+
+## Portalled / raised surfaces are their own design context
+
+Content that floats on `surface-raised` — popovers, menus, tooltips — is a distinct styling context,
+not just "the page with a shadow," and the same three needs recurred across **Select + Tooltip +
+Skeleton**. (1) **Fills must use the raised-surface tokens:** an item highlight or a placeholder fill
+reaches for `muted-raised`, not base `muted`, because base `muted` collapses to `surface` in dark
+(stone.900 = the dark surface), so a highlight *recedes* and a skeleton goes *invisible* on a card.
+(2) **The 1px `border` carries the lift, not the shadow:** `shadow-md` reads weakly in dark, so the
+hairline `border border-border` is what visually separates the raised card from the canvas (there is
+no semantic elevation token yet). (3) **Portals still theme correctly:** because `.dark` lives on
+`<html>`, a Radix portal mounted under `<body>` (Select / Tooltip content) inherits the theme, so the
+common-path semantic utilities just work — no per-portal theme wiring.
+
+**Apply it:** when building any future portalled component, reach for `surface-raised` + `border`
+(for the lift) + `muted-raised` (for any item-highlight / placeholder fill) from the start; don't
+reuse base `muted` or lean on a shadow for elevation. (The `ElementRef`→`ComponentRef` sweep is now
+done too — the earlier learning's "pending sweep" caveat is resolved.)
