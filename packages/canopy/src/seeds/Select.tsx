@@ -39,6 +39,10 @@ const SelectValue = SelectPrimitive.Value;
  * `aria-invalid:` danger overrides so an invalid Select reads identically to an invalid Input.
  * The placeholder picks up `data-[placeholder]:text-text-muted`, and a chevron-down SVG sits
  * at the trailing edge.
+ *
+ * Single height (`h-10`) by design — it matches Input's default (`md`). A Select trigger sizing
+ * to Input's `sm`/`lg` isn't a need yet; if it becomes one, lift the height into a cva `size`
+ * variant mirroring `inputVariants` (deferred, not an oversight).
  */
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
