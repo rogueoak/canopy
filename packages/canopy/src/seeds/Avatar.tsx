@@ -11,14 +11,16 @@ import { cn } from '../lib/cn';
  *
  * The root is always a circle (`rounded-full`); shapes other than circle are out of scope for
  * this Seed (spec 0015 — square/rounded deferred). Size drives a fixed square box so the image
- * and initials fallback both fill it: sm `h-8 w-8`, md `h-10 w-10`, lg `h-12 w-12`.
+ * and initials fallback both fill it; the size also sets the font-size so the `AvatarFallback`
+ * initials scale WITH the circle (they inherit it): sm `h-8 w-8`/`text-xs`, md `h-10 w-10`/
+ * `text-sm`, lg `h-12 w-12`/`text-base`.
  */
 export const avatarVariants = cva('relative flex shrink-0 overflow-hidden rounded-full bg-muted', {
   variants: {
     size: {
-      sm: 'h-8 w-8',
-      md: 'h-10 w-10',
-      lg: 'h-12 w-12',
+      sm: 'h-8 w-8 text-xs',
+      md: 'h-10 w-10 text-sm',
+      lg: 'h-12 w-12 text-base',
     },
   },
   defaultVariants: {
@@ -71,8 +73,9 @@ export type AvatarFallbackProps = React.ComponentPropsWithoutRef<typeof AvatarPr
 /**
  * AvatarFallback — the graceful fallback (`AvatarPrimitive.Fallback`) shown while the image is
  * loading, or whenever it is absent or fails to load. Typically holds the user's initials; it
- * centres them on the `bg-muted` surface with `text-muted-foreground`. Pass `delayMs` to avoid a
- * flash of the fallback when the image will resolve quickly.
+ * centres them on the `bg-muted` surface with `text-muted-foreground`. The font-size is INHERITED
+ * from the Avatar root's `size` (so the initials scale with the circle); set `text-*` here only
+ * to override. Pass `delayMs` to avoid a flash of the fallback when the image resolves quickly.
  */
 export const AvatarFallback = React.forwardRef<
   React.ComponentRef<typeof AvatarPrimitive.Fallback>,
@@ -81,7 +84,7 @@ export const AvatarFallback = React.forwardRef<
   <AvatarPrimitive.Fallback
     ref={ref}
     className={cn(
-      'flex h-full w-full items-center justify-center bg-muted text-muted-foreground text-sm font-medium',
+      'flex h-full w-full items-center justify-center bg-muted font-medium text-muted-foreground',
       className,
     )}
     {...props}

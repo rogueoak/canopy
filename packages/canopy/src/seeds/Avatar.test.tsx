@@ -48,9 +48,16 @@ describe('Avatar', () => {
       'justify-center',
       'bg-muted',
       'text-muted-foreground',
-      'text-sm',
       'font-medium',
     );
+    // The fallback no longer pins a font-size — it inherits the root's size (so initials scale).
+    expect(fallback).not.toHaveClass('text-sm');
+  });
+
+  it('scales the initials with the avatar size (font-size lives on the root)', () => {
+    render(<Avatar data-testid="lg" size="lg" />);
+    const root = screen.getByTestId('lg');
+    expect(root).toHaveClass('h-12', 'w-12', 'text-base');
   });
 
   it('applies the circle shape + muted surface on the root by default', () => {
