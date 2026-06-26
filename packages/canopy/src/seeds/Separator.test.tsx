@@ -16,7 +16,7 @@ describe('Separator', () => {
     const sep = screen.getByRole('separator');
     expect(sep).toBeInTheDocument();
     // Default orientation is horizontal; Radix omits aria-orientation for the default.
-    expect(sep).not.toHaveAttribute('aria-orientation', 'vertical');
+    expect(sep).not.toHaveAttribute('aria-orientation');
   });
 
   it('reflects vertical orientation via aria-orientation (semantic)', () => {
