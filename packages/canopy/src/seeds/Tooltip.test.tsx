@@ -21,8 +21,8 @@ beforeAll(() => {
 // Radix Tooltip opens on hover (pointer events) AND keyboard focus. In jsdom, focus is the
 // reliable path — pointer/hover timing is flaky without a real layout/event loop — so these
 // tests drive the keyboard (`user.tab()`) per the spec. `delayDuration={0}` removes the open
-// delay so the content mounts synchronously after focus, and no jsdom stubs are needed (the
-// content opens before Popper measures, unlike Select which needs scroll/pointer stubs).
+// delay so the content mounts synchronously after focus. No POINTER/SCROLL stubs are needed
+// (unlike Select) — only the ResizeObserver no-op above, which the Arrow's measurement requires.
 function Basic({ content = 'Add to library' }: { content?: string }) {
   return (
     <TooltipProvider delayDuration={0}>
@@ -65,6 +65,28 @@ describe('Tooltip', () => {
       'rounded-md',
       'shadow-md',
     );
+  });
+
+  it('renders the arrow (fill-surface-raised) by default and omits it with arrow={false}', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<Basic />);
+    await user.tab();
+    let content = (await screen.findByRole('tooltip')).parentElement;
+    // the Arrow is an SVG child of the content, filled to match the card face
+    expect(content?.querySelector('svg.fill-surface-raised')).toBeInTheDocument();
+    unmount();
+
+    render(
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger>Trigger</TooltipTrigger>
+          <TooltipContent arrow={false}>No arrow</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>,
+    );
+    await user.tab();
+    content = (await screen.findByRole('tooltip')).parentElement;
+    expect(content?.querySelector('svg.fill-surface-raised')).not.toBeInTheDocument();
   });
 
   it('closes when Escape is pressed', async () => {
