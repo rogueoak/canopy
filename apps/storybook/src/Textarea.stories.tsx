@@ -49,6 +49,17 @@ export const WithPlaceholder: Story = {
   args: { placeholder: 'Write a few lines…' },
 };
 
+/* ----------------------------------------------------------------- Focused */
+
+/**
+ * Auto-focused on mount to show the focus-visible ring (`ring-ring` + `ring-offset`) — parity
+ * with Input's Focused story.
+ */
+export const Focused: Story = {
+  parameters: { controls: { disable: true } },
+  args: { autoFocus: true, defaultValue: 'Focused — note the ring.' },
+};
+
 /* ----------------------------------------------------------------- Invalid */
 
 /**
