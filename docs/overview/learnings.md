@@ -206,4 +206,60 @@ keeps the role; `text-h2` swaps the role and keeps the colour). Fixed once in th
 every Seed inherits it. The lesson generalises: when a design-token namespace overloads a Tailwind
 prefix (`text-`, `bg-`, …) with a meaning tailwind-merge can't infer, teach the merge — don't work
 around it per component.
->>>>>>> 93b7d85 (docs(overview): reflect Label (0007) + the cn() typography-role merge fix)
+
+## Empty component-prop types: alias vs interface
+
+The choice between `type` alias and `interface` for a Seed's props is not stylistic — it's forced
+by `react/prop-types`. A Seed **with** cva variants extends `NativeAttrs & VariantProps<…>` (a
+non-empty type — fine either way). A Seed whose props are exactly a Radix Root's props uses a
+`type` alias (`type X = React.ComponentPropsWithoutRef<typeof Root>`). But a Seed with **no** extra
+props and no variants (Textarea) genuinely needs an empty `interface X extends NativeAttrs {}`,
+because `react/prop-types` only resolves the spread-prop members through an interface's `extends` —
+a `type` alias there breaks prop-types resolution. That empty interface trips
+`@typescript-eslint/no-empty-object-type`; the minimal correct fix is a **line-scoped
+`eslint-disable` with a rationale comment**, not a rewrite to a `type` alias.
+
+**Apply it:** pick by need — variants → extend a non-empty type; props == a Radix Root's props →
+`type` alias; no props and no variants → empty `interface … extends NativeAttrs {}` + a
+line-scoped `eslint-disable` explaining the prop-types constraint.
+
+## Disabled styling is per-control-kind, not one global rule
+
+Two disabled treatments coexist by design. **Fields** (Input, Textarea, the Select trigger) use the
+`bg-disabled` / `text-disabled-foreground` **token pair** — an empty field has no fill to preserve,
+so a flat muted surface reads best. **Toggle controls that can be checked** (Checkbox, Switch,
+RadioGroupItem) use `disabled:opacity-50` + `cursor-not-allowed` instead — a disabled-but-checked
+control must stay visibly *filled* (its `primary` fill), and the token pair would flatten that to a
+neutral surface and lose the on/off signal. The Roots `disabled` token note explicitly sanctions
+opacity for controls that merely dim.
+
+**Apply it:** choose the disabled treatment by whether a **filled/checked** state must survive
+disabling — yes → `opacity-50` + `cursor-not-allowed`; no (an empty field) → the
+`bg-disabled` / `text-disabled-foreground` pair.
+
+## Use `React.ComponentRef`, not the deprecated `React.ElementRef`
+
+`React.ElementRef` is deprecated in React 19.2. New Radix-based Seeds should type their forwarded
+ref with `React.ComponentRef<typeof X>` (the drop-in replacement) rather than
+`React.ElementRef<typeof X>`. The already-merged Batch 1 Seeds still use `ElementRef`; a consistency
+sweep across them is pending (deferred, not an oversight).
+
+**Apply it:** in any new `forwardRef` over a Radix primitive, write
+`React.forwardRef<React.ComponentRef<typeof X>, …>`; don't copy `ElementRef` from the older Seeds.
+
+## A "one step up" interaction fill is surface-relative
+
+A `muted` hover/highlight that lightens correctly on the base canvas can **invert** on a *raised*
+surface in the opposite theme: on a `surface-raised` popover in dark, base `muted` (stone.900) is
+darker than the surface (stone.800), so a "focus" fill *recedes* instead of lifting — the same one
+token reading as a highlight in light and a recess in dark (feedback 0006, surfaced by Select, the
+first portalled Seed). Model the raised-surface highlight **explicitly** rather than reusing base
+`muted`: `color-muted-raised` steps toward the foreground on `surface-raised` in BOTH themes
+(stone.100 in light, stone.700 — lighter than surface-raised — in dark), guarded by a new
+`text` × `muted-raised` AA pair. (The elevation-shadow half of 0006 — dark popovers reading as
+lifted — stays open; the dark border carries the lift for now, no shadow token yet.)
+
+**Apply it:** when a hover/highlight fill will appear on more than one surface elevation, don't
+assume "one step up" is the same lightness direction everywhere — give the raised surface its own
+token (`color-muted-raised`) and add an AA pair for the foreground that renders on it. Fix it at the
+token layer the first time a portalled component needs it, so later portalled Seeds inherit it.

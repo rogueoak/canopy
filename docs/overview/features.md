@@ -197,6 +197,91 @@ end-to-end, built on the 0005 recipe (no new deps; reuses Radix `Slot` for `asCh
 - **Tests** — default + each variant (`it.each`), the neutral-drop negative assertion, `asChild`
   renders the child with no wrapper span, ref forwarding.
 
-Not yet built (later specs): the rest of the atom catalogue (0009+ — Checkbox, Switch, Textarea,
-Select, Tooltip, Avatar, Separator, Spinner, Skeleton, Kbd), Twigs / Branches / Boughs, the native
-Swift token target, and npm publish.
+## Seeds: Checkbox (0009)
+
+The boolean-field atom — the first toggle control, built on the 0005 recipe.
+
+- **Checkbox** (`@rogueoak/canopy/seeds`) — built on `@radix-ui/react-checkbox`, so it reports
+  the correct `role="checkbox"` / `aria-checked` and supports `checked` / `unchecked` /
+  `indeterminate` (pass `checked="indeterminate"`, controlled or via `defaultChecked`). An `h-5 w-5`
+  rounded square with a `border-border-strong` outline over `bg-surface`; the `data-[state=checked]`
+  **and** `data-[state=indeterminate]` variants swap to the `primary` / `primary-foreground` fill.
+  Hand-rolled inline check + minus SVGs (no icon library) inherit `currentColor`, picked from the
+  live `data-state` via `group-data-[state=…]`. Shared focus-visible ring on the `ring` /
+  `ring-offset` pair. **Disabled dims with `disabled:opacity-50` + `cursor-not-allowed`** (not the
+  `bg-disabled` pair) so the checked `primary` fill stays visible-but-muted. `forwardRef` + native
+  prop spread + `cn()` merge; pairs with `Label` via `id` / `htmlFor`. Semantic tokens only — both
+  themes automatically.
+
+## Seeds: Switch (0010)
+
+The on/off toggle atom — for instant settings (notifications, feature flags) where a checkbox's
+"submit later" semantics don't fit. Built on the 0005 recipe.
+
+- **Switch** (`@rogueoak/canopy/seeds`) — built on `@radix-ui/react-switch`, so it ships
+  `role="switch"` / `aria-checked` and the full controlled (`checked` + `onCheckedChange`) and
+  uncontrolled (`defaultChecked`) APIs. A `h-6 w-11` pill track is `bg-border` when off and
+  `data-[state=checked]:bg-primary` when on; the `bg-surface` thumb slides via a `transform`
+  transition (`data-[state=checked]:translate-x-5`). The focus-visible ring lives on the Root so
+  keyboard focus is always visible. **Disabled uses `disabled:opacity-50` + `cursor-not-allowed`**
+  (the filled "on" track stays visible-but-muted). `forwardRef`, native prop spread, `cn()` merge;
+  pairs with `Label`. Semantic tokens only — both themes automatically.
+
+## Seeds: Radio Group (0011)
+
+The single-choice selection atom — a group of mutually-exclusive options, built on the 0005 recipe.
+
+- **RadioGroup / RadioGroupItem** (`@rogueoak/canopy/seeds`) — built on
+  `@radix-ui/react-radio-group`. The root is a thin `grid gap-2` wrapper; Radix owns the selection
+  state and the **roving keyboard model** (arrow keys move focus _and_ selection, Tab enters/leaves
+  the group). Each item is a `h-5 w-5` circle with an idle `border-border-strong` ring over
+  `bg-surface`; when selected the ring becomes `data-[state=checked]:border-primary` and the centred
+  `Indicator` reveals a `bg-primary` dot. Shared focus-visible ring. **Disabled uses
+  `disabled:opacity-50` + `cursor-not-allowed`** (per-item or inherited from a fully-disabled group),
+  keeping the selected fill visible-but-muted. `forwardRef`, native prop spread, `cn()` merge.
+  Semantic tokens only — both themes automatically.
+
+## Seeds: Textarea (0012)
+
+The multi-line text-field atom — the field primitive for longer free-text input, mirroring Input
+(0006) for visual parity. Reuses the 0005 recipe; no new deps and **no Radix** (a native element).
+
+- **Textarea** (`@rogueoak/canopy/seeds`) — a native `<textarea>` with Input's exact token base for
+  the shared axes: `border-border` / `bg-surface` / `text-text`, a `placeholder:text-text-muted`
+  placeholder (AA-normal; `text-subtle` is AA-Large-only), the shared focus-visible ring, the
+  `disabled:bg-disabled` / `disabled:text-disabled-foreground` **token pair** (a field, so not
+  opacity) + `cursor-not-allowed`, and the native `aria-invalid` styled via `aria-invalid:` danger
+  overrides. Textarea-specific: vertical `py-2` (no fixed height), a `min-h-20` floor so an empty
+  field reads as multi-line, and `resize-y` so a reader can drag it taller; otherwise height follows
+  the native `rows` prop. Auto-grow is out of scope. `forwardRef<HTMLTextAreaElement>` + full native
+  prop spread. Semantic tokens only — both themes automatically.
+- **API note** — adds no bespoke props, so `TextareaProps` is an empty `interface … extends
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> {}` — an `interface` (not a `type` alias) because
+  `react/prop-types` only resolves the spread members through `extends`; the resulting "empty
+  interface" is intentional, with a line-scoped `eslint-disable` documenting why.
+
+## Seeds: Select (0013)
+
+The single-choice dropdown atom — and the **first portalled Seed** (a popover on a raised surface),
+built on the 0005 recipe.
+
+- **Select** (`@rogueoak/canopy/seeds`) — built on `@radix-ui/react-select`, exposing the shadcn
+  surface area: `Select` (stateful root, owns `value` / `onValueChange`), `SelectGroup` /
+  `SelectLabel`, `SelectValue`, `SelectTrigger`, `SelectContent`, `SelectItem`, `SelectSeparator`,
+  and `SelectScrollUp`/`DownButton`. The **trigger** mirrors the Input field (`border-border` /
+  `bg-surface` / `text-text`, the shared focus-visible ring, the `disabled:*` token pair, and
+  `aria-invalid:` danger overrides) plus a chevron and a muted placeholder via
+  `data-[placeholder]:text-text-muted`. The **content** is portalled through
+  `SelectPrimitive.Portal` onto a `bg-surface-raised` card (`border` + the primitive `shadow-md`);
+  because `.dark` lives on `<html>`, the portalled popover (mounted under `<body>`) still themes
+  correctly. Each **item** carries a leading check `ItemIndicator`, and its keyboard/hover highlight
+  uses the **`muted-raised`** raised-surface fill (feedback 0006) so it lifts in both themes rather
+  than receding on the raised surface in dark. Single-select only (multi-select / combobox / async
+  search are out of scope). `forwardRef` on every styled wrapper + native prop spread + `cn()` merge.
+  Semantic tokens only — both themes automatically.
+
+Batch 1 of the Seeds catalogue (0005–0013: Button, Input, Label, Badge, Checkbox, Switch, Radio
+Group, Textarea, Select) has shipped — nine atoms, including the first portalled component (Select)
+and a raised-surface highlight token (`muted-raised`). Not yet built: **Batch 2 (0014+ — Tooltip,
+Avatar, Separator, Spinner, Skeleton, Keyboard)**, then Twigs / Branches / Boughs, the native Swift
+token target, and npm publish.

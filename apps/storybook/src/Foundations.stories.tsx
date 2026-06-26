@@ -122,6 +122,7 @@ const SEMANTIC_GROUPS: { group: string; tokens: { name: string; util?: string }[
       { name: 'secondary-hover', util: 'bg-secondary-hover' },
       { name: 'secondary-active', util: 'bg-secondary-active' },
       { name: 'accent-hover', util: 'bg-accent-hover' },
+      { name: 'muted-raised', util: 'bg-muted-raised' },
       { name: 'danger-hover', util: 'bg-danger-hover' },
       { name: 'danger-active', util: 'bg-danger-active' },
       { name: 'disabled', util: 'bg-disabled' },
