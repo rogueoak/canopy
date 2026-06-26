@@ -17,6 +17,7 @@ export default defineConfig({
     'react',
     'react-dom',
     '@rogueoak/roots',
+    '@radix-ui/react-avatar',
     '@radix-ui/react-slot',
     '@radix-ui/react-label',
     '@radix-ui/react-checkbox',
