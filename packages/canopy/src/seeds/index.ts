@@ -44,6 +44,8 @@ export { Spinner, spinnerVariants } from './Spinner';
 export type { SpinnerProps } from './Spinner';
 export { Skeleton } from './Skeleton';
 export type { SkeletonProps } from './Skeleton';
+export { Keyboard, keyboardVariants } from './Keyboard';
+export type { KeyboardProps } from './Keyboard';
 export { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from './Tooltip';
 export type {
   TooltipProps,
