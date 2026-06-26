@@ -44,3 +44,10 @@ export { Spinner, spinnerVariants } from './Spinner';
 export type { SpinnerProps } from './Spinner';
 export { Skeleton } from './Skeleton';
 export type { SkeletonProps } from './Skeleton';
+export { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from './Tooltip';
+export type {
+  TooltipProps,
+  TooltipProviderProps,
+  TooltipTriggerProps,
+  TooltipContentProps,
+} from './Tooltip';

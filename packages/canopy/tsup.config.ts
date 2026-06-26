@@ -25,6 +25,7 @@ export default defineConfig({
     '@radix-ui/react-radio-group',
     '@radix-ui/react-select',
     '@radix-ui/react-separator',
+    '@radix-ui/react-tooltip',
     'class-variance-authority',
     'clsx',
     'tailwind-merge',
