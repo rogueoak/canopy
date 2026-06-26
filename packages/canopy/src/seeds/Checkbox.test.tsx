@@ -51,6 +51,14 @@ describe('Checkbox', () => {
       'data-[state=indeterminate]:bg-primary',
       'data-[state=indeterminate]:border-primary',
     );
+    // The DASH icon (not the check) is the one wired to show for indeterminate — pin the
+    // swap so a crossed icon (dash wired to checked) is caught, not just the shared fill.
+    const icons = Array.from(checkbox.querySelectorAll('svg'));
+    const dPath = (el: Element) => el.querySelector('path')?.getAttribute('d');
+    const dash = icons.find((s) => dPath(s) === 'M5 12h14');
+    const check = icons.find((s) => dPath(s) === 'M20 6 9 17l-5-5');
+    expect(dash).toHaveClass('group-data-[state=indeterminate]:block');
+    expect(check).toHaveClass('group-data-[state=checked]:block');
   });
 
   it('does not toggle when disabled', async () => {
