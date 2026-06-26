@@ -36,3 +36,5 @@ export type {
   SelectLabelProps,
   SelectSeparatorProps,
 } from './Select';
+export { Separator } from './Separator';
+export type { SeparatorProps } from './Separator';

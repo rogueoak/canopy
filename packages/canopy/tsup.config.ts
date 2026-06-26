@@ -23,6 +23,7 @@ export default defineConfig({
     '@radix-ui/react-switch',
     '@radix-ui/react-radio-group',
     '@radix-ui/react-select',
+    '@radix-ui/react-separator',
     'class-variance-authority',
     'clsx',
     'tailwind-merge',
