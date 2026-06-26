@@ -244,9 +244,13 @@ builds `src/index.ts` and `src/seeds/index.ts` to ESM + `.d.ts` with subpath exp
 and `./seeds`); React/react-dom are peer deps, and the Radix runtime deps
 (`@radix-ui/react-slot`) plus `@rogueoak/roots` are `external` (resolved at the consumer's
 install, never bundled). Vitest + Testing Library + `user-event` (jsdom) drive the component tests.
-The Seeds layer is now **9 atoms** (Batch 1, specs 0005–0013: Button, Input, Label, Badge, Checkbox,
-Switch, Radio Group, Textarea, Select) — including the first **portalled** component (Select, which
-introduced the `muted-raised` raised-surface token above).
+The Seeds layer is now **complete at 15 atoms** — Batch 1 (specs 0005–0013: Button, Input, Label,
+Badge, Checkbox, Switch, Radio Group, Textarea, Select) plus Batch 2 (0014–0019: Tooltip, Avatar,
+Separator, Spinner, Skeleton, Keyboard). Every atom follows the same **cva + `cn()` + Radix** recipe
+below; two of them are **portalled** on `surface-raised` (Select, then Tooltip), establishing the
+raised-surface pattern that introduced the `muted-raised` token above. All refs type with
+`React.ComponentRef` (not the deprecated `React.ElementRef`). Next up are the **Twigs** (molecules:
+FormField, SearchBar, Card).
 
 ### The component recipe (spec 0005)
 

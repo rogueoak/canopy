@@ -21,7 +21,7 @@ export interface LabelProps extends React.ComponentPropsWithoutRef<typeof LabelP
  * the token layer (spec 0004). `forwardRef`, full native `<label>` prop spread, and `cn()` merge
  * follow the 0005 recipe.
  */
-export const Label = React.forwardRef<React.ElementRef<typeof LabelPrimitive.Root>, LabelProps>(
+export const Label = React.forwardRef<React.ComponentRef<typeof LabelPrimitive.Root>, LabelProps>(
   ({ className, children, required = false, ...props }, ref) => (
     <LabelPrimitive.Root
       ref={ref}

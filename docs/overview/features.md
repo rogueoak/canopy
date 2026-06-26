@@ -280,8 +280,105 @@ built on the 0005 recipe.
   search are out of scope). `forwardRef` on every styled wrapper + native prop spread + `cn()` merge.
   Semantic tokens only — both themes automatically.
 
-Batch 1 of the Seeds catalogue (0005–0013: Button, Input, Label, Badge, Checkbox, Switch, Radio
-Group, Textarea, Select) has shipped — nine atoms, including the first portalled component (Select)
-and a raised-surface highlight token (`muted-raised`). Not yet built: **Batch 2 (0014+ — Tooltip,
-Avatar, Separator, Spinner, Skeleton, Keyboard)**, then Twigs / Branches / Boughs, the native Swift
-token target, and npm publish.
+## Seeds: Tooltip (0014)
+
+The hover/focus hint atom — and the **second portalled Seed** (after Select), a small text card on a
+raised surface. Built on the 0005 recipe.
+
+- **Tooltip** (`@rogueoak/canopy/seeds`) — built on `@radix-ui/react-tooltip`, exposing
+  `TooltipProvider` (shared `delayDuration` / `skipDelayDuration` config — wrap once high in the
+  tree), `Tooltip` (the stateful root; **opens on hover _and_ keyboard focus**, closes on blur /
+  escape), `TooltipTrigger` (use `asChild` to wrap a Button etc.), and `TooltipContent`. The
+  **content** is portalled through `TooltipPrimitive.Portal` onto a `bg-surface-raised` card
+  (`border` + the primitive `shadow-md`) with terse `text-xs`, capped at `max-w-xs` so a long hint
+  wraps; `sideOffset` defaults to `4`. A matching `TooltipPrimitive.Arrow` (filled `fill-surface-raised`
+  so it matches the card face in both themes) renders by default — pass `arrow={false}` to omit it.
+  Because `.dark` lives on `<html>`, the portalled card (mounted under `<body>`) themes correctly.
+  Short, non-interactive text only (Popover / HoverCard / rich content are later specs). `forwardRef`
+  on the styled content + native prop spread + `cn()` merge. Semantic tokens only — both themes
+  automatically.
+
+## Seeds: Avatar (0015)
+
+The identity atom — a user photo with a graceful initials fallback, built on the 0005 recipe.
+
+- **Avatar** (`@rogueoak/canopy/seeds`) — built on `@radix-ui/react-avatar`, composing `Avatar`
+  (root), `AvatarImage`, and `AvatarFallback`. The root is **always a circle** (`rounded-full`;
+  square / rounded shapes are out of scope) over a `bg-muted` surface that shows through while the
+  image loads or if it is absent. A cva `size` variant (`sm` `h-8 w-8` / `md` (default) `h-10 w-10` /
+  `lg` `h-12 w-12`) sizes the box **and** sets the font-size, so the fallback's **initials scale with
+  the circle** (they inherit it: `text-xs` / `text-sm` / `text-base`). `AvatarImage` is revealed by
+  Radix only once the image has actually loaded (`aspect-square object-cover` to fill the circle
+  without distortion; always pass a meaningful `alt`), so the fallback shows through until then and
+  stays if the image is missing or errors. `AvatarFallback` centres the initials on `bg-muted` with
+  `text-muted-foreground`, and accepts `delayMs` to avoid a fallback flash when the image resolves
+  quickly. `forwardRef` on each part + native prop spread + `cn()` merge. Semantic tokens only — both
+  themes automatically.
+
+## Seeds: Separator (0016)
+
+The hairline-divider atom — a thin rule between content groups (menu sections, toolbar clusters),
+built on the 0005 recipe.
+
+- **Separator** (`@rogueoak/canopy/seeds`) — built on `@radix-ui/react-separator`, which handles the
+  **decorative-vs-semantic ARIA distinction**: `decorative` (the default) renders no role, while
+  `decorative={false}` exposes `role="separator"` with `aria-orientation` reflecting the
+  `orientation` (`horizontal` default / `vertical`). The rule paints with the `border` token
+  (`bg-border`); `data-[orientation=…]` utilities size it as a 1px-tall full-width line when
+  horizontal and a 1px-wide full-height line when vertical. `forwardRef`, native prop spread, `cn()`
+  merge. Semantic tokens only — both themes automatically.
+
+## Seeds: Spinner (0017)
+
+The busy-indicator atom — a spinning loader, built on the 0005 recipe; **no Radix** (pure CSS/SVG,
+no dependency).
+
+- **Spinner** (`@rogueoak/canopy/seeds`) — renders a `<span role="status">` whose accessible name
+  comes from a **single source**: a visually-hidden (`sr-only`) text node holding the label (default
+  `"Loading"`, overridable via the native `aria-label` prop) — _not_ also duplicated as an
+  `aria-label` attribute, which would make some readers announce it twice. Inside sits an inline SVG
+  (a faint circle track + a brighter arc) drawn with `currentColor`, so it **inherits the caller's
+  text colour** (`<Spinner className="text-primary" />`); the SVG is `aria-hidden` so the status is
+  announced once. A cva `size` variant (`sm` `h-4 w-4` / `md` (default) `h-5 w-5` / `lg` `h-6 w-6`).
+  **Reduced motion:** the rotation is `animate-spin` gated with `motion-reduce:animate-none`, so users
+  who prefer reduced motion see a static indicator. `forwardRef<HTMLSpanElement>` + native prop spread
+  + `cn()` merge. Semantic tokens only — both themes automatically.
+
+## Seeds: Skeleton (0018)
+
+The loading-placeholder atom — a pulsing block that holds layout while content fetches, built on the
+0005 recipe; **no Radix** (a native `<div>`).
+
+- **Skeleton** (`@rogueoak/canopy/seeds`) — a `rounded-md` block that pulses while content loads.
+  Fill is **`bg-muted-raised`, NOT `bg-muted`** (feedback 0006): in dark, base `muted` collapses to
+  the same `stone.900` as `surface`, so a skeleton on a card/panel would be invisible; `muted-raised`
+  steps off both the page canvas **and** a raised surface in either theme, so the placeholder is
+  always visible. **Reduced motion:** `animate-pulse` is gated with `motion-reduce:animate-none`,
+  leaving a static block. Decorative by default — `aria-hidden="true"` so assistive tech skips the
+  placeholder (the surrounding loading _region_ announces busy-ness via `aria-busy`); because the
+  spread follows the default, a caller can override it (`aria-hidden={false}`). Shape and size are not
+  baked in — the caller drives them through `className` (`h-4 w-32` for a text line, `h-10 w-10
+  rounded-full` for an avatar), which `cn()` merges over the base. `forwardRef<HTMLDivElement>` +
+  native prop spread. Semantic tokens only — both themes automatically.
+
+## Seeds: Keyboard (0019)
+
+The keyboard-key atom — a small key-cap for help text, command menus, and tooltips, built on the
+0005 recipe; **no Radix** (renders a semantic `<kbd>`).
+
+- **Keyboard** (`@rogueoak/canopy/seeds`) — renders the semantic **`<kbd>`** element with a subtle
+  key-cap look: a hairline `border` outline around a `bg-muted` fill with `text-muted-foreground`
+  text in a `font-mono` face and a small radius; `align-middle` keeps the cap vertically centred
+  against surrounding copy when used inline. A cva `size` variant (`sm` for dense help text / `md`
+  (default) for inline hints and command menus) scales the cap box. **Display-only** — it carries no
+  key-binding logic (capturing or registering presses is out of scope); for a combo, compose multiple
+  `Keyboard` with a separator, e.g. `<Keyboard>⌘</Keyboard> + <Keyboard>K</Keyboard>`.
+  `forwardRef<HTMLElement>` + native prop spread + `cn()` merge. Semantic tokens only — both themes
+  automatically.
+
+The **Seeds layer is now COMPLETE (15 atoms)** — Batch 1 (0005–0013: Button, Input, Label, Badge,
+Checkbox, Switch, Radio Group, Textarea, Select) plus Batch 2 (0014–0019: Tooltip, Avatar, Separator,
+Spinner, Skeleton, Keyboard). Two of them are **portalled** on `surface-raised` (Select + Tooltip),
+the pattern that drove the `muted-raised` raised-surface token. Not yet built: **Twigs** (molecules:
+FormField, SearchBar, Card), then **Branches**, **Boughs**, the native Swift token target, and an
+**npm publish / release** spec.

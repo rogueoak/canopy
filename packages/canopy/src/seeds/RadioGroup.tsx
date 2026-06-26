@@ -14,7 +14,7 @@ export type RadioGroupItemProps = React.ComponentPropsWithoutRef<typeof RadioGro
  * no per-component theme code — light/dark flips through the token layer (spec 0004).
  */
 export const RadioGroup = React.forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Root>,
+  React.ComponentRef<typeof RadioGroupPrimitive.Root>,
   RadioGroupProps
 >(({ className, ...props }, ref) => (
   <RadioGroupPrimitive.Root ref={ref} className={cn('grid gap-2', className)} {...props} />
@@ -31,7 +31,7 @@ RadioGroup.displayName = 'RadioGroup';
  * emits each utility. `forwardRef`, `cn()` merge, native prop spread follow the 0005 recipe.
  */
 export const RadioGroupItem = React.forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Item>,
+  React.ComponentRef<typeof RadioGroupPrimitive.Item>,
   RadioGroupItemProps
 >(({ className, ...props }, ref) => (
   <RadioGroupPrimitive.Item

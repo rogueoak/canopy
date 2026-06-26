@@ -45,7 +45,7 @@ const SelectValue = SelectPrimitive.Value;
  * variant mirroring `inputVariants` (deferred, not an oversight).
  */
 const SelectTrigger = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Trigger>,
+  React.ComponentRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
@@ -82,7 +82,7 @@ SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
  * Inherits the content's text token; a chevron-up SVG centres it.
  */
 const SelectScrollUpButton = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.ScrollUpButton>,
+  React.ComponentRef<typeof SelectPrimitive.ScrollUpButton>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.ScrollUpButton
@@ -112,7 +112,7 @@ SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
  * SelectScrollDownButton — the downward overflow affordance (mirror of the up button).
  */
 const SelectScrollDownButton = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.ScrollDownButton>,
+  React.ComponentRef<typeof SelectPrimitive.ScrollDownButton>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.ScrollDownButton
@@ -147,7 +147,7 @@ SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayNam
  * the trigger width via Radix's CSS vars.
  */
 const SelectContent = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Content>,
+  React.ComponentRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = 'popper', ...props }, ref) => (
   <SelectPrimitive.Portal>
@@ -183,7 +183,7 @@ SelectContent.displayName = SelectPrimitive.Content.displayName;
  * matches the items' left padding so the heading aligns above their text (past the check gutter).
  */
 const SelectLabel = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Label>,
+  React.ComponentRef<typeof SelectPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
@@ -203,7 +203,7 @@ SelectLabel.displayName = SelectPrimitive.Label.displayName;
  * (`pl-8`) for the current value, and the option text renders through `ItemText`.
  */
 const SelectItem = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Item>,
+  React.ComponentRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Item
@@ -241,7 +241,7 @@ SelectItem.displayName = SelectPrimitive.Item.displayName;
  * SelectSeparator — a hairline divider between groups/items, tinted with the `border` token.
  */
 const SelectSeparator = React.forwardRef<
-  React.ElementRef<typeof SelectPrimitive.Separator>,
+  React.ComponentRef<typeof SelectPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
