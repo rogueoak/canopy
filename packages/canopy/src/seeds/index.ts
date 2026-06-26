@@ -6,6 +6,8 @@ export { Label } from './Label';
 export type { LabelProps } from './Label';
 export { Badge, badgeVariants } from './Badge';
 export type { BadgeProps } from './Badge';
+export { Textarea } from './Textarea';
+export type { TextareaProps } from './Textarea';
 export { Checkbox } from './Checkbox';
 export type { CheckboxProps } from './Checkbox';
 export { Switch } from './Switch';
