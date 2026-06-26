@@ -13,7 +13,7 @@ describe('Keyboard', () => {
   it('applies the base key-cap classes + the default size (md)', () => {
     render(<Keyboard>⌘</Keyboard>);
     const key = screen.getByText('⌘');
-    // base key-cap look (muted fill, hairline border, mono face)
+    // base key-cap look (muted fill, hairline border, mono face, inline alignment)
     expect(key).toHaveClass(
       'inline-flex',
       'items-center',
@@ -22,6 +22,7 @@ describe('Keyboard', () => {
       'border',
       'border-border',
       'bg-muted',
+      'align-middle',
       'font-mono',
       'text-muted-foreground',
     );

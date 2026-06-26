@@ -9,12 +9,13 @@ import { cn } from '../lib/cn';
  * light/dark flips automatically through the token layer (spec 0004).
  *
  * The base gives a subtle key-cap look: a hairline `border` outline around a `muted` fill with
- * `muted-foreground` text in a monospace face and a small radius. `size` scales the cap box:
- * `sm` for dense help text, `md` (default) for inline hints and command menus.
+ * `muted-foreground` text in a monospace face and a small radius. `align-middle` keeps the cap
+ * vertically centred against surrounding copy when used inline in a sentence. `size` scales the
+ * cap box: `sm` for dense help text, `md` (default) for inline hints and command menus.
  */
 export const keyboardVariants = cva(
   // Base — the key-cap look shared by every size. Presentational (non-interactive, no focus ring).
-  'inline-flex items-center justify-center rounded border border-border bg-muted font-mono text-muted-foreground',
+  'inline-flex items-center justify-center rounded border border-border bg-muted align-middle font-mono text-muted-foreground',
   {
     variants: {
       size: {

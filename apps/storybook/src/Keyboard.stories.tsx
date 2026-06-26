@@ -74,14 +74,15 @@ export const Sizes: Story = {
 /* ------------------------------------------------------------- Inline in text */
 
 /**
- * `Keyboard` sits inline within running text and aligns to the baseline of the surrounding copy.
+ * `Keyboard` sits inline within running text — `align-middle` keeps the cap vertically centred
+ * against the surrounding copy at the default `md` size.
  */
 export const InlineInText: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
     <p className="text-text max-w-sm text-sm">
-      Press <Keyboard size="sm">⌘</Keyboard> <Keyboard size="sm">K</Keyboard> to open the command
-      menu, or <Keyboard size="sm">Esc</Keyboard> to dismiss it.
+      Press <Keyboard>⌘</Keyboard> <Keyboard>K</Keyboard> to open the command menu, or{' '}
+      <Keyboard>Esc</Keyboard> to dismiss it.
     </p>
   ),
 };
