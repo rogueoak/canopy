@@ -171,6 +171,10 @@ const PAIRS: [string, string, number][] = [
   ['color-accent-foreground', 'color-accent', 4.5],
   ['color-accent-strong', 'color-bg', 4.5],
   ['color-muted-foreground', 'color-muted', 4.5],
+  // Raised-surface item highlight (feedback 0006): SelectItem renders `text-text` on the
+  // `muted-raised` fill, so that pair must hit AA in BOTH themes — light text (stone.900) on
+  // stone.100, dark text (stone.50) on stone.700.
+  ['color-text', 'color-muted-raised', 4.5],
   ['color-success-foreground', 'color-success', 4.5],
   ['color-warning-foreground', 'color-warning', 4.5],
   ['color-danger-foreground', 'color-danger', 4.5],

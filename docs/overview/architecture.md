@@ -201,6 +201,12 @@ Components consume **only** semantic names.
 Because these are ordinary semantic tokens, they flow through the same `:root` / `.dark` seam and
 every output (utilities `bg-primary-hover`, the typed export, the dark remap) for free.
 
+A later **raised-surface** highlight token, `color-muted-raised` (feedback 0006, added with the
+first portalled Seed), follows the same seam: it is the hover/focus fill for items on a
+`surface-raised` popover, stepping *toward* the foreground in both themes (light `stone-100`, dark
+`stone-700` — lighter than `surface-raised` `stone-800`) where base `muted` would recede in dark.
+Guarded by a `text` × `muted-raised` AA pair in `tokens.test.ts`.
+
 The contrast guard (`tokens.test.ts`) asserts AA for the foreground each state shows on its
 **hover/active** fill, in **both** themes — a bad state step fails the build. `disabled` is
 deliberately excluded (WCAG 2.1 §1.4.3 exempts disabled controls). Two state steps were nudged
@@ -238,6 +244,9 @@ builds `src/index.ts` and `src/seeds/index.ts` to ESM + `.d.ts` with subpath exp
 and `./seeds`); React/react-dom are peer deps, and the Radix runtime deps
 (`@radix-ui/react-slot`) plus `@rogueoak/roots` are `external` (resolved at the consumer's
 install, never bundled). Vitest + Testing Library + `user-event` (jsdom) drive the component tests.
+The Seeds layer is now **9 atoms** (Batch 1, specs 0005–0013: Button, Input, Label, Badge, Checkbox,
+Switch, Radio Group, Textarea, Select) — including the first **portalled** component (Select, which
+introduced the `muted-raised` raised-surface token above).
 
 ### The component recipe (spec 0005)
 

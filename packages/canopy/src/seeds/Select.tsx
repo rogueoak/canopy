@@ -196,9 +196,11 @@ SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
 /**
  * SelectItem — a selectable option. Highlight (keyboard/hover via Radix's `focus` state) uses
- * the `muted` token pair; the `data-[disabled]` state dims with opacity and drops pointer
- * events. A leading check `ItemIndicator` sits in the left gutter (`pl-8`) for the current
- * value, and the option text renders through `ItemText`.
+ * the raised-surface `muted-raised` fill (feedback 0006): the popover sits on `surface-raised`,
+ * where base `muted` would *recede* in dark (stone.900 darker than the stone.800 surface), so
+ * the item lifts toward the foreground in BOTH themes instead. The `data-[disabled]` state dims
+ * with opacity and drops pointer events. A leading check `ItemIndicator` sits in the left gutter
+ * (`pl-8`) for the current value, and the option text renders through `ItemText`.
  */
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
@@ -207,7 +209,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-text outline-none focus:bg-muted focus:text-text data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+      'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-text outline-none focus:bg-muted-raised focus:text-text data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     {...props}

@@ -130,6 +130,11 @@
       "$type": "color",
       "$description": "Foreground on muted surfaces."
     },
+    "muted-raised": {
+      "$value": "{color.stone.100}",
+      "$type": "color",
+      "$description": "Highlight/hover fill for items on a RAISED surface (popovers, menus) — a subtle lift on the white raised surface (feedback 0006). Steps toward the foreground on surface-raised in BOTH themes, unlike base muted which inverts on a raised surface in dark (muted stone.900 is darker than surface-raised stone.800, so the highlight recedes). Pairs with text/text-text at AA."
+    },
     "success": {
       "DEFAULT": {
         "$value": "{color.success.600}",
