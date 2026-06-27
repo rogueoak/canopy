@@ -448,8 +448,9 @@ The first Branch — and the **Branches recipe reference**: a stateful, portalle
 Radix that composes lower layers and adds no new token.
 
 - **Dialog** (`@rogueoak/canopy/branches`) — `Dialog` (root) + `DialogTrigger` / `DialogClose`
-  (re-exported primitives) + `DialogOverlay` / `DialogContent` / `DialogHeader` / `DialogFooter` /
-  `DialogTitle` / `DialogDescription`. Built on **`@radix-ui/react-dialog`**, so Radix owns the
+  (re-exported primitives) + `DialogContent` / `DialogHeader` / `DialogFooter` /
+  `DialogTitle` / `DialogDescription`. (The overlay is **module-internal** — `DialogContent` owns the
+  scrim, so a public standalone overlay isn't exported.) Built on **`@radix-ui/react-dialog`**, so Radix owns the
   open/close state machine, the focus trap, return-focus, scroll lock, and `Esc`-to-close. A
   centred modal: the scrim is the **pre-provisioned** `color-overlay` token at reduced opacity
   (`bg-overlay/80`, authored in 0004 "used at reduced opacity behind modals" — so the first Branch
@@ -460,7 +461,9 @@ Radix that composes lower layers and adds no new token.
   focus-visible ring). `DialogTitle` is the `text-h3` `aria-labelledby`; `DialogDescription` is
   muted `text-body-sm` `aria-describedby`; `role="dialog"` + an explicit `aria-modal="true"` (Radix
   marks modality by `aria-hidden`-ing siblings, so we add the APG attribute directly). Enter/exit
-  fade + zoom is gated with `motion-reduce:animate-none`. `forwardRef` + native prop spread + `cn()`
+  fade + zoom is gated with `motion-reduce:animate-none`; the `animate-dialog-*` keyframes + utilities
+  **ship from the Roots preset** (`tailwind-preset.css`, composing the `--duration-*`/`--ease-*`
+  tokens) every consumer already imports, so the motion works out of the box. `forwardRef` + native prop spread + `cn()`
   merge on every styled part; semantic tokens only, both themes automatically; NO `dark:` on the
   common path. Stories prove composition: a FormField Twig in the body, Button Seeds for
   trigger/footer, a destructive confirmation, and a controlled example.

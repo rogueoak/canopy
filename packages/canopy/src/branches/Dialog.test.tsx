@@ -100,10 +100,42 @@ describe('Dialog', () => {
     await user.click(screen.getByRole('button', { name: 'Open dialog' }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    const overlay = document.querySelector('[class*="bg-overlay"]');
+    // Token-independent handle: the portal renders the overlay then the content as siblings, so
+    // the scrim is the dialog's previousElementSibling (no reliance on a `bg-overlay` class).
+    const overlay = screen.getByRole('dialog').previousElementSibling;
     expect(overlay).not.toBeNull();
     await user.click(overlay as Element);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('does not dismiss when clicking inside the content', async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(<Basic />);
+    await user.click(screen.getByRole('button', { name: 'Open dialog' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    // Clicking content (the title) must NOT close — only the scrim / Esc / close button dismiss.
+    await user.click(screen.getByText('Invite teammate'));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('renders free-form body children inside the portalled card', async () => {
+    const user = userEvent.setup();
+    render(
+      <Dialog>
+        <DialogTrigger>Open dialog</DialogTrigger>
+        <DialogContent>
+          <DialogTitle>Bodied</DialogTitle>
+          <DialogDescription>Body</DialogDescription>
+          <p>Body marker</p>
+        </DialogContent>
+      </Dialog>,
+    );
+    await user.click(screen.getByRole('button', { name: 'Open dialog' }));
+
+    const marker = screen.getByText('Body marker');
+    expect(marker).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toContainElement(marker);
   });
 
   it('moves focus into the dialog on open and returns it to the trigger on close', async () => {

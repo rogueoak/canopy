@@ -21,7 +21,6 @@ import { cn } from '../lib/cn';
  *   `defaultOpen`).
  * - `DialogTrigger` — opens the dialog; `asChild` to wrap a Button Seed.
  * - `DialogClose` — closes the dialog; `asChild` to wrap a Button (e.g. a footer "Cancel").
- * - `DialogOverlay` — the scrim on `color-overlay`; clicking it closes (Radix default).
  * - `DialogContent` — the portalled card with a built-in `X` close affordance; owns focus trap,
  *   return-focus, scroll lock, and `Esc`-to-close (Radix).
  * - `DialogHeader` / `DialogFooter` — layout slots (stacked header; right-aligned action footer).
@@ -29,10 +28,11 @@ import { cn } from '../lib/cn';
  * - `DialogDescription` — muted supporting copy (`text-body-sm`), wired as `aria-describedby`.
  *
  * Enter/exit fade + zoom are gated with `motion-reduce:animate-none`, so a reduced-motion user
- * gets an instant show/hide. (The named keyframes are provided by the consumer's theme CSS — see
- * the Storybook `tailwind.css`; without them the dialog simply shows/hides instantly, which is the
- * reduced-motion behaviour anyway.) Centred modal only — drawer/sheet and `alertdialog` are later
- * specs (spec 0024, Out of scope).
+ * gets an instant show/hide. The named `animate-dialog-*` keyframes + utilities now ship from the
+ * Roots **preset** (`@rogueoak/roots/tailwind-preset.css`, composing the `--duration-*`/`--ease-*`
+ * motion tokens), so the motion works out of the box for any consumer importing the preset — no
+ * longer consumer-provided. Centred modal only — drawer/sheet and `alertdialog` are later specs
+ * (spec 0024, Out of scope).
  */
 const Dialog = DialogPrimitive.Root;
 
@@ -44,7 +44,8 @@ const DialogClose = DialogPrimitive.Close;
  * DialogOverlay — the full-viewport scrim. `bg-overlay/80` is the pre-provisioned `color-overlay`
  * semantic token (authored in 0004 "used at reduced opacity behind modals") at reduced opacity, so
  * the modal reads through it in both themes. Fades in/out via Radix's `data-[state]` hooks, gated
- * with `motion-reduce:animate-none`.
+ * with `motion-reduce:animate-none`. **Module-internal:** `DialogContent` bakes in the scrim, so the
+ * overlay is not exported — a public standalone overlay would be a double-scrim footgun.
  */
 const DialogOverlay = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Overlay>,
@@ -92,7 +93,7 @@ const DialogContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         aria-label="Close"
-        className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-muted-raised hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:pointer-events-none"
+        className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-muted-raised hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface-raised disabled:pointer-events-none"
       >
         <svg
           width="16"
@@ -117,9 +118,12 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 /**
  * DialogHeader — the stacked header region (title + description). Text-left, a small vertical gap.
+ * `pr-6` keeps a long title clear of the absolutely-positioned close `X` in the top-right corner.
  */
-const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col gap-1.5 text-left', className)} {...props} />
+const DialogHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn('flex flex-col gap-1.5 pr-6 text-left', className)} {...props} />
+  ),
 );
 DialogHeader.displayName = 'DialogHeader';
 
@@ -127,11 +131,14 @@ DialogHeader.displayName = 'DialogHeader';
  * DialogFooter — the action region. Stacks reversed on mobile (the primary action ends up on top)
  * and becomes a right-aligned row on `sm+`, mirroring the shadcn footer layout.
  */
-const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
-    {...props}
-  />
+const DialogFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+      {...props}
+    />
+  ),
 );
 DialogFooter.displayName = 'DialogFooter';
 
@@ -167,7 +174,6 @@ export {
   Dialog,
   DialogTrigger,
   DialogClose,
-  DialogOverlay,
   DialogContent,
   DialogHeader,
   DialogFooter,
@@ -178,7 +184,6 @@ export {
 export type DialogProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>;
 export type DialogTriggerProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>;
 export type DialogCloseProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>;
-export type DialogOverlayProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>;
 export type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>;
 export type DialogHeaderProps = React.HTMLAttributes<HTMLDivElement>;
 export type DialogFooterProps = React.HTMLAttributes<HTMLDivElement>;

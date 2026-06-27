@@ -30,6 +30,17 @@ const dist = (file) => fileURLToPath(new URL(`./dist/${file}`, import.meta.url))
 const light = new StyleDictionary(lightConfig);
 await light.buildAllPlatforms();
 
+// Fold the overlay-motion partial onto the freshly-built preset in a SINGLE write. The
+// `@keyframes` + `@theme --animate-*` declarations are theme declarations, not utilities, so
+// Tailwind's `@source` scanner can never emit them — they must ship from the preset every
+// consumer imports (the same reason tokens.css owns the runtime vars). Reading the just-built
+// preset (not the previous on-disk file) + the hand-authored partial makes this fold a pure
+// function of its inputs → re-running it is IDEMPOTENT and never double-appends (mirrors the
+// tokens.css fold below). It's independent of the theme sidecars, so it sits before that block.
+const presetFile = dist('tailwind-preset.css');
+const motionPartial = fileURLToPath(new URL('./preset-motion.css', import.meta.url));
+writeFileSync(presetFile, readFileSync(presetFile, 'utf8') + readFileSync(motionPartial, 'utf8'));
+
 const sidecars = themes.map(({ name }) => dist(`tokens.${name}.css`));
 try {
   // Build each theme's `.<name>` sidecar.
