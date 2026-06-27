@@ -22,3 +22,6 @@ export type {
   CardContentProps,
   CardFooterProps,
 } from './Card';
+
+export { SearchBar } from './SearchBar';
+export type { SearchBarProps } from './SearchBar';
