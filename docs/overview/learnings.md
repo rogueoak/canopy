@@ -308,3 +308,17 @@ ARIA relationship, register the real parts and build the attribute from them —
 might not be there. And debts a Seed defers upward (Label 0007 left the disabled-label affordance "to
 a FormField Twig") are collected here, at the composition layer, where the context to honour them
 finally exists. (Card reuses the raised-surface tokens from the portalled-surfaces learning above.)
+
+## State in a Storybook story lives in a component, not the `render` callback
+
+A story that needs `useState` (a controlled-field demo) must put it in a **top-level component**
+and render that — `render: (args) => <ControlledExample {...args} />` — not call the hook inside
+the `render` arrow. A `render` body is not a React component (lowercase, not a hook), so the
+Rules of Hooks lint rejects a hook there even though Storybook happens to invoke `render` like a
+component, so it "works" at runtime. SearchBar's `WithValue` story (0021) shipped the hook inline
+and put `main` in a red-lint state (feedback 0007).
+
+**Apply it:** any story needing state gets a named component; keep the `render` callback a thin
+`(args) => <Example {...args} />`. And the process half — wire CI (`build`/`test`/`lint`/
+`format:check`) as a **required** status check so a red `main` can't happen: a failing lint
+should block the merge, not be discovered a spec later.

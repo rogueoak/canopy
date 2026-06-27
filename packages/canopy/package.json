@@ -3,6 +3,18 @@
   "version": "0.0.0",
   "description": "Canopy components — built on Roots tokens, Tailwind v4, Radix/shadcn (later).",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogueoak/canopy.git",
+    "directory": "packages/canopy"
+  },
+  "homepage": "https://github.com/rogueoak/canopy/tree/main/packages/canopy#readme",
+  "bugs": {
+    "url": "https://github.com/rogueoak/canopy/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [
@@ -25,7 +37,8 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
     "react": "^19.0.0",

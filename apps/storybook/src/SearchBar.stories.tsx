@@ -37,11 +37,13 @@ export const Default: Story = {
  * With a value: a controlled wrapper drives the field, so the clear (x) Button is visible. Clicking
  * it empties the value and refocuses the input.
  */
+function ControlledSearchBar(args: React.ComponentProps<typeof SearchBar>) {
+  const [value, setValue] = React.useState('Granny Smith');
+  return <SearchBar {...args} value={value} onValueChange={setValue} placeholder="Search..." />;
+}
+
 export const WithValue: Story = {
-  render: (args) => {
-    const [value, setValue] = React.useState('Granny Smith');
-    return <SearchBar {...args} value={value} onValueChange={setValue} placeholder="Search..." />;
-  },
+  render: (args) => <ControlledSearchBar {...args} />,
 };
 
 /**

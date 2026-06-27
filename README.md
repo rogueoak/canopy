@@ -23,8 +23,9 @@
 
 > [!NOTE]
 > **🚧 Status: early development.** Canopy is being built in the open, foundation-first.
-> Nothing is published to npm yet, and the APIs below marked _(planned)_ don't exist
-> yet — they describe where we're headed. Follow the [roadmap](#roadmap) for what's live.
+> The first packages are published to npm under the `@rogueoak` scope; APIs below marked
+> _(planned)_ don't exist yet — they describe where we're headed. Follow the
+> [roadmap](#roadmap) for what's live.
 
 ## What is Canopy?
 
@@ -142,14 +143,16 @@ dark values too, ready for the first components.
 
 Canopy publishes under the **`@rogueoak`** npm scope as a small set of versioned packages:
 
-| Package            | Holds                                        | Status      |
-| ------------------ | -------------------------------------------- | ----------- |
-| `@rogueoak/roots`  | design tokens + Tailwind preset              | _(planned)_ |
-| `@rogueoak/canopy` | components (`/seeds`, `/twigs`, `/branches`) | _(planned)_ |
+| Package            | Holds                                        | Status    |
+| ------------------ | -------------------------------------------- | --------- |
+| `@rogueoak/roots`  | design tokens + Tailwind preset              | published |
+| `@rogueoak/canopy` | components (`/seeds`, `/twigs`, `/branches`) | published |
+
+Releases are **tag-driven**: pushing a bare-SemVer tag (`X.Y.Z`, no `v` prefix) publishes both
+packages at that version via GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml),
+npm trusted publishing / OIDC).
 
 ## Quick start
-
-> _(planned — available once the first packages publish)_
 
 ```bash
 pnpm add @rogueoak/canopy @rogueoak/roots
@@ -207,7 +210,6 @@ pnpm build        # build tokens (Style Dictionary), components (tsup), and Stor
 pnpm storybook    # run the showcase locally at http://localhost:6006
 pnpm test         # run the test suite (Vitest)
 pnpm lint         # lint the workspace (ESLint + Prettier)
-pnpm changeset    # record a version bump for release
 ```
 
 Layout:
