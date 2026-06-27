@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags: ['[0-9]*.[0-9]*.[0-9]*']
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    # Trusted publishing (OIDC): npm verifies this workflow against each package's
+    # trusted-publisher config instead of an NPM_TOKEN secret. `id-token: write` lets the
+    # job mint the OIDC token; pnpm exchanges it for a short-lived publish credential.
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      # Node 24 + pnpm 11.8 (pinned via packageManager): pnpm's OIDC publish path needs the
+      # post-11.0.8 fix (pnpm/pnpm#11526), which 11.8 includes. No registry-url here — that
+      # would write an .npmrc auth stub and get in the way of the OIDC exchange.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Stamp version from tag
+        run: |
+          if ! echo "$GITHUB_REF_NAME" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([.-].*)?$'; then
+            echo "::error::Tag '$GITHUB_REF_NAME' is not a bare SemVer version (X.Y.Z)."
+            exit 1
+          fi
+          pnpm -r --filter './packages/*' exec npm version "$GITHUB_REF_NAME" --no-git-tag-version --allow-same-version
+
+      - name: Build
+        run: pnpm build
+
+      # pnpm (not npm) so the canopy → roots `workspace:*` dep is rewritten to the real
+      # version on publish. Auth is OIDC — no NODE_AUTH_TOKEN.
+      - name: Publish
+        run: pnpm -r --filter './packages/*' publish --no-git-checks --access public

@@ -433,6 +433,30 @@ The surface container molecule — a presentational compound on the raised-surfa
   compose arbitrary children including other Twigs (a Card framing a FormField + Button). `forwardRef`
   + native prop spread + `cn()` merge on every part. Semantic tokens only — both themes automatically.
 
-The **Twigs layer's first three molecules are live**. Not yet built: more Twigs as needed, then
-**Branches** (organisms), **Boughs** (templates), the native Swift token target, and an **npm
-publish / release** spec.
+The **Twigs layer's first three molecules are live**.
+
+## npm publishing (0023)
+
+Releases now **publish to npm**, driven by git tags — a tag _is_ the release.
+
+- **Tag-driven, lockstep** — pushing a **bare-SemVer tag** (`X.Y.Z`, no `v` prefix) publishes
+  **both** `@rogueoak/roots` and `@rogueoak/canopy` to the public registry at that version, in
+  dependency order (roots before canopy). The tag is the single source of truth; repo versions
+  stay at a `0.0.0` placeholder, so there are no version-bump PRs and no changesets (the
+  Changesets tooling — `.changeset/`, the `@changesets/cli` devDep, the root `changeset` script
+  — is removed). To cut a release: `git tag 0.1.0 && git push origin 0.1.0`.
+- **Release workflow** (`.github/workflows/release.yml`) — triggers on the tag push, sets up
+  pnpm + Node 24, validates the tag is SemVer, stamps both packages from the tag, runs a clean
+  `pnpm build`, and `pnpm -r publish`es via **npm trusted publishing (OIDC)** — no `NPM_TOKEN`
+  secret; the job grants `id-token: write` and npm verifies the run against each package's
+  trusted-publisher config. pnpm rewrites canopy's `workspace:*` dep on roots to the real
+  version and skips the private Storybook app.
+- **Publishable packages** — both packages carry `publishConfig.access: public`, `repository`
+  (+`directory`), `homepage`, `bugs`, a `prepublishOnly: pnpm build` clean-build guard (so a
+  stale `dist` can never ship), and a focused `README.md` rendered on their npm page.
+- **Developer-performed prerequisites** (not automated) — ensuring the `@rogueoak` npm org
+  exists with the publishing identity as a member, and configuring the trusted publisher
+  (repo + `release.yml`) on each package at `npmjs.com/package/<pkg>/access`.
+
+Not yet built: more Twigs as needed, then **Branches** (organisms), **Boughs** (templates), and
+the native Swift token target.

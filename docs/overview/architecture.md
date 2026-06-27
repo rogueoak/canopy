@@ -354,9 +354,31 @@ Two GitHub Actions workflows:
 - `pages.yml` (push main): builds Storybook and deploys `apps/storybook/storybook-static`
   to GitHub Pages (`upload-pages-artifact` + `deploy-pages`, `pages: write` /
   `id-token: write`). **Requires Pages enabled** in repo settings (Source: GitHub Actions).
+- `release.yml` (push of a bare-SemVer tag): publishes both packages to npm — see below.
 
-**Changesets** handles versioning (`access: public`, `baseBranch: main`, the private
-Storybook app ignored). Actual `npm publish` stays off until a later spec.
+**Releases are tag-driven and lockstep** (spec 0023). A **bare-SemVer git tag** (`X.Y.Z`, no
+`v` prefix, per trellis `rules/guidelines.md`) *is* the version: `git tag 0.1.0 && git push
+origin 0.1.0`. Repo `package.json` versions stay at a `0.0.0` placeholder, so the tag is the
+single source of truth — no version-bump PRs, no bot write access, no changelogs.
+`release.yml` (trigger `on: push: tags: ['[0-9]*.[0-9]*.[0-9]*']`) checks out, sets up pnpm +
+Node 24, `pnpm install --frozen-lockfile`, validates `$GITHUB_REF_NAME` is SemVer, then stamps
+**both** packages with `pnpm -r --filter './packages/*' exec npm version "$GITHUB_REF_NAME"
+--no-git-tag-version --allow-same-version`, runs a clean `pnpm build` (tsup `clean: true`
+rebuilds `canopy/dist`, including the `./twigs` subpath its `exports` references), and
+publishes with `pnpm -r --filter './packages/*' publish --no-git-checks --access public`.
+pnpm rewrites canopy's `workspace:*` dep on `@rogueoak/roots` to the published version, skips
+the private Storybook app, and publishes roots before canopy via the workspace dep graph.
+Both packages carry `publishConfig.access: public` and a `prepublishOnly: pnpm build` guard so
+a manual publish can't ship stale `dist`.
+
+Auth is **npm trusted publishing (OIDC)** — no `NPM_TOKEN` secret. The job grants
+`id-token: write`; npm verifies the run against each package's trusted-publisher config
+(repo + workflow filename `release.yml`), and pnpm exchanges the OIDC token for a short-lived
+publish credential. This needs pnpm ≥ the OIDC fix (pnpm/pnpm#11526; the pinned `pnpm@11.8.0`
+includes it) on Node 24, and `setup-node` deliberately omits `registry-url` (its `.npmrc` auth
+stub would block the OIDC exchange). The developer-performed prerequisites — not automated —
+are `@rogueoak` npm org membership and configuring the trusted publisher on each package at
+`npmjs.com/package/<pkg>/access`.
 
 ### Toolchain note
 

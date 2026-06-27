@@ -3,6 +3,18 @@
   "version": "0.0.0",
   "description": "Canopy design tokens — Style Dictionary pipeline (CSS vars, typed TS, Tailwind v4 preset).",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogueoak/canopy.git",
+    "directory": "packages/roots"
+  },
+  "homepage": "https://github.com/rogueoak/canopy/tree/main/packages/roots#readme",
+  "bugs": {
+    "url": "https://github.com/rogueoak/canopy/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "sideEffects": [
     "*.css"
@@ -22,7 +34,8 @@
     "build": "pnpm clean && node build.mjs && tsup",
     "test": "vitest run",
     "lint": "eslint .",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "style-dictionary": "^4.3.0",
