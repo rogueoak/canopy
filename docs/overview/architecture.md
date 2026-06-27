@@ -249,8 +249,9 @@ Badge, Checkbox, Switch, Radio Group, Textarea, Select) plus Batch 2 (0014–001
 Separator, Spinner, Skeleton, Keyboard). Every atom follows the same **cva + `cn()` + Radix** recipe
 below; two of them are **portalled** on `surface-raised` (Select, then Tooltip), establishing the
 raised-surface pattern that introduced the `muted-raised` token above. All refs type with
-`React.ComponentRef` (not the deprecated `React.ElementRef`). Next up are the **Twigs** (molecules:
-FormField, SearchBar, Card).
+`React.ComponentRef` (not the deprecated `React.ElementRef`). The **Twigs** layer (molecules)
+is now live too — `FormField`, `SearchBar`, `Card` (specs 0020-0022) — shipped on a new
+`./twigs` subpath; see the Twigs composition recipe below.
 
 ### The component recipe (spec 0005)
 
@@ -288,6 +289,42 @@ this exact seam — `apps/storybook/.storybook/tailwind.css` adds
 so a built Storybook contains Button's utilities (`bg-primary`, `hover:bg-primary-hover`,
 `disabled:bg-disabled`, the focus ring, …), all resolving to the runtime token vars. A
 prebuilt-CSS bundle for non-Tailwind consumers is deferred. Documented in the README quick start.
+
+### The Twigs composition recipe (spec 0020)
+
+The **Twigs** layer (molecules) is the first composition tier, established with **FormField**
+(0020) and followed by **SearchBar** (0021) and **Card** (0022). Where a Seed is a single atom,
+a Twig **composes Seeds** — and the recipe is a **compound component** (a root plus named parts)
+that, where the parts need to share wiring, do so through a small React **context**. The same
+token / `cn()` / full-literal-class / `forwardRef` rules as the Seeds recipe apply, with **no new
+token and no `dark:`** — a Twig is themed by the Seeds it composes.
+
+- **Subpath per layer.** Twigs ship on a new **`./twigs` subpath** (`@rogueoak/canopy/twigs`),
+  parallel to `./seeds`: a tsup entry (`twigs/index` → `dist/twigs/index.js` + `.d.ts`) and a
+  `./twigs` `exports` map. Imports stay self-documenting (`from '@rogueoak/canopy/twigs'`) and
+  tree-shake per layer; the consumer's existing `@source '@rogueoak/canopy'` already covers the
+  new files, so the styling seam is unchanged. The layer boundary is one-way — **twigs import
+  seeds, never the reverse**.
+- **Compound + context (FormField).** The canonical molecule: `FormField` generates a `useId`
+  base, derives `${id}-description` / `${id}-message`, and provides them plus `invalid` /
+  `disabled` via a `FormFieldContext`; the parts (`FormFieldLabel`, `FormFieldControl`,
+  `FormFieldDescription`, `FormFieldMessage`) consume it. `FormFieldControl` is a Radix **`Slot`**
+  that injects `id` / `aria-describedby` / `aria-invalid` / `disabled` onto **any** control Seed
+  (Input, Textarea, Select trigger, Checkbox) without that Seed depending on the Twig.
+  Description / Message **register their presence** (a mount/unmount effect) so the control's
+  `aria-describedby` lists only the parts actually rendered — render-driven wiring, not prop
+  archaeology. FormField also collects the **disabled-label affordance** the Label Seed (0007)
+  deliberately deferred to "a FormField Twig."
+- **Composition over new surface (SearchBar).** `SearchBar` composes Input + Button + Keyboard
+  into one `<form role="search">` control (leading magnifier, a clear Button that appears with a
+  value and refocuses the input, an optional display-only shortcut hint), mirroring the native
+  controlled/uncontrolled contract and forwarding `ref` to the inner `<input>`. It adds nothing
+  to the token layer — every part is an existing Seed.
+- **Structural compound (Card).** `Card` + `CardHeader` / `CardTitle` / `CardDescription` /
+  `CardContent` / `CardFooter` is a presentational surface compound on `surface-raised` + `border`
+  + primitive `shadow-sm` (the raised-surface pattern from the portalled Seeds), with `CardTitle`
+  using `Slot` (`asChild`) so the visual `text-h3` role rides onto a caller-chosen heading element
+  and the document outline stays the caller's to control.
 
 ## Showcase + theming (Storybook)
 

@@ -283,3 +283,28 @@ common-path semantic utilities just work — no per-portal theme wiring.
 (for the lift) + `muted-raised` (for any item-highlight / placeholder fill) from the start; don't
 reuse base `muted` or lean on a shadow for elevation. (The `ElementRef`→`ComponentRef` sweep is now
 done too — the earlier learning's "pending sweep" caveat is resolved.)
+
+## A Twig wires Seeds without the Seeds knowing — context + Slot
+
+The composition layer (Twigs) needs to add cross-cutting wiring (a shared id, `aria-describedby`,
+`aria-invalid`, a disabled state) across several atoms **without** pushing that knowledge down into
+the atoms — a Seed must stay a context-free, drop-in element. Two primitives solve this together and
+became the Twigs recipe (FormField, 0020): a small React **context** on the compound's root owns the
+shared state, and a Radix **`Slot`** part injects the wiring onto whatever single control child the
+consumer passes. So `FormFieldControl` makes an Input, a Textarea, a Select trigger, or a Checkbox a
+fully-wired field by merging props onto it — none of those Seeds import or depend on FormField. The
+**reverse import is forbidden**: twigs import seeds, never the other way, which is what keeps the
+layer boundary (and the `./twigs` vs `./seeds` subpaths) honest.
+
+A second, subtler lesson from the same build: **derive ARIA from what is actually rendered, not from
+props.** `aria-describedby` must list the description / message ids only when those parts exist, so
+the parts **register their presence** via a mount/unmount effect and the control composes the
+attribute from the live flags. Driving it off props instead ("there is a `description` prop, so point
+at its id") silently lies the moment a part is conditionally rendered.
+
+**Apply it:** for any future Twig that coordinates atoms, put the shared state in a root context and
+inject onto children with `Slot`; keep atoms ignorant of the composition. When the coordination is an
+ARIA relationship, register the real parts and build the attribute from them — never infer DOM that
+might not be there. And debts a Seed defers upward (Label 0007 left the disabled-label affordance "to
+a FormField Twig") are collected here, at the composition layer, where the context to honour them
+finally exists. (Card reuses the raised-surface tokens from the portalled-surfaces learning above.)

@@ -220,17 +220,18 @@ Layout:
 
 > Roots ships the **real foundation** plus **light & dark theming**: primitive ramps + semantic
 > tokens (light + dark, with interaction states), type, spacing, radii, elevation, and motion.
-> The first **Seeds** are live — **Button**, **Input**, **Label**, and **Badge** — built on the
-> shared component **recipe** (`cn()`, cva variants over semantic tokens, Radix `Slot` for
-> `asChild`). More atoms are in progress.
+> The full **Seeds** atom catalogue is live, built on the shared component **recipe** (`cn()`, cva
+> variants over semantic tokens, Radix `Slot` for `asChild`). The first **Twigs** (molecules) are
+> live too — **FormField**, **SearchBar**, and **Card** — composing those atoms on the
+> `@rogueoak/canopy/twigs` subpath.
 
 ## Roadmap
 
 Built foundation-first, so there's **always working software and working docs** at each step:
 
 - [x] **Roots** — tokens: palette, typography, spacing, radii, elevation, motion; light & dark theming
-- [x] **Seeds** — the atoms; first batch live (**Button · Input · Label · Badge**), more in progress
-- [ ] **Twigs** — molecules (FormField, SearchBar, Card)
+- [x] **Seeds** — the atoms; the full first catalogue is live
+- [x] **Twigs** — molecules; the first compositions are live (FormField · SearchBar · Card)
 - [ ] **Branches** — organisms (NavBar, Dialog, DataTable)
 - [ ] **Boughs** — page scaffolds and layout patterns
 
