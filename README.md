@@ -225,7 +225,9 @@ Layout:
 > The full **Seeds** atom catalogue is live, built on the shared component **recipe** (`cn()`, cva
 > variants over semantic tokens, Radix `Slot` for `asChild`). The first **Twigs** (molecules) are
 > live too — **FormField**, **SearchBar**, and **Card** — composing those atoms on the
-> `@rogueoak/canopy/twigs` subpath.
+> `@rogueoak/canopy/twigs` subpath. The **Branches** (organisms) layer has opened with **Dialog**
+> — a focus-trapping, portalled modal composing Seeds and Twigs — on the new
+> `@rogueoak/canopy/branches` subpath.
 
 ## Roadmap
 
@@ -234,7 +236,7 @@ Built foundation-first, so there's **always working software and working docs** 
 - [x] **Roots** — tokens: palette, typography, spacing, radii, elevation, motion; light & dark theming
 - [x] **Seeds** — the atoms; the full first catalogue is live
 - [x] **Twigs** — molecules; the first compositions are live (FormField · SearchBar · Card)
-- [ ] **Branches** — organisms (NavBar, Dialog, DataTable)
+- [ ] **Branches** — organisms; the layer is open (**Dialog** is live; NavBar, DataTable to come)
 - [ ] **Boughs** — page scaffolds and layout patterns
 
 Development follows the [Spectra protocol](docs/spectra/protocol.md): every change is built and

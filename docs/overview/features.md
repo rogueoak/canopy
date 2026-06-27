@@ -435,6 +435,39 @@ The surface container molecule — a presentational compound on the raised-surfa
 
 The **Twigs layer's first three molecules are live**.
 
+## Branches (organisms)
+
+The **composition** layer above Twigs — Branches assemble **Seeds _and_ Twigs** into self-contained
+pieces of UI that own interaction state and (often) a portal. They ship on a new
+`@rogueoak/canopy/branches` subpath, parallel to `./seeds` and `./twigs`, and import the lower
+layers one-way (branches import twigs/seeds, never the reverse).
+
+## Branches: Dialog (0024)
+
+The first Branch — and the **Branches recipe reference**: a stateful, portalled compound built on
+Radix that composes lower layers and adds no new token.
+
+- **Dialog** (`@rogueoak/canopy/branches`) — `Dialog` (root) + `DialogTrigger` / `DialogClose`
+  (re-exported primitives) + `DialogContent` / `DialogHeader` / `DialogFooter` /
+  `DialogTitle` / `DialogDescription`. (The overlay is **module-internal** — `DialogContent` owns the
+  scrim, so a public standalone overlay isn't exported.) Built on **`@radix-ui/react-dialog`**, so Radix owns the
+  open/close state machine, the focus trap, return-focus, scroll lock, and `Esc`-to-close. A
+  centred modal: the scrim is the **pre-provisioned** `color-overlay` token at reduced opacity
+  (`bg-overlay/80`, authored in 0004 "used at reduced opacity behind modals" — so the first Branch
+  adds **no new token**); the portalled content card reuses the raised-surface pattern
+  (`bg-surface-raised` + `border border-border` + `rounded-lg` + the primitive `shadow-lg`, `p-6`),
+  the third portalled surface after Select (0013) and Tooltip (0014). It ships a built-in `X` close
+  affordance (inline `currentColor` SVG, `aria-label="Close"`, `muted-raised` hover, the shared
+  focus-visible ring). `DialogTitle` is the `text-h3` `aria-labelledby`; `DialogDescription` is
+  muted `text-body-sm` `aria-describedby`; `role="dialog"` + an explicit `aria-modal="true"` (Radix
+  marks modality by `aria-hidden`-ing siblings, so we add the APG attribute directly). Enter/exit
+  fade + zoom is gated with `motion-reduce:animate-none`; the `animate-dialog-*` keyframes + utilities
+  **ship from the Roots preset** (`tailwind-preset.css`, composing the `--duration-*`/`--ease-*`
+  tokens) every consumer already imports, so the motion works out of the box. `forwardRef` + native prop spread + `cn()`
+  merge on every styled part; semantic tokens only, both themes automatically; NO `dark:` on the
+  common path. Stories prove composition: a FormField Twig in the body, Button Seeds for
+  trigger/footer, a destructive confirmation, and a controlled example.
+
 ## npm publishing (0023)
 
 Releases now **publish to npm**, driven by git tags — a tag _is_ the release.
@@ -458,5 +491,5 @@ Releases now **publish to npm**, driven by git tags — a tag _is_ the release.
   exists with the publishing identity as a member, and configuring the trusted publisher
   (repo + `release.yml`) on each package at `npmjs.com/package/<pkg>/access`.
 
-Not yet built: more Twigs as needed, then **Branches** (organisms), **Boughs** (templates), and
-the native Swift token target.
+Not yet built: more **Branches** (the layer is open with Dialog — TopNav, SideNav, DataTable to
+come) and more Twigs as needed, then **Boughs** (templates), and the native Swift token target.

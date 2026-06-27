@@ -1,0 +1,57 @@
+/**
+ * Roots overlay-motion partial (the design system's keyframed motion).
+ *
+ * `@keyframes` and `@theme --animate-*` are THEME declarations, not utilities, so Tailwind's
+ * `@source` scanner can NEVER emit them — they must ship from CSS every consumer already imports.
+ * This partial is folded into `dist/tailwind-preset.css` by `build.mjs` (an idempotent single
+ * write), so any consumer importing `@rogueoak/roots/tailwind-preset.css` gets the `animate-dialog-*`
+ * utilities — and their motion — for free. The `--animate-*` values COMPOSE the Roots
+ * `--duration-*` / `--ease-*` motion tokens (not hardcoded ms/easing), so motion stays token-driven.
+ *
+ * First consumed by Dialog (Branches, spec 0024): Radix toggles `data-[state=open|closed]` on the
+ * portalled overlay + content, which reference these `animate-dialog-*` utilities (gated with
+ * `motion-reduce:animate-none`).
+ */
+@keyframes dialog-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes dialog-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes dialog-content-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes dialog-content-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+}
+
+@theme {
+  --animate-dialog-overlay-in: dialog-overlay-in var(--duration-slow) var(--ease-decelerate);
+  --animate-dialog-overlay-out: dialog-overlay-out var(--duration-base) var(--ease-standard);
+  --animate-dialog-content-in: dialog-content-in var(--duration-slow) var(--ease-decelerate);
+  --animate-dialog-content-out: dialog-content-out var(--duration-base) var(--ease-standard);
+}

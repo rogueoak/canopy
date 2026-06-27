@@ -23,6 +23,9 @@
    (see the README) — the path is relative to THIS file, so adjust the depth to match yours. */
 @source '../../../packages/canopy/src';
 
+/* Dialog enter/exit motion (Branches/Dialog, spec 0024) now ships from the imported Roots preset
+   (@rogueoak/roots/tailwind-preset.css) — keyframes + token-composed `animate-dialog-*` utilities. */
+
 /* Dark theme (spec 0004). The common path needs NO `dark:` utilities — semantic tokens
    auto-flip because `tokens.css` `.dark` overrides the runtime vars, so `bg-primary`,
    `text-default`, … re-resolve under `.dark` with zero per-component code. This custom

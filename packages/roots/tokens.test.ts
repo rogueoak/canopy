@@ -74,6 +74,20 @@ describe('Roots token outputs — Tailwind v4 namespaces', () => {
     expect(preset).toContain('--tracking-tight: var(--tracking-tight)');
     expect(preset).toContain('--font-weight-medium: var(--font-weight-medium)');
   });
+
+  it('ships the Dialog overlay-motion (keyframes + token-composed animate utilities) in the preset', () => {
+    // Motion ships from the preset, not `@source` (which can never emit keyframes / a `@theme
+    // --animate-*` theme declaration). Grep the BUILT rule (per the literal-class learning) to
+    // prove the partial was folded in and the consumer gets working `animate-dialog-*` utilities.
+    const preset = read('tailwind-preset.css');
+    expect(preset).toContain('@keyframes dialog-overlay-in');
+    expect(preset).toContain('@keyframes dialog-content-in');
+    expect(preset).toContain('--animate-dialog-overlay-in:');
+    // The animate value COMPOSES the motion tokens (not hardcoded ms/easing) → token-driven.
+    const overlayIn = /--animate-dialog-overlay-in:\s*([^;]+);/.exec(preset)?.[1] ?? '';
+    expect(overlayIn).toContain('var(--duration-slow)');
+    expect(overlayIn).toContain('var(--ease-decelerate)');
+  });
 });
 
 describe('Roots token outputs — composite text roles', () => {

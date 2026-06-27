@@ -322,3 +322,25 @@ and put `main` in a red-lint state (feedback 0007).
 `(args) => <Example {...args} />`. And the process half — wire CI (`build`/`test`/`lint`/
 `format:check`) as a **required** status check so a red `main` can't happen: a failing lint
 should block the merge, not be discovered a spec later.
+
+## Animation/motion utilities ship from the preset, not `@source`
+
+Canopy's distribution seam (Decision A) is that components ship `className` strings and the
+**consumer's** Tailwind build emits the CSS by scanning canopy's source via `@source`. That seam
+generates *utilities* — but `@source` only emits a class where it sees that class **used as a literal
+string**. A component's keyframed motion is **not** a utility: `@keyframes` and a `@theme {
+--animate-*: … }` block are **theme declarations**, and the scanner can never synthesize them. So
+Dialog's `animate-dialog-*` motion (0024) couldn't ride the `@source` seam the way its `bg-surface-raised`
+/ focus-ring utilities do. Parked in Storybook's `tailwind.css`, it animated in Storybook but left a
+real consumer with **dead `animate-dialog-*` classes and no motion** — and no error, since an undefined
+`animate-*` utility is silently not emitted (feedback 0008). Fix: ship the keyframes + `--animate-*`
+vars from the Roots **`tailwind-preset.css`** — the file every consumer already imports (the same way
+`tokens.css` owns runtime `:root` vars) — folded in from a `preset-motion.css` partial by `build.mjs`
+in an idempotent single write. Compose the existing `--duration-*` / `--ease-*` tokens
+(`dialog-overlay-in var(--duration-slow) var(--ease-decelerate)`), never hardcoded ms/easing, so motion
+stays token-driven; and guard the built preset (grep the rule) so the motion can't silently vanish again.
+
+**Apply it:** when a component needs keyframed motion, deliver the `@keyframes` + `@theme --animate-*`
+from CSS **every consumer imports** (the Roots preset), not from component source or a single app's CSS
+— `@source` can't emit theme declarations. Compose the Roots motion tokens rather than hardcoding, and
+add a built-preset assertion that the keyframes + token-composed animate value ship.
