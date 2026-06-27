@@ -376,9 +376,63 @@ The keyboard-key atom — a small key-cap for help text, command menus, and tool
   `forwardRef<HTMLElement>` + native prop spread + `cn()` merge. Semantic tokens only — both themes
   automatically.
 
-The **Seeds layer is now COMPLETE (15 atoms)** — Batch 1 (0005–0013: Button, Input, Label, Badge,
+The **Seeds layer is COMPLETE (15 atoms)** — Batch 1 (0005–0013: Button, Input, Label, Badge,
 Checkbox, Switch, Radio Group, Textarea, Select) plus Batch 2 (0014–0019: Tooltip, Avatar, Separator,
 Spinner, Skeleton, Keyboard). Two of them are **portalled** on `surface-raised` (Select + Tooltip),
-the pattern that drove the `muted-raised` raised-surface token. Not yet built: **Twigs** (molecules:
-FormField, SearchBar, Card), then **Branches**, **Boughs**, the native Swift token target, and an
-**npm publish / release** spec.
+the pattern that drove the `muted-raised` raised-surface token.
+
+## Twigs (molecules)
+
+The first **composition** layer — Twigs compose Seeds into small patterns, shipped on a new
+`@rogueoak/canopy/twigs` subpath. They add **no new token** (a Twig is themed by the Seeds it
+composes) and follow the compound-component + context recipe established by FormField.
+
+## Twigs: FormField (0020)
+
+The canonical form molecule — and the **Twigs recipe reference** (compound component + React context
++ Radix `Slot`).
+
+- **FormField** (`@rogueoak/canopy/twigs`) — a form-library-agnostic compound: `FormField` (root) +
+  `FormFieldLabel` / `FormFieldControl` / `FormFieldDescription` / `FormFieldMessage`. The root
+  generates a `useId` base, derives `${id}-description` / `${id}-message`, and shares them plus
+  `invalid` / `disabled` through a `FormFieldContext`. `FormFieldControl` is a Radix `Slot` that wires
+  `id` / `aria-describedby` / `aria-invalid` / `disabled` onto **any** control Seed (Input, Textarea,
+  Select trigger, Checkbox) without that Seed knowing about FormField. `aria-describedby` lists only
+  the parts actually rendered — Description / Message register their presence via a mount/unmount
+  effect, so an absent part contributes no id and an empty `FormFieldMessage` renders nothing; a
+  non-empty message (role `alert`) also makes the control invalid. It owns the **disabled-label
+  affordance** the Label Seed (0007) explicitly deferred to "a FormField Twig" (the label dims with
+  its field). Semantic tokens only — both themes automatically.
+
+## Twigs: SearchBar (0021)
+
+The search-input molecule — composes **Input + Button + Keyboard** into one accessible control.
+
+- **SearchBar** (`@rogueoak/canopy/twigs`) — an Input inside a `<form role="search">` with a leading
+  magnifier, a ghost icon **clear** Button that appears only with a value (clears it, fires
+  `onValueChange('')`, and refocuses the input) and hides when empty / disabled, an `onSearch` fired
+  on Enter / submit, and an optional **display-only** `shortcutHint` rendered as a `Keyboard` (hidden
+  while there is a value — it binds no key). Mirrors the native controlled / uncontrolled contract
+  (`value` + `onValueChange`, or `defaultValue`); `ref` forwards to the inner `<input>` via
+  `useImperativeHandle` so the clear handler focuses the caller's node. The browser's native
+  `type="search"` clear is suppressed (`[&::-webkit-search-cancel-button]:appearance-none`) so it does
+  not double the custom one. Composition only — no new token. Semantic tokens only — both themes
+  automatically.
+
+## Twigs: Card (0022)
+
+The surface container molecule — a presentational compound on the raised-surface pattern.
+
+- **Card** (`@rogueoak/canopy/twigs`) — `Card` + `CardHeader` / `CardTitle` / `CardDescription` /
+  `CardContent` / `CardFooter`. A bordered, rounded, `shadow-sm` raised surface (`bg-surface-raised`
+  + `border-border`, the lift pattern from the portalled Seeds — no semantic elevation token yet) with
+  a consistent `p-6` inset (content / footer drop their top padding to sit flush under the region
+  above). `CardTitle` renders a real `<h3>` by default carrying the `text-h3` role, and takes
+  `asChild` (Radix `Slot`) so that visual role rides onto a caller-chosen heading element and the
+  document outline stays the caller's to control. `CardDescription` is muted `text-body-sm`; the slots
+  compose arbitrary children including other Twigs (a Card framing a FormField + Button). `forwardRef`
+  + native prop spread + `cn()` merge on every part. Semantic tokens only — both themes automatically.
+
+The **Twigs layer's first three molecules are live**. Not yet built: more Twigs as needed, then
+**Branches** (organisms), **Boughs** (templates), the native Swift token target, and an **npm
+publish / release** spec.
