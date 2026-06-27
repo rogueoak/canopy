@@ -32,6 +32,10 @@
     "./twigs": {
       "types": "./dist/twigs/index.d.ts",
       "import": "./dist/twigs/index.js"
+    },
+    "./branches": {
+      "types": "./dist/branches/index.d.ts",
+      "import": "./dist/branches/index.js"
     }
   },
   "scripts": {
@@ -47,6 +51,7 @@
   "dependencies": {
     "@radix-ui/react-avatar": "^1.2.0",
     "@radix-ui/react-checkbox": "^1.3.5",
+    "@radix-ui/react-dialog": "^1.1.17",
     "@radix-ui/react-label": "^2.1.10",
     "@radix-ui/react-radio-group": "^1.4.1",
     "@radix-ui/react-select": "^2.3.1",

@@ -23,6 +23,56 @@
    (see the README) — the path is relative to THIS file, so adjust the depth to match yours. */
 @source '../../../packages/canopy/src';
 
+/* Dialog enter/exit motion (Branches/Dialog, spec 0024). Radix toggles `data-[state=open|closed]`
+   on the portalled overlay + content; the component references named `animate-dialog-*` utilities
+   gated with `motion-reduce:animate-none`. There is no animate plugin in the repo, so the consumer
+   provides the keyframes — here, in Storybook's theme CSS. Tailwind v4 turns each `--animate-*`
+   theme var into an `animate-*` utility. A consumer who omits these keyframes simply gets an
+   instant show/hide (the reduced-motion behaviour), so the dialog degrades gracefully. */
+@theme {
+  --animate-dialog-overlay-in: dialog-overlay-in 150ms ease-out;
+  --animate-dialog-overlay-out: dialog-overlay-out 150ms ease-in;
+  --animate-dialog-content-in: dialog-content-in 150ms ease-out;
+  --animate-dialog-content-out: dialog-content-out 150ms ease-in;
+}
+
+@keyframes dialog-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes dialog-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes dialog-content-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes dialog-content-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+}
+
 /* Dark theme (spec 0004). The common path needs NO `dark:` utilities — semantic tokens
    auto-flip because `tokens.css` `.dark` overrides the runtime vars, so `bg-primary`,
    `text-default`, … re-resolve under `.dark` with zero per-component code. This custom

@@ -251,7 +251,8 @@ below; two of them are **portalled** on `surface-raised` (Select, then Tooltip),
 raised-surface pattern that introduced the `muted-raised` token above. All refs type with
 `React.ComponentRef` (not the deprecated `React.ElementRef`). The **Twigs** layer (molecules)
 is now live too — `FormField`, `SearchBar`, `Card` (specs 0020-0022) — shipped on a new
-`./twigs` subpath; see the Twigs composition recipe below.
+`./twigs` subpath, and the **Branches** layer (organisms) has opened with `Dialog` (spec 0024) on a
+`./branches` subpath; see the Twigs and Branches composition recipes below.
 
 ### The component recipe (spec 0005)
 
@@ -325,6 +326,42 @@ token and no `dark:`** — a Twig is themed by the Seeds it composes.
   + primitive `shadow-sm` (the raised-surface pattern from the portalled Seeds), with `CardTitle`
   using `Slot` (`asChild`) so the visual `text-h3` role rides onto a caller-chosen heading element
   and the document outline stays the caller's to control.
+
+### The Branches composition recipe (spec 0024)
+
+The **Branches** layer (organisms) is the composition tier above Twigs, opened with **Dialog**
+(0024). Where a Twig composes atoms presentationally, a **Branch additionally owns interaction state
+and a portal**: it leans on Radix for the behavioural core (a state machine + focus management +
+ARIA) and is otherwise composition + token styling. The same `cn()` / full-literal-class /
+`forwardRef` / `React.ComponentRef` rules apply, with **no new token and no `dark:`** — a Branch is
+themed by the layers it composes and the tokens already provisioned.
+
+- **Subpath per layer.** Branches ship on a new **`./branches` subpath** (`@rogueoak/canopy/branches`),
+  parallel to `./seeds` and `./twigs`: a tsup entry (`branches/index` → `dist/branches/index.js` +
+  `.d.ts`) and a `./branches` `exports` map. The layer boundary is one-way — **branches import
+  twigs and seeds, never the reverse**. The consumer's existing `@source '@rogueoak/canopy'` already
+  covers the new files, so the styling seam is unchanged.
+- **Stateful portalled compound (Dialog).** Built on **`@radix-ui/react-dialog`** (added to
+  `dependencies` **and** tsup `external`, like every other Radix dep): Radix owns `open`/`onOpenChange`,
+  the focus trap, return-focus, scroll lock, `Esc`-to-close, and the `role="dialog"` +
+  `aria-labelledby`/`aria-describedby` wiring. `DialogContent` is portalled (`DialogPrimitive.Portal`)
+  with the `DialogOverlay` as a sibling — the **third portalled surface** after Select and Tooltip, so
+  it inherits the theme for free (`.dark` lives on `<html>`, the portal mounts under `<body>`).
+- **No new token — reuse `color-overlay`.** The scrim uses the **pre-provisioned** `color-overlay`
+  semantic token at reduced opacity (`bg-overlay/80`), authored back in 0004 "used at reduced opacity
+  behind modals"; the content card reuses the raised-surface tokens (`surface-raised` + `border`,
+  close-button hover on `muted-raised`) and the primitive `shadow-lg`. So the first Branch adds **no
+  token** — "a Branch is themed by the layers it composes / the tokens already provisioned." A true
+  elevation **shadow** token (feedback 0006) would be a Roots spec, not this one.
+- **`aria-modal` added explicitly.** Radix advertises modality by `aria-hidden`-ing sibling content
+  rather than emitting `aria-modal`, so `DialogContent` sets `aria-modal="true"` directly to match the
+  ARIA APG modal-dialog pattern.
+- **Motion is consumer-provided keyframes.** Enter/exit fade + zoom are gated with
+  `motion-reduce:animate-none` and reference named `animate-dialog-*` utilities driven by Radix's
+  `data-[state=open|closed]` hooks. The repo has no animate plugin, so the **keyframes live in the
+  consumer's theme CSS** (Storybook's `tailwind.css`, via Tailwind v4 `@theme` `--animate-*` vars +
+  `@keyframes`). A consumer that omits them gets an instant show/hide — graceful, reduced-motion-equivalent
+  degradation — without any build error (an undefined `animate-*` utility is simply not emitted).
 
 ## Showcase + theming (Storybook)
 
