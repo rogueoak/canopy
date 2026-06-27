@@ -356,16 +356,20 @@ Two GitHub Actions workflows:
   `id-token: write`). **Requires Pages enabled** in repo settings (Source: GitHub Actions).
 - `release.yml` (push of a bare-SemVer tag): publishes both packages to npm — see below.
 
-**Releases are tag-driven and lockstep** (spec 0023). A **bare-SemVer git tag** (`X.Y.Z`, no
-`v` prefix, per trellis `rules/guidelines.md`) *is* the version: `git tag 0.1.0 && git push
-origin 0.1.0`. Repo `package.json` versions stay at a `0.0.0` placeholder, so the tag is the
-single source of truth — no version-bump PRs, no bot write access, no changelogs.
+**Releases are tag-driven and lockstep** (spec 0023). A **strict bare-SemVer git tag** (`X.Y.Z`,
+no `v` prefix, no prerelease suffix, per trellis `rules/guidelines.md`) *is* the version:
+`git tag 0.1.1 && git push origin 0.1.1`. Repo `package.json` versions stay at a `0.0.0`
+placeholder, so the tag is the single source of truth — no version-bump PRs, no bot write
+access, no changelogs. (Bootstrap: trusted publishing requires the package to pre-exist, so the
+first version of each — `0.1.0` — was published manually before the publisher was configured;
+the first CI tag is `0.1.1`.)
 `release.yml` (trigger `on: push: tags: ['[0-9]*.[0-9]*.[0-9]*']`) checks out, sets up pnpm +
 Node 24, `pnpm install --frozen-lockfile`, validates `$GITHUB_REF_NAME` is SemVer, then stamps
 **both** packages with `pnpm -r --filter './packages/*' exec npm version "$GITHUB_REF_NAME"
 --no-git-tag-version --allow-same-version`, runs a clean `pnpm build` (tsup `clean: true`
-rebuilds `canopy/dist`, including the `./twigs` subpath its `exports` references), and
-publishes with `pnpm -r --filter './packages/*' publish --no-git-checks --access public`.
+rebuilds `canopy/dist`, including the `./twigs` subpath its `exports` references), gates on
+`pnpm test` (a tag is immutable, so this is the last stop for a regression that still compiles),
+and publishes with `pnpm -r --filter './packages/*' publish --no-git-checks --access public`.
 pnpm rewrites canopy's `workspace:*` dep on `@rogueoak/roots` to the published version, skips
 the private Storybook app, and publishes roots before canopy via the workspace dep graph.
 Both packages carry `publishConfig.access: public` and a `prepublishOnly: pnpm build` guard so

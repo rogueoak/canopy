@@ -47,9 +47,16 @@ Consumers outside this repo cannot install Canopy. This spec turns publishing on
 
 **Tag → version.** Repo `package.json` versions stay at a `0.0.0` placeholder; the real
 version is injected at publish time from the tag, so the tag is unambiguously the source of
-truth and there is no version-commit-back or bot write access to the repo. Tags are bare
-SemVer with no `v` prefix (trellis `rules/guidelines.md`). To cut a release:
-`git tag 0.1.0 && git push origin 0.1.0`.
+truth and there is no version-commit-back or bot write access to the repo. Tags are **strict**
+bare SemVer with no `v` prefix and no prerelease/build suffix (trellis `rules/guidelines.md`) —
+a prerelease would otherwise land on the `latest` dist-tag. To cut a release:
+`git tag 0.1.1 && git push origin 0.1.1`.
+
+**Bootstrap (one-time, already done).** npm trusted publishing can only be configured on a
+package that already exists, so the *first* version of each package is published **manually**
+(`pnpm -r --filter './packages/*' publish --access public`), after which the trusted publisher
+(repo + `release.yml`) is set on each package. `0.1.0` was published this way; the first
+tag-driven CI release is therefore `0.1.1`.
 
 **Release workflow** (`.github/workflows/release.yml`), `on: push: tags: ['[0-9]*.[0-9]*.[0-9]*']`,
 job `permissions: id-token: write` (+`contents: read`):
@@ -61,9 +68,17 @@ job `permissions: id-token: write` (+`contents: read`):
    --allow-same-version`.
 4. `pnpm build` (clean — tsup `clean: true` rebuilds the currently-stale `canopy/dist`,
    including the `./twigs` subpath its `exports` already references).
-5. `pnpm -r --filter './packages/*' publish --no-git-checks --access public`
+5. `pnpm test` — gate the release on the suite, since a tag is immutable and `prepublishOnly`
+   only builds (a regression that still compiles must not reach `latest`).
+6. `pnpm -r --filter './packages/*' publish --no-git-checks --access public`
    (`--no-git-checks` for the detached-HEAD tag checkout; pnpm rewrites `workspace:*` and
    skips private packages; roots publishes before canopy via the workspace dep graph).
+
+**Partial-publish recovery.** Because publish is lockstep and ordered, if roots succeeds but
+canopy fails the same tag cannot simply be re-run (roots would `EPUBLISHCONFLICT`). Recovery is
+manual: publish canopy alone (`pnpm --filter @rogueoak/canopy publish --access public
+--no-git-checks`) or cut the next patch tag. Accepted for a low-frequency two-package release
+rather than building version-existence checks.
 
 **Auth — npm trusted publishing (OIDC), no `NPM_TOKEN`.** The job grants `id-token: write`;
 npm verifies the run against each package's trusted-publisher config (repo + workflow filename
