@@ -18,3 +18,20 @@ export type {
   DialogTitleProps,
   DialogDescriptionProps,
 } from './Dialog';
+
+export {
+  TopNav,
+  TopNavBrand,
+  TopNavLinks,
+  TopNavLink,
+  TopNavActions,
+  TopNavMenuButton,
+} from './TopNav';
+export type {
+  TopNavProps,
+  TopNavBrandProps,
+  TopNavLinksProps,
+  TopNavLinkProps,
+  TopNavActionsProps,
+  TopNavMenuButtonProps,
+} from './TopNav';

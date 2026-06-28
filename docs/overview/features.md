@@ -468,6 +468,36 @@ Radix that composes lower layers and adds no new token.
   common path. Stories prove composition: a FormField Twig in the body, Button Seeds for
   trigger/footer, a destructive confirmation, and a controlled example.
 
+## Branches: TopNav (0025)
+
+The second Branch — and the first **non-portalled, stateful** Branch: a responsive top navigation
+bar whose disclosure is **hand-rolled** (no Radix primitive, no new dependency, no new token).
+
+- **TopNav** (`@rogueoak/canopy/branches`) — a slot-based compound: `TopNav` (root) + `TopNavBrand`
+  / `TopNavLinks` / `TopNavLink` / `TopNavActions` / `TopNavMenuButton`. Rendered as a `<header>`
+  wrapping a `<nav aria-label>` (default `"Main"`, overridable) landmark; the bar is `h-14`,
+  `border-b border-border`, `bg-surface`, a horizontal flex layout (brand · links · actions). The
+  root owns the responsive open/close state in a small `TopNavContext` (`open` / `setOpen` /
+  `close` / a `useId` `panelId` / the menu button's ref) and the dismissal effect.
+- **Responsive collapse** — `TopNavLinks` is ONE element that is an inline row on `md+` and a mobile
+  disclosure panel anchored below the bar (`absolute … top-14`) when `open`; it carries
+  `id={panelId}`. `TopNavMenuButton` is the ☰ toggle, **only visible below the breakpoint**
+  (`md:hidden`), composing the Button Seed (`variant="ghost" size="icon"`) with
+  `aria-expanded={open}` + `aria-controls={panelId}` and a hamburger / X SVG that swaps with state.
+  The responsive `md:hidden` / `md:flex` classes are full literals so Tailwind's scanner emits them.
+- **Dismissal + focus** — while open, a document `pointerdown` outside the header closes the panel,
+  and `Escape` closes it **and returns focus to the menu button** (mirroring Dialog's
+  return-to-trigger, without the modal weight); clicking a `TopNavLink` also closes it, so a mobile
+  tap navigates and dismisses.
+- **Active state** — `TopNavLink active` sets `aria-current="page"` AND the active styling
+  (`font-medium text-text`) in lockstep, while an idle link stays muted (`text-text-muted
+  hover:text-text`); the consumer drives `active` from their router so Canopy stays router-agnostic.
+  `TopNavBrand` and `TopNavLink` support `asChild` (Radix `Slot`) to wrap the consumer's `<a>` /
+  router `<Link>`. `TopNavActions` is the `ml-auto` right cluster for Buttons / Avatar / SearchBar.
+  `forwardRef` + native prop spread + `cn()` merge on every styled part; semantic tokens only, both
+  themes automatically; NO `dark:`. Stories prove composition: brand + links + an actions cluster
+  (a Button and an Avatar), an active link, and the responsive collapse in a constrained container.
+
 ## npm publishing (0023)
 
 Releases now **publish to npm**, driven by git tags — a tag _is_ the release.
@@ -491,5 +521,5 @@ Releases now **publish to npm**, driven by git tags — a tag _is_ the release.
   exists with the publishing identity as a member, and configuring the trusted publisher
   (repo + `release.yml`) on each package at `npmjs.com/package/<pkg>/access`.
 
-Not yet built: more **Branches** (the layer is open with Dialog — TopNav, SideNav, DataTable to
+Not yet built: more **Branches** (the layer is open with Dialog · TopNav — SideNav, DataTable to
 come) and more Twigs as needed, then **Boughs** (templates), and the native Swift token target.

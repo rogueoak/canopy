@@ -376,6 +376,22 @@ themed by the layers it composes and the tokens already provisioned.
   composing the `--duration-*` / `--ease-*` tokens), which every consumer already imports — so the
   motion works out of the box, not consumer-provided. It can't come from `@source`: keyframes / a
   `@theme --animate-*` declaration are theme declarations, not utilities the scanner can emit.
+- **Hand-rolled stateful compound (TopNav, spec 0025).** TopNav is the first **non-portalled,
+  stateful** Branch — the counterpoint to Dialog. It still _owns interaction state_ (what makes it a
+  Branch), but **hand-rolls the disclosure** instead of pulling a Radix primitive: a small
+  `TopNavContext` (`open` / `setOpen` / `close` / a `useId` `panelId` / the menu button's ref) plus a
+  single `<header>`-scoped effect that, while open, listens for a document **`pointerdown` outside the
+  header** (close) and **`Escape`** (close **and** return focus to the menu button — the same
+  return-to-trigger idea as Dialog, without the portal/focus-trap weight). The menu button advertises
+  the disclosure with **`aria-expanded` + `aria-controls`** pointing at the `TopNavLinks` `id`
+  (`panelId`); `aria-current="page"` on an `active` link is set in lockstep with its styling (the
+  attribute-driven pattern). It adds **no Radix disclosure dep, no new token** — only the Button Seed
+  (the ☰ toggle) and Radix `Slot` (already a dep) for `asChild` on Brand/Link. The responsive collapse
+  is pure CSS: `TopNavLinks` is ONE element styled as an inline `md:flex` row above the breakpoint and
+  an `absolute` disclosure panel below it when `open`, with the `md:hidden` / `md:flex` literals
+  written out in full so the Tailwind scanner emits them. So Branches now span both ends: **portalled
+  + Radix-driven (Dialog)** and **in-flow + hand-rolled (TopNav)**, sharing the same recipe rules
+  (`cn()`, full-literal classes, `forwardRef` + native spread, no `dark:`, no new token).
 
 ## Showcase + theming (Storybook)
 
