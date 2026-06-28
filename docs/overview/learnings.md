@@ -377,3 +377,37 @@ stays token-driven; and guard the built preset (grep the rule) so the motion can
 from CSS **every consumer imports** (the Roots preset), not from component source or a single app's CSS
 — `@source` can't emit theme declarations. Compose the Roots motion tokens rather than hardcoding, and
 add a built-preset assertion that the keyframes + token-composed animate value ship.
+
+## A multi-form component's public surface must land on the same conceptual element in every form
+
+A Branch that renders **two structurally different forms** (SideNav: a desktop `<aside>` rail and a
+mobile Radix drawer) has to choose, *per branch*, which element a caller's `ref` / `className` /
+`{...props}` attach to — and SideNav's two branches drifted. The props landed on the `<aside>` on
+desktop but on the inner `<nav>` on mobile, so a consumer styling "the rail" had their `className`
+applied to the styled panel on desktop and to an unstyled inner wrapper below the breakpoint —
+**silently** (nothing errors; the class is just on the wrong element). The fix routes the public
+surface to the **styled panel** in both forms (the `<aside>`, and `DialogPrimitive.Content` on mobile,
+merging `className` into the drawer classes), with the `<nav aria-label>` a static landmark wrapper in
+both; the forwarded ref is documented as the rail panel (an `<aside>` on desktop, the drawer `div` on
+mobile, `null` while the drawer is closed). See
+[`docs/feedback/0009-sidenav-review-gaps.md`](../feedback/0009-sidenav-review-gaps.md).
+
+**Apply it:** when a component forks into more than one render shape, deliberately pick the **same
+conceptual element** (the styled panel) as the `ref`/`className`/native-prop surface in *every* branch,
+and keep them in lockstep — otherwise a caller's `className` targets different things across states. A
+desktop ref/className test passes while the mobile surface is wrong, so assert the surface in each form.
+
+## Test the a11y behaviour, not its scaffolding
+
+SideNav's headline collapsed-rail promise is "an icon-only item still surfaces its label, via a
+Tooltip on hover/focus." The tests asserted only the **`sr-only`** half (the label survives in the
+accessible name) — the actual Tooltip behaviour (focus the collapsed item → its label appears in a
+`role="tooltip"`) was never exercised, so the marquee a11y feature could have regressed with every
+test still green. A passing `sr-only` assertion *looks* like coverage but proves only that a hidden
+node exists, not that the label becomes perceivable. The fix adds a test that focuses a collapsed
+`SideNavItem` and asserts `findByRole('tooltip')` resolves with the label text.
+
+**Apply it:** guard a component's headline accessibility promise with a test of the **observable
+outcome** (a `role="tooltip"` appears on focus, focus returns to the trigger on close), not of the
+scaffolding that enables it (an `sr-only` node exists). Write the test that would **fail if the promise
+broke** — not the one that passes because a hidden element is present.

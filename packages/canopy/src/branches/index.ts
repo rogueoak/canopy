@@ -44,6 +44,7 @@ export {
   SideNavItem,
   SideNavTrigger,
   SideNavCollapseToggle,
+  useSideNavCollapsed,
 } from './SideNav';
 export type {
   SideNavProps,

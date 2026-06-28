@@ -87,6 +87,13 @@ describe('Roots token outputs — Tailwind v4 namespaces', () => {
     const overlayIn = /--animate-dialog-overlay-in:\s*([^;]+);/.exec(preset)?.[1] ?? '';
     expect(overlayIn).toContain('var(--duration-slow)');
     expect(overlayIn).toContain('var(--ease-decelerate)');
+
+    // The same partial now also carries the off-canvas drawer slide (first consumed by SideNav
+    // 0026) — assert its keyframes + token-composed animate value ship too.
+    expect(preset).toContain('@keyframes drawer-in');
+    expect(preset).toContain('--animate-drawer-in:');
+    const drawerIn = /--animate-drawer-in:\s*([^;]+);/.exec(preset)?.[1] ?? '';
+    expect(drawerIn).toContain('var(--duration-slow)');
   });
 });
 

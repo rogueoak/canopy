@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRef, useState } from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -37,6 +37,15 @@ beforeAll(() => {
   }
   if (!Element.prototype.scrollIntoView) {
     Element.prototype.scrollIntoView = vi.fn();
+  }
+  // The collapsed-item Tooltip's Radix `Arrow` measures itself through `react-use-size`, which
+  // calls `ResizeObserver` — absent in jsdom, so opening the tooltip throws without a no-op stub.
+  if (!globalThis.ResizeObserver) {
+    globalThis.ResizeObserver = vi.fn(() => ({
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+    })) as unknown as typeof ResizeObserver;
   }
 });
 
@@ -148,6 +157,31 @@ describe('SideNav (collapsed)', () => {
     // The button's accessible name flips with the state.
     await user.click(screen.getByRole('button', { name: 'Expand sidebar' }));
     expect(ref.current).toHaveClass('w-60');
+  });
+
+  it('surfaces a collapsed item label in a Tooltip on focus (the headline a11y promise)', async () => {
+    render(<Sidebar defaultCollapsed />);
+    // Radix Tooltip opens on focus immediately; the collapsed item is wrapped in one, so focusing
+    // the (icon-only) link must surface its label — the actual a11y behaviour, not just the sr-only
+    // scaffolding.
+    fireEvent.focus(screen.getByRole('link', { name: 'Projects' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Projects');
+  });
+
+  it('controlled collapse: the toggle fires onCollapsedChange but the rail width stays pinned', async () => {
+    const user = userEvent.setup();
+    const onCollapsedChange = vi.fn();
+    const ref = createRef<HTMLElement>();
+    // `collapsed` is pinned `false`, so SideNav is controlled — the DOM must not change on its own.
+    render(<Sidebar ref={ref} collapsed={false} onCollapsedChange={onCollapsedChange} />);
+
+    expect(ref.current).toHaveClass('w-60');
+    await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }));
+    // The callback reports intent...
+    expect(onCollapsedChange).toHaveBeenCalledWith(true);
+    // ...but the controlled rail width stays pinned until the prop actually changes.
+    expect(ref.current).toHaveClass('w-60');
+    expect(ref.current).not.toHaveClass('w-16');
   });
 });
 

@@ -514,13 +514,24 @@ The vertical side-navigation Branch — a collapsible, responsive app-shell rail
   a **Tooltip** Seed on hover/focus; below `768px` (a `useIsMobile()` matchMedia hook) the rail
   becomes an **off-canvas drawer** built directly on the **`@radix-ui/react-dialog` primitive** (the
   spec's "reuse Dialog's pattern, don't re-invent modal mechanics" — the Radix primitive, NOT
-  canopy's centred Dialog component): a `bg-overlay/80` scrim + a left-anchored full-height panel
-  with an sr-only `Title`, with Radix owning the focus trap, scroll lock, `Esc`/outside-click
-  dismiss; SideNav captures the opener on `onOpenAutoFocus` and returns focus to it on close.
-  `SideNavItem active` sets both `aria-current="page"` and the active fill (`bg-muted text-text`),
-  driven by the consumer's router; `asChild` styles a router `<Link>`; an item click closes the
-  drawer. `useIsMobile` renders the nav content **once** (single landmark, no duplicated
-  `aria-current`). The `SideNavTrigger` is intentionally **decoupled** (it lives in the app bar, a
+  canopy's centred Dialog component): a `bg-overlay/80` scrim (fading with the shared dialog overlay
+  motion) + a left-anchored full-height panel with an sr-only `Title`, with Radix owning the focus
+  trap, scroll lock, `Esc`/outside-click dismiss; SideNav captures the opener on `onOpenAutoFocus`
+  and returns focus to it on close. The drawer is a true **raised, animated surface**: it is elevated
+  (`bg-surface-raised` + `shadow-lg` + `border-r`, vs the in-flow desktop rail on plain `bg-surface`),
+  it **slides in/out** (`animate-drawer-in`/`-out`, shipped from the Roots preset, gated with
+  `motion-reduce:animate-none`), and it carries a **visible `X` close button** (`DialogPrimitive.Close`,
+  `aria-label="Close navigation"`) mirroring Dialog's close affordance; drawer items are ≥44px
+  (`min-h-11`) touch targets. `SideNavItem active` sets both `aria-current="page"` and the active fill
+  (`bg-muted text-text`; a **collapsed** active item brand-colours its icon `text-primary` so an
+  icon-only active item is distinct from a hovered idle one), driven by the consumer's router;
+  `asChild` styles a router `<Link>`; an item click closes the drawer (a no-op on desktop, and skipped
+  when the caller `preventDefault()`s). `useIsMobile` renders the nav content **once** (single
+  landmark, no duplicated `aria-current`); a **`mobile?` prop** overrides the detection for SSR/
+  first-paint correctness (avoids the desktop-rail flash). The `ref`/`className`/native props always
+  land on the **rail panel** (the `<aside>` on desktop, the drawer `div` on mobile), and an exported
+  **`useSideNavCollapsed()`** hook (`{ collapsed, mobile }`) lets an `asChild` item adapt to the
+  collapsed icon-rail. The `SideNavTrigger` is intentionally **decoupled** (it lives in the app bar, a
   sibling of SideNav, so it can't share context): the consumer wires its `onClick` to open and
   passes `aria-expanded`/`aria-controls`. Composition only — **no new token, no `dark:`** (semantic
   tokens flip via the layer; the portalled drawer themes correctly because `.dark` lives on
