@@ -5,12 +5,15 @@
  * `@source` scanner can NEVER emit them — they must ship from CSS every consumer already imports.
  * This partial is folded into `dist/tailwind-preset.css` by `build.mjs` (an idempotent single
  * write), so any consumer importing `@rogueoak/roots/tailwind-preset.css` gets the `animate-dialog-*`
- * utilities — and their motion — for free. The `--animate-*` values COMPOSE the Roots
- * `--duration-*` / `--ease-*` motion tokens (not hardcoded ms/easing), so motion stays token-driven.
+ * / `animate-drawer-*` utilities — and their motion — for free. The `--animate-*` values COMPOSE the
+ * Roots `--duration-*` / `--ease-*` motion tokens (not hardcoded ms/easing), so motion stays
+ * token-driven.
  *
  * First consumed by Dialog (Branches, spec 0024): Radix toggles `data-[state=open|closed]` on the
  * portalled overlay + content, which reference these `animate-dialog-*` utilities (gated with
- * `motion-reduce:animate-none`).
+ * `motion-reduce:animate-none`). The partial now ALSO carries the off-canvas drawer slide
+ * (`animate-drawer-in` / `-out`), first consumed by SideNav (spec 0026): the mobile drawer slides in
+ * from the left edge and back out, gated the same way.
  */
 @keyframes dialog-overlay-in {
   from {
@@ -48,10 +51,28 @@
     transform: translate(-50%, -50%) scale(0.96);
   }
 }
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes drawer-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
 
 @theme {
   --animate-dialog-overlay-in: dialog-overlay-in var(--duration-slow) var(--ease-decelerate);
   --animate-dialog-overlay-out: dialog-overlay-out var(--duration-base) var(--ease-standard);
   --animate-dialog-content-in: dialog-content-in var(--duration-slow) var(--ease-decelerate);
   --animate-dialog-content-out: dialog-content-out var(--duration-base) var(--ease-standard);
+  --animate-drawer-in: drawer-in var(--duration-slow) var(--ease-decelerate);
+  --animate-drawer-out: drawer-out var(--duration-base) var(--ease-standard);
 }

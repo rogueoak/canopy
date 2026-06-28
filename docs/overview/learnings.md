@@ -323,6 +323,39 @@ and put `main` in a red-lint state (feedback 0007).
 `format:check`) as a **required** status check so a red `main` can't happen: a failing lint
 should block the merge, not be discovered a spec later.
 
+## A control outside a Branch's subtree can't use its context — decouple it and own focus-return
+
+SideNav's mobile drawer (0026) is opened by a `SideNavTrigger` that, in a real app shell, lives in
+the **top bar** — a *sibling* of `<SideNav>`, not a descendant. So it cannot read SideNav's React
+context (context only flows down): a trigger that called `useSideNavContext()` threw
+"must be used within a <SideNav>", and there is no common ancestor to hoist a provider onto without
+inventing a wrapper component the spec didn't ask for. The fix is to **decouple the trigger**: the
+consumer already owns the drawer's `open` state (it passes `open`/`onOpenChange` to SideNav), so the
+trigger is a presentational Button the consumer wires (`onClick` to open, `aria-expanded`/
+`aria-controls` for the disclosure), and SideNav coordinates `aria-controls` via a shared `id`.
+
+That breaks Radix Dialog's **return-focus**, though: Radix restores focus to its `DialogTrigger`'s
+ref, and there is no DialogTrigger here (the opener is an unrelated sibling) — Radix's
+`onCloseAutoFocus` unconditionally `preventDefault()`s and focuses a null trigger ref, so focus is
+lost to `<body>` and `FocusScope`'s own restore is suppressed. Recover it **without** a trigger ref:
+capture the opener in the content's **`onOpenAutoFocus`** (which fires while `document.activeElement`
+is *still* the element that opened the dialog, before focus moves in), then restore it in
+`onCloseAutoFocus` (`preventDefault()` + `opener.focus()`). This returns focus to whatever opened the
+drawer with zero coupling to the trigger.
+
+Two more SideNav points worth keeping: (1) pick the responsive wrapper in **JS** (a `useIsMobile()`
+matchMedia hook), not by rendering both a desktop and a mobile form behind `md:` visibility
+utilities — that keeps the `<nav aria-label>` **landmark single** (no duplicated landmark, no
+doubled `aria-current`). (2) Radix `aria-hidden`s the background while a modal is open, so a query
+like `getByRole('button', { name: 'Open navigation' })` can't find the (now hidden) trigger after
+opening — assert on the **captured node reference** instead, which React still updates in place.
+
+**Apply it:** when a Branch's control must sit outside the Branch's DOM subtree, don't force a
+context onto it — decouple it (consumer-wired) and have the Branch own any side effects that the
+missing context would have carried (here, focus-return via `onOpenAutoFocus`/`onCloseAutoFocus`).
+Render responsive variants single-landmark via a JS breakpoint hook, and remember a Radix modal
+hides its background from role queries.
+
 ## Animation/motion utilities ship from the preset, not `@source`
 
 Canopy's distribution seam (Decision A) is that components ship `className` strings and the
@@ -344,3 +377,37 @@ stays token-driven; and guard the built preset (grep the rule) so the motion can
 from CSS **every consumer imports** (the Roots preset), not from component source or a single app's CSS
 — `@source` can't emit theme declarations. Compose the Roots motion tokens rather than hardcoding, and
 add a built-preset assertion that the keyframes + token-composed animate value ship.
+
+## A multi-form component's public surface must land on the same conceptual element in every form
+
+A Branch that renders **two structurally different forms** (SideNav: a desktop `<aside>` rail and a
+mobile Radix drawer) has to choose, *per branch*, which element a caller's `ref` / `className` /
+`{...props}` attach to — and SideNav's two branches drifted. The props landed on the `<aside>` on
+desktop but on the inner `<nav>` on mobile, so a consumer styling "the rail" had their `className`
+applied to the styled panel on desktop and to an unstyled inner wrapper below the breakpoint —
+**silently** (nothing errors; the class is just on the wrong element). The fix routes the public
+surface to the **styled panel** in both forms (the `<aside>`, and `DialogPrimitive.Content` on mobile,
+merging `className` into the drawer classes), with the `<nav aria-label>` a static landmark wrapper in
+both; the forwarded ref is documented as the rail panel (an `<aside>` on desktop, the drawer `div` on
+mobile, `null` while the drawer is closed). See
+[`docs/feedback/0009-sidenav-review-gaps.md`](../feedback/0009-sidenav-review-gaps.md).
+
+**Apply it:** when a component forks into more than one render shape, deliberately pick the **same
+conceptual element** (the styled panel) as the `ref`/`className`/native-prop surface in *every* branch,
+and keep them in lockstep — otherwise a caller's `className` targets different things across states. A
+desktop ref/className test passes while the mobile surface is wrong, so assert the surface in each form.
+
+## Test the a11y behaviour, not its scaffolding
+
+SideNav's headline collapsed-rail promise is "an icon-only item still surfaces its label, via a
+Tooltip on hover/focus." The tests asserted only the **`sr-only`** half (the label survives in the
+accessible name) — the actual Tooltip behaviour (focus the collapsed item → its label appears in a
+`role="tooltip"`) was never exercised, so the marquee a11y feature could have regressed with every
+test still green. A passing `sr-only` assertion *looks* like coverage but proves only that a hidden
+node exists, not that the label becomes perceivable. The fix adds a test that focuses a collapsed
+`SideNavItem` and asserts `findByRole('tooltip')` resolves with the label text.
+
+**Apply it:** guard a component's headline accessibility promise with a test of the **observable
+outcome** (a `role="tooltip"` appears on focus, focus returns to the trigger on close), not of the
+scaffolding that enables it (an `sr-only` node exists). Write the test that would **fail if the promise
+broke** — not the one that passes because a hidden element is present.
