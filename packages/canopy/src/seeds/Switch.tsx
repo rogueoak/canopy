@@ -5,12 +5,12 @@ import { cn } from '../lib/cn';
 export type SwitchProps = React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>;
 
 /**
- * Switch — the canopy on/off toggle Seed (spec 0010). For instant settings (notifications,
+ * Switch - the canopy on/off toggle Seed (spec 0010). For instant settings (notifications,
  * feature flags) where a checkbox's "submit later" semantics don't fit. Built on
  * `@radix-ui/react-switch`, so it ships the correct `role="switch"` / `aria-checked` and the
  * full controlled (`checked` + `onCheckedChange`) and uncontrolled (`defaultChecked`) APIs.
  *
- * Styled entirely with semantic-token utilities (spec 0005 recipe) — all FULL LITERALS so
+ * Styled entirely with semantic-token utilities (spec 0005 recipe) - all FULL LITERALS so
  * Tailwind v4's source scanner emits each one. No `dark:`: light/dark flips through the token
  * layer (spec 0004). The pill track is `bg-border` when off and `data-[state=checked]:bg-primary`
  * when on; the `bg-surface` thumb slides with a transform transition. The focus-visible ring lives

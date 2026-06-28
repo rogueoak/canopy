@@ -1,4 +1,4 @@
-# 0012 — Textarea
+# 0012 - Textarea
 
 ## Problem
 
@@ -6,7 +6,7 @@ With the Seeds recipe established in [0005](0005-button.md) and Input shipped in
 [0006](0006-input.md), add the **Textarea** atom for multi-line free text (comments,
 descriptions, messages). Textarea mirrors Input's states so forms feel consistent.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — no new infra.
+Independently shippable: one component, one PR. Follows the 0005 recipe - no new infra.
 
 ## Outcome
 
@@ -19,11 +19,11 @@ Independently shippable: one component, one PR. Follows the 0005 recipe — no n
 ## Scope
 
 ### In
-- **Textarea** — multi-line text input; focus-visible ring; `invalid` (aria-invalid) and
-  `disabled` states. A sensible `min-height` floor and user-`resize-y`; **no size variants** — a
+- **Textarea** - multi-line text input; focus-visible ring; `invalid` (aria-invalid) and
+  `disabled` states. A sensible `min-height` floor and user-`resize-y`; **no size variants** - a
   single height suits a multi-line field, and consumers set `rows` for a taller default. Forwards
   `ref`, spreads native props (incl. `rows`).
-- Stories: default, focused, invalid, disabled — light and dark.
+- Stories: default, focused, invalid, disabled - light and dark.
 - Tests: render, value/onChange, disabled, invalid/aria, focus ring.
 
 ### Out
@@ -31,13 +31,13 @@ Independently shippable: one component, one PR. Follows the 0005 recipe — no n
   `min-height` + `rows`, not a fixed control height like Input.
 - **Auto-resize** (grow-to-content) → out of scope; consumers set `rows` and CSS `resize`. A
   controlled auto-grow behaviour can be a follow-up if demand warrants.
-- **Label** (0007) — pairs with Textarea but ships separately.
+- **Label** (0007) - pairs with Textarea but ships separately.
 - Twig-level FormField (label + control + error/help) → later.
 
 ## Approach
 
 Follows the **0005 recipe**: `cn()` merge, semantic-token utilities only, theme-agnostic by
-construction. Reuses Input's token mapping for visual parity — invalid uses `danger` / `ring`;
+construction. Reuses Input's token mapping for visual parity - invalid uses `danger` / `ring`;
 focus uses `ring`; disabled uses `disabled` / `disabled-foreground`; placeholder uses
 `text-muted`. No cva (no variants); a single token base plus `min-h-*` + `resize-y`. Vitest +
 Testing Library + user-event.

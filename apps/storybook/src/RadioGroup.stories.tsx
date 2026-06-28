@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Label, RadioGroup, RadioGroupItem } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/RadioGroup — the single-choice selection Seed (spec 0011), built on
+ * Seeds/RadioGroup - the single-choice selection Seed (spec 0011), built on
  * `@radix-ui/react-radio-group`. Each `RadioGroupItem` pairs with a canopy `Label` via
  * `htmlFor`/`id`, so clicking the label selects its radio and assistive tech reads the name.
  *
@@ -10,7 +10,7 @@ import { Label, RadioGroup, RadioGroupItem } from '@rogueoak/canopy/seeds';
  * selected border + dot, the focus `ring`). There is NO per-story theme code: toggle the
  * toolbar Light / Dark control and every story re-themes via the token layer (spec 0004).
  * Keyboard: Tab into the group, then ArrowUp/ArrowDown (or Left/Right) roves focus and
- * selection — all from Radix.
+ * selection - all from Radix.
  */
 const meta = {
   title: 'Seeds/RadioGroup',
@@ -47,7 +47,7 @@ export const Default: Story = {
 
 /* -------------------------------------------------------------- Selected */
 
-/** `defaultValue` pre-selects an option — note the `primary` border + centred dot. */
+/** `defaultValue` pre-selects an option - note the `primary` border + centred dot. */
 export const Selected: Story = {
   render: () => (
     <RadioGroup aria-label="Plan" defaultValue="sprout">
@@ -74,7 +74,7 @@ export const DisabledItem: Story = {
 
 /* -------------------------------------------------------- Disabled group */
 
-/** The whole group disabled — every item inherits the disabled affordance. */
+/** The whole group disabled - every item inherits the disabled affordance. */
 export const DisabledGroup: Story = {
   name: 'Disabled group',
   render: () => (

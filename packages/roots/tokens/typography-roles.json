@@ -8,7 +8,7 @@
         "fontWeight": "{font-weight.bold}",
         "letterSpacing": "{tracking.tighter}"
       },
-      "$description": "Display — largest hero/marketing heading. Composes the type primitives so components reference text-display, not raw scale+weight+leading."
+      "$description": "Display - largest hero/marketing heading. Composes the type primitives so components reference text-display, not raw scale+weight+leading."
     },
     "h1": {
       "$type": "typography",
@@ -93,7 +93,7 @@
         "lineHeight": "{leading.normal}",
         "fontWeight": "{font-weight.normal}"
       },
-      "$description": "Inline / block code — uses the mono family."
+      "$description": "Inline / block code - uses the mono family."
     }
   }
 }

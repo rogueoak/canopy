@@ -3,26 +3,26 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import { cn } from '../lib/cn';
 
 /**
- * Select — the canopy single-choice dropdown Seed (spec 0013), built on
+ * Select - the canopy single-choice dropdown Seed (spec 0013), built on
  * `@radix-ui/react-select` and the 0005 component recipe: semantic-token Tailwind utilities
  * (FULL LITERAL strings so Tailwind v4's scanner emits each one), `cn()` class merge, and
  * `forwardRef` on every styled wrapper with a full native prop spread. There is NO `dark:` on
- * the common path — light/dark flips automatically through the token layer (spec 0004), and
+ * the common path - light/dark flips automatically through the token layer (spec 0004), and
  * because the `.dark` class lives on `<html>`, Radix-portalled `SelectContent` (mounted under
  * `<body>`) themes correctly too.
  *
  * The family mirrors the shadcn surface area:
- * - `Select` — the stateful root (`SelectPrimitive.Root`), owns `value` / `onValueChange`.
- * - `SelectGroup` / `SelectLabel` — group related options under a heading.
- * - `SelectValue` — renders the selected option's text (or the placeholder) in the trigger.
- * - `SelectTrigger` — the field button; styled for parity with the Input field
+ * - `Select` - the stateful root (`SelectPrimitive.Root`), owns `value` / `onValueChange`.
+ * - `SelectGroup` / `SelectLabel` - group related options under a heading.
+ * - `SelectValue` - renders the selected option's text (or the placeholder) in the trigger.
+ * - `SelectTrigger` - the field button; styled for parity with the Input field
  *   (`border-border` / `bg-surface` / `text-text`, focus-visible ring, `disabled:*` token pair,
  *   and `aria-invalid:` danger overrides) plus a trailing chevron and a muted placeholder via
  *   `data-[placeholder]:text-text-muted`.
- * - `SelectContent` — the portalled popup (`surface-raised` + `border` + the primitive
+ * - `SelectContent` - the portalled popup (`surface-raised` + `border` + the primitive
  *   `shadow-md`; there is no semantic elevation token yet).
- * - `SelectItem` — a selectable option with a leading check `ItemIndicator`.
- * - `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton` — supporting parts.
+ * - `SelectItem` - a selectable option with a leading check `ItemIndicator`.
+ * - `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton` - supporting parts.
  *
  * Single-select only; multi-select / combobox / async search are out of scope (spec 0013).
  */
@@ -33,14 +33,14 @@ const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
 /**
- * SelectTrigger — the field button that opens the dropdown. Class tokens mirror the Input
+ * SelectTrigger - the field button that opens the dropdown. Class tokens mirror the Input
  * field (spec 0006) for visual parity: `border-border` + `bg-surface` + `text-text`, the
  * shared focus-visible ring, the `disabled:*` token pair (not opacity), and the
  * `aria-invalid:` danger overrides so an invalid Select reads identically to an invalid Input.
  * The placeholder picks up `data-[placeholder]:text-text-muted`, and a chevron-down SVG sits
  * at the trailing edge.
  *
- * Single height (`h-10`) by design — it matches Input's default (`md`). A Select trigger sizing
+ * Single height (`h-10`) by design - it matches Input's default (`md`). A Select trigger sizing
  * to Input's `sm`/`lg` isn't a need yet; if it becomes one, lift the height into a cva `size`
  * variant mirroring `inputVariants` (deferred, not an oversight).
  */
@@ -78,7 +78,7 @@ const SelectTrigger = React.forwardRef<
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 
 /**
- * SelectScrollUpButton — the affordance Radix shows when the option list overflows upward.
+ * SelectScrollUpButton - the affordance Radix shows when the option list overflows upward.
  * Inherits the content's text token; a chevron-up SVG centres it.
  */
 const SelectScrollUpButton = React.forwardRef<
@@ -109,7 +109,7 @@ const SelectScrollUpButton = React.forwardRef<
 SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
 
 /**
- * SelectScrollDownButton — the downward overflow affordance (mirror of the up button).
+ * SelectScrollDownButton - the downward overflow affordance (mirror of the up button).
  */
 const SelectScrollDownButton = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.ScrollDownButton>,
@@ -139,10 +139,10 @@ const SelectScrollDownButton = React.forwardRef<
 SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
 
 /**
- * SelectContent — the portalled dropdown surface. Rendered through `SelectPrimitive.Portal`
+ * SelectContent - the portalled dropdown surface. Rendered through `SelectPrimitive.Portal`
  * (so it escapes overflow/stacking contexts) onto a raised-surface card: `bg-surface-raised`
  * + `text-text` + `border border-border` + `rounded-md` + the primitive `shadow-md` (there is
- * no semantic elevation token yet — chosen as the closest default-elevation primitive). When
+ * no semantic elevation token yet - chosen as the closest default-elevation primitive). When
  * `position="popper"` (the default here) the viewport is offset off the trigger and sized to
  * the trigger width via Radix's CSS vars.
  */
@@ -179,7 +179,7 @@ const SelectContent = React.forwardRef<
 SelectContent.displayName = SelectPrimitive.Content.displayName;
 
 /**
- * SelectLabel — a non-interactive heading for a `SelectGroup`. Uses the muted text token and
+ * SelectLabel - a non-interactive heading for a `SelectGroup`. Uses the muted text token and
  * matches the items' left padding so the heading aligns above their text (past the check gutter).
  */
 const SelectLabel = React.forwardRef<
@@ -195,7 +195,7 @@ const SelectLabel = React.forwardRef<
 SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
 /**
- * SelectItem — a selectable option. Highlight (keyboard/hover via Radix's `focus` state) uses
+ * SelectItem - a selectable option. Highlight (keyboard/hover via Radix's `focus` state) uses
  * the raised-surface `muted-raised` fill (feedback 0006): the popover sits on `surface-raised`,
  * where base `muted` would *recede* in dark (stone.900 darker than the stone.800 surface), so
  * the item lifts toward the foreground in BOTH themes instead. The `data-[disabled]` state dims
@@ -238,7 +238,7 @@ const SelectItem = React.forwardRef<
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 
 /**
- * SelectSeparator — a hairline divider between groups/items, tinted with the `border` token.
+ * SelectSeparator - a hairline divider between groups/items, tinted with the `border` token.
  */
 const SelectSeparator = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Separator>,

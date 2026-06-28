@@ -14,15 +14,15 @@ import {
 } from '@rogueoak/canopy/branches';
 
 /**
- * Branches/Dialog — the first canopy Branch (organism, spec 0024), built on
+ * Branches/Dialog - the first canopy Branch (organism, spec 0024), built on
  * `@radix-ui/react-dialog`. A Branch owns interaction state and a portal: Radix supplies the
  * open/close state machine, the focus trap, return-focus, scroll lock, and the `aria-modal` ARIA
  * contract, while the surface is the established raised-surface pattern (`bg-surface-raised` +
  * `border` + the primitive `shadow-lg`) and the scrim is the pre-provisioned `color-overlay` token
  * at reduced opacity (`bg-overlay/80`).
  *
- * There is NO per-story theme code: toggle the toolbar Light / Dark control and every story —
- * including the portalled overlay + content — re-themes via the token layer (spec 0004). Dialog
+ * There is NO per-story theme code: toggle the toolbar Light / Dark control and every story -
+ * including the portalled overlay + content - re-themes via the token layer (spec 0004). Dialog
  * composes lower layers: Button Seeds for the trigger / footer, and a FormField Twig in the body.
  */
 const meta = {
@@ -63,7 +63,7 @@ export const Basic: Story = {
 /* --------------------------------------------------------------------- FormBody */
 
 /**
- * A form dialog: a FormField Twig (Label + Input) in the body, with Cancel / Save footer Buttons —
+ * A form dialog: a FormField Twig (Label + Input) in the body, with Cancel / Save footer Buttons -
  * proving a Branch composes Twigs and Seeds.
  */
 export const FormBody: Story = {

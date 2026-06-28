@@ -1,4 +1,4 @@
-# 0006 — Input
+# 0006 - Input
 
 ## Problem
 
@@ -6,7 +6,7 @@ With the Seeds recipe established in [0005](0005-button.md), grow the next atom:
 **Input**. Forms are the backbone of rogueoak apps; Input is the field primitive every form
 control and Twig (FormField, SearchBar) will build on.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — no new infra.
+Independently shippable: one component, one PR. Follows the 0005 recipe - no new infra.
 
 ## Outcome
 
@@ -18,14 +18,14 @@ Independently shippable: one component, one PR. Follows the 0005 recipe — no n
 ## Scope
 
 ### In
-- **Input** — text input; focus-visible ring; `invalid` (aria-invalid) and `disabled` states;
+- **Input** - text input; focus-visible ring; `invalid` (aria-invalid) and `disabled` states;
   sizes `sm` / `md` / `lg` consistent with Button. Forwards `ref`, spreads native props,
   `type` passthrough.
-- Stories: default, focused, invalid, disabled, sizes — light and dark.
+- Stories: default, focused, invalid, disabled, sizes - light and dark.
 - Tests: render, value/onChange, disabled, invalid/aria, focus ring.
 
 ### Out
-- **Label** (0007) — pairs with Input but ships separately.
+- **Label** (0007) - pairs with Input but ships separately.
 - Textarea, Select, Checkbox, Switch → follow-up Seeds specs.
 - Twig-level FormField (label + input + error + help) → later.
 

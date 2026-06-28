@@ -1,12 +1,12 @@
-# 0010 — Switch
+# 0010 - Switch
 
 ## Problem
 
-With the Seeds recipe established in [0005](0005-button.md), add the **Switch** atom — a toggle
+With the Seeds recipe established in [0005](0005-button.md), add the **Switch** atom - a toggle
 for instant on/off settings (notifications, feature flags) where a checkbox's "submit later"
 semantics don't fit. Switch is the on/off primitive for settings rows and later Twigs.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — no new infra beyond
+Independently shippable: one component, one PR. Follows the 0005 recipe - no new infra beyond
 the Radix Switch primitive.
 
 ## Outcome
@@ -19,14 +19,14 @@ the Radix Switch primitive.
 ## Scope
 
 ### In
-- **Switch** — Radix Switch; on/off states; `disabled`; focus-visible ring; animated thumb.
+- **Switch** - Radix Switch; on/off states; `disabled`; focus-visible ring; animated thumb.
   Forwards `ref`, spreads native props.
 - New dep on `@rogueoak/canopy`: `@radix-ui/react-switch`.
-- Stories: on, off, disabled, paired with a Label — light and dark.
+- Stories: on, off, disabled, paired with a Label - light and dark.
 - Tests: render, toggle (controlled + uncontrolled), disabled, focus ring, aria.
 
 ### Out
-- **Checkbox** (0009) and **Radio Group** (0011) — sibling selection atoms, separate specs.
+- **Checkbox** (0009) and **Radio Group** (0011) - sibling selection atoms, separate specs.
 - Twig-level FormField (label + control + error/help) → later.
 
 ## Approach

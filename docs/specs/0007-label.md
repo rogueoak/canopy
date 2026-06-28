@@ -1,12 +1,12 @@
-# 0007 — Label
+# 0007 - Label
 
 ## Problem
 
 With [0005](0005-button.md)'s recipe and [0006](0006-input.md)'s Input in place, add the
 **Label** atom that pairs with form fields. Correct labelling is the foundation of accessible
-forms — Label is small but load-bearing for every field and Twig that follows.
+forms - Label is small but load-bearing for every field and Twig that follows.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — no new infra beyond
+Independently shippable: one component, one PR. Follows the 0005 recipe - no new infra beyond
 the Radix Label primitive.
 
 ## Outcome
@@ -20,10 +20,10 @@ the Radix Label primitive.
 ## Scope
 
 ### In
-- **Label** — Radix Label; `htmlFor` association; optional `required` indicator (visual `*`
+- **Label** - Radix Label; `htmlFor` association; optional `required` indicator (visual `*`
   with accessible semantics); styled via semantic text tokens.
 - New dep on `@rogueoak/canopy`: `@radix-ui/react-label`.
-- Stories: standalone, required, paired with an Input (htmlFor) — light and dark.
+- Stories: standalone, required, paired with an Input (htmlFor) - light and dark.
 - Tests: render, `htmlFor` association (clicking label focuses input), required indicator.
 
 ### Out

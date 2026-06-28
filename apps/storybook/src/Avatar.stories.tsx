@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Avatar — the canopy identity Seed (spec 0015).
+ * Seeds/Avatar - the canopy identity Seed (spec 0015).
  *
  * Built on `@radix-ui/react-avatar`: an image with a graceful initials fallback shown while the
  * image loads, or whenever it is missing or fails to load. Styled entirely with semantic-token
- * utilities (`bg-muted` / `text-muted-foreground`) — there is NO per-story theme code: toggle
+ * utilities (`bg-muted` / `text-muted-foreground`) - there is NO per-story theme code: toggle
  * the toolbar Light / Dark control and every story re-themes via the token layer (spec 0004).
  */
 const meta = {
@@ -52,7 +52,7 @@ export const WithImage: Story = {
 /* ----------------------------------------------------------- Fallback initials */
 
 /**
- * No `src` (and an invalid one) — Radix never resolves an image, so the initials fallback is
+ * No `src` (and an invalid one) - Radix never resolves an image, so the initials fallback is
  * what renders. This is the same path that shows when a real image 404s or is still loading.
  */
 export const FallbackInitials: Story = {
@@ -96,7 +96,7 @@ export const Sizes: Story = {
 /* ----------------------------------------------------------------- Group/row */
 
 /**
- * A row of avatars — member lists, comment threads, stacked headers. Mixes loaded images with
+ * A row of avatars - member lists, comment threads, stacked headers. Mixes loaded images with
  * initials-only fallbacks.
  */
 export const Group: Story = {

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Checkbox, Label } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Checkbox — the canopy boolean-field Seed (spec 0009).
+ * Seeds/Checkbox - the canopy boolean-field Seed (spec 0009).
  *
  * Styled entirely with semantic-token utilities (`border-border-strong`, `bg-surface`, the
  * `data-[state=checked]` / `data-[state=indeterminate]` swap to `bg-primary` /
@@ -44,7 +44,7 @@ export const Checked: Story = {
 };
 
 /**
- * Indeterminate — the "mixed" state (`checked="indeterminate"`), rendered with the inline dash
+ * Indeterminate - the "mixed" state (`checked="indeterminate"`), rendered with the inline dash
  * indicator. Common for a parent checkbox over a partially-selected group.
  */
 export const Indeterminate: Story = {
@@ -67,7 +67,7 @@ export const Disabled: Story = {
 };
 
 /**
- * Paired with the canopy `Label` via `id` / `htmlFor` — clicking the label toggles the box and
+ * Paired with the canopy `Label` via `id` / `htmlFor` - clicking the label toggles the box and
  * the two share one accessible name.
  */
 export const WithLabel: Story = {

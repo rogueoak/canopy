@@ -1,4 +1,4 @@
-# 0003 — Theming review gaps (dark border, unguarded states, build safety)
+# 0003 - Theming review gaps (dark border, unguarded states, build safety)
 
 Source: Spectra designer/engineer/architect/tester reviews on PR #5 (spec 0004). Severity:
 **major** (×2) + minors.
@@ -9,7 +9,7 @@ Source: Spectra designer/engineer/architect/tester reviews on PR #5 (spec 0004).
    `stone.800` → a **1.0:1 invisible hairline** on popovers/menus, and only 1.25:1 on cards.
    Borders disappear on raised surfaces in dark.
 2. **Interaction-state AA unguarded** (architect major). The both-theme contrast guard covers
-   base roles but omits the new `*-hover`/`*-active`/`disabled` tokens — exactly the surfaces
+   base roles but omits the new `*-hover`/`*-active`/`disabled` tokens - exactly the surfaces
    0005's Button renders foreground on, in both themes. A bad hover step would ship green.
 3. **Build append not idempotent / unsafe** (engineer + architect). `build.mjs` appends the
    `.dark` block to `tokens.css`; only safe because `pnpm clean` precedes it. A standalone/watch
@@ -30,7 +30,7 @@ single pure write; the story table was authored as static strings.
   surfaces); re-verify the depth.
 - Extend the contrast guard to assert AA for foreground-on-`hover`/`-active` (primary/secondary/
   danger/accent) in **both** themes. `disabled` is intentionally low-contrast (WCAG exempts
-  disabled controls) and stays excluded — with a comment so it reads as deliberate.
+  disabled controls) and stays excluded - with a comment so it reads as deliberate.
 - Rewrite `build.mjs` to compose `tokens.css` in **one write** (light + dark), idempotent, with
   `try/finally` cleanup; hard-error the dark format's non-reference branch instead of emitting a
   flat hex; drop the dead `outputReferences` on `darkConfig`.
@@ -43,7 +43,7 @@ single pure write; the story table was authored as static strings.
 ## Learning
 
 Guard the **full token surface components will use** (interaction states, not just base roles),
-and test **visual depth** (border-vs-surface separation), not only text legibility — a 1.0:1
+and test **visual depth** (border-vs-surface separation), not only text legibility - a 1.0:1
 border passes every text-contrast check. Composed build outputs should be **pure functions of
 their inputs** (idempotent single write), never appends. And living-doc tables must be
 **computed**, never hardcoded, or they drift from the tokens they describe. Rolled into

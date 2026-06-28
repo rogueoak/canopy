@@ -8,12 +8,12 @@
     "surface": {
       "$value": "{color.stone.900}",
       "$type": "color",
-      "$description": "Default surface (cards, panels) — dark."
+      "$description": "Default surface (cards, panels) - dark."
     },
     "surface-raised": {
       "$value": "{color.stone.800}",
       "$type": "color",
-      "$description": "Raised surface (popovers, menus) — dark, lighter than surface."
+      "$description": "Raised surface (popovers, menus) - dark, lighter than surface."
     },
     "overlay": {
       "$value": "{color.stone.950}",
@@ -33,7 +33,7 @@
     "text-subtle": {
       "$value": "{color.stone.400}",
       "$type": "color",
-      "$description": "Subtle/tertiary text — dark (large-text-only)."
+      "$description": "Subtle/tertiary text - dark (large-text-only)."
     },
     "text-inverted": {
       "$value": "{color.stone.900}",
@@ -43,7 +43,7 @@
     "border": {
       "$value": "{color.stone.700}",
       "$type": "color",
-      "$description": "Default hairline border (dark). stone.700 (not .800) so it stays visibly distinct from surface-raised (stone.800) — a .800 border was a ~1.0:1 invisible hairline on popovers/menus (feedback 0003)."
+      "$description": "Default hairline border (dark). stone.700 (not .800) so it stays visibly distinct from surface-raised (stone.800) - a .800 border was a ~1.0:1 invisible hairline on popovers/menus (feedback 0003)."
     },
     "border-strong": {
       "$value": "{color.stone.600}",
@@ -58,27 +58,27 @@
     "ring-offset": {
       "$value": "{color.stone.950}",
       "$type": "color",
-      "$description": "Focus-ring offset / gap colour (dark — the page canvas)."
+      "$description": "Focus-ring offset / gap colour (dark - the page canvas)."
     },
     "primary": {
       "$value": "{color.moss.400}",
       "$type": "color",
-      "$description": "Primary brand role — a lighter moss step for legibility on dark."
+      "$description": "Primary brand role - a lighter moss step for legibility on dark."
     },
     "primary-foreground": {
       "$value": "{color.moss.950}",
       "$type": "color",
-      "$description": "Foreground on primary surfaces (dark — near-black on the lighter moss)."
+      "$description": "Foreground on primary surfaces (dark - near-black on the lighter moss)."
     },
     "primary-hover": {
       "$value": "{color.moss.300}",
       "$type": "color",
-      "$description": "Primary role — hover state (dark — lighter)."
+      "$description": "Primary role - hover state (dark - lighter)."
     },
     "primary-active": {
       "$value": "{color.moss.500}",
       "$type": "color",
-      "$description": "Primary role — active/pressed state (dark)."
+      "$description": "Primary role - active/pressed state (dark)."
     },
     "secondary": {
       "$value": "{color.bark.400}",
@@ -93,17 +93,17 @@
     "secondary-hover": {
       "$value": "{color.bark.300}",
       "$type": "color",
-      "$description": "Secondary role — hover state (dark)."
+      "$description": "Secondary role - hover state (dark)."
     },
     "secondary-active": {
       "$value": "{color.bark.200}",
       "$type": "color",
-      "$description": "Secondary role — active/pressed state (dark). Lifts toward light (base .400 → hover .300 → active .200) so the near-black secondary-foreground (bark.950) keeps AA on the active surface; bark.500 was too dark (~3.77:1, below AA) — feedback 0003."
+      "$description": "Secondary role - active/pressed state (dark). Lifts toward light (base .400 → hover .300 → active .200) so the near-black secondary-foreground (bark.950) keeps AA on the active surface; bark.500 was too dark (~3.77:1, below AA) - feedback 0003."
     },
     "accent": {
       "$value": "{color.amber.400}",
       "$type": "color",
-      "$description": "Accent role — FILL use on dark surfaces."
+      "$description": "Accent role - FILL use on dark surfaces."
     },
     "accent-strong": {
       "$value": "{color.amber.300}",
@@ -113,17 +113,17 @@
     "accent-foreground": {
       "$value": "{color.amber.950}",
       "$type": "color",
-      "$description": "Foreground on accent (fill) surfaces (dark — near-black on amber)."
+      "$description": "Foreground on accent (fill) surfaces (dark - near-black on amber)."
     },
     "accent-hover": {
       "$value": "{color.amber.300}",
       "$type": "color",
-      "$description": "Accent role — hover state (dark)."
+      "$description": "Accent role - hover state (dark)."
     },
     "muted": {
       "$value": "{color.stone.900}",
       "$type": "color",
-      "$description": "Muted surface (subtle fills, hover backgrounds) — dark."
+      "$description": "Muted surface (subtle fills, hover backgrounds) - dark."
     },
     "muted-foreground": {
       "$value": "{color.stone.300}",
@@ -133,13 +133,13 @@
     "muted-raised": {
       "$value": "{color.stone.700}",
       "$type": "color",
-      "$description": "Highlight/hover fill for items on a RAISED surface (popovers, menus) — dark (feedback 0006). stone.700 is LIGHTER than surface-raised (stone.800) → a real lift, unlike base muted (stone.900) which is DARKER than surface-raised and recedes. The near-white text (stone.50) stays above AA on stone.700."
+      "$description": "Highlight/hover fill for items on a RAISED surface (popovers, menus) - dark (feedback 0006). stone.700 is LIGHTER than surface-raised (stone.800) → a real lift, unlike base muted (stone.900) which is DARKER than surface-raised and recedes. The near-white text (stone.50) stays above AA on stone.700."
     },
     "success": {
       "DEFAULT": {
         "$value": "{color.success.400}",
         "$type": "color",
-        "$description": "Success status role (dark) — the lighter .400 reads on dark surfaces."
+        "$description": "Success status role (dark) - the lighter .400 reads on dark surfaces."
       }
     },
     "success-foreground": {
@@ -163,7 +163,7 @@
       "DEFAULT": {
         "$value": "{color.danger.300}",
         "$type": "color",
-        "$description": "Danger/error status role (dark). Uses .300 (not .400 like success/warning) so the near-black .950 foreground reaches AA — danger's hue is darker at .400 (only ~4.03:1)."
+        "$description": "Danger/error status role (dark). Uses .300 (not .400 like success/warning) so the near-black .950 foreground reaches AA - danger's hue is darker at .400 (only ~4.03:1)."
       }
     },
     "danger-foreground": {
@@ -174,18 +174,18 @@
     "danger-hover": {
       "$value": "{color.danger.200}",
       "$type": "color",
-      "$description": "Danger role — hover state (dark). Lifts toward light (base .300 → hover .200 → active .100), NOT .300 — at .300 it collided with the .300 base and the destructive hover was invisible in dark (feedback 0004). Going lighter keeps the near-black danger-foreground (danger.950) above AA on the fill."
+      "$description": "Danger role - hover state (dark). Lifts toward light (base .300 → hover .200 → active .100), NOT .300 - at .300 it collided with the .300 base and the destructive hover was invisible in dark (feedback 0004). Going lighter keeps the near-black danger-foreground (danger.950) above AA on the fill."
     },
     "danger-active": {
       "$value": "{color.danger.100}",
       "$type": "color",
-      "$description": "Danger role — active/pressed state (dark). Continues the lighten-on-press path (.300 → .200 → .100) the dark theme uses where the foreground is near-black (cf. secondary .400 → .300 → .200); danger.950 stays well above AA on danger.100."
+      "$description": "Danger role - active/pressed state (dark). Continues the lighten-on-press path (.300 → .200 → .100) the dark theme uses where the foreground is near-black (cf. secondary .400 → .300 → .200); danger.950 stays well above AA on danger.100."
     },
     "info": {
       "DEFAULT": {
         "$value": "{color.info.300}",
         "$type": "color",
-        "$description": "Info status role (dark). Uses .300 (not .400) so the near-black .950 foreground reaches AA — info's hue is darker at .400 (only ~4.14:1)."
+        "$description": "Info status role (dark). Uses .300 (not .400) so the near-black .950 foreground reaches AA - info's hue is darker at .400 (only ~4.14:1)."
       }
     },
     "info-foreground": {

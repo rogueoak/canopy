@@ -51,7 +51,7 @@ describe('Checkbox', () => {
       'data-[state=indeterminate]:bg-primary',
       'data-[state=indeterminate]:border-primary',
     );
-    // The DASH icon (not the check) is the one wired to show for indeterminate — pin the
+    // The DASH icon (not the check) is the one wired to show for indeterminate - pin the
     // swap so a crossed icon (dash wired to checked) is caught, not just the shared fill.
     const icons = Array.from(checkbox.querySelectorAll('svg'));
     const dPath = (el: Element) => el.querySelector('path')?.getAttribute('d');

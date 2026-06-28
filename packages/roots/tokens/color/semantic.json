@@ -13,7 +13,7 @@
     "surface-raised": {
       "$value": "{color.base.white}",
       "$type": "color",
-      "$description": "Raised surface (popovers, menus) — distinguished by elevation."
+      "$description": "Raised surface (popovers, menus) - distinguished by elevation."
     },
     "overlay": {
       "$value": "{color.stone.900}",
@@ -58,7 +58,7 @@
     "ring-offset": {
       "$value": "{color.base.white}",
       "$type": "color",
-      "$description": "Focus-ring offset / gap colour — sits between a focus ring and the element on a coloured surface (defaults to the page surface). Pairs with ring."
+      "$description": "Focus-ring offset / gap colour - sits between a focus ring and the element on a coloured surface (defaults to the page surface). Pairs with ring."
     },
     "primary": {
       "$value": "{color.moss.600}",
@@ -73,12 +73,12 @@
     "primary-hover": {
       "$value": "{color.moss.700}",
       "$type": "color",
-      "$description": "Primary role — hover state (deeper ramp step in light, lighter in dark)."
+      "$description": "Primary role - hover state (deeper ramp step in light, lighter in dark)."
     },
     "primary-active": {
       "$value": "{color.moss.800}",
       "$type": "color",
-      "$description": "Primary role — active/pressed state."
+      "$description": "Primary role - active/pressed state."
     },
     "secondary": {
       "$value": "{color.bark.600}",
@@ -93,22 +93,22 @@
     "secondary-hover": {
       "$value": "{color.bark.700}",
       "$type": "color",
-      "$description": "Secondary role — hover state."
+      "$description": "Secondary role - hover state."
     },
     "secondary-active": {
       "$value": "{color.bark.800}",
       "$type": "color",
-      "$description": "Secondary role — active/pressed state."
+      "$description": "Secondary role - active/pressed state."
     },
     "accent": {
       "$value": "{color.amber.500}",
       "$type": "color",
-      "$description": "Accent role — FILL use only (amber.500 is ~2.83:1 on bg, below AA for foreground). For accent text/icon/border on a light surface use accent-strong."
+      "$description": "Accent role - FILL use only (amber.500 is ~2.83:1 on bg, below AA for foreground). For accent text/icon/border on a light surface use accent-strong."
     },
     "accent-strong": {
       "$value": "{color.amber.700}",
       "$type": "color",
-      "$description": "Accent for FOREGROUND use (text/icon/border) on light surfaces — amber.700 reaches AA (~6.15:1 on bg). accent stays the fill role."
+      "$description": "Accent for FOREGROUND use (text/icon/border) on light surfaces - amber.700 reaches AA (~6.15:1 on bg). accent stays the fill role."
     },
     "accent-foreground": {
       "$value": "{color.amber.950}",
@@ -118,7 +118,7 @@
     "accent-hover": {
       "$value": "{color.amber.400}",
       "$type": "color",
-      "$description": "Accent role — hover state. accent is a fill role with a near-black foreground (accent-foreground = amber.950), so its hover lightens (amber.500 → .400) rather than darkening: amber.600 dropped the foreground to ~3.79:1 (below AA), amber.400 restores it to ~6.40:1 (feedback 0003)."
+      "$description": "Accent role - hover state. accent is a fill role with a near-black foreground (accent-foreground = amber.950), so its hover lightens (amber.500 → .400) rather than darkening: amber.600 dropped the foreground to ~3.79:1 (below AA), amber.400 restores it to ~6.40:1 (feedback 0003)."
     },
     "muted": {
       "$value": "{color.stone.100}",
@@ -133,7 +133,7 @@
     "muted-raised": {
       "$value": "{color.stone.100}",
       "$type": "color",
-      "$description": "Highlight/hover fill for items on a RAISED surface (popovers, menus) — a subtle lift on the white raised surface (feedback 0006). Steps toward the foreground on surface-raised in BOTH themes, unlike base muted which inverts on a raised surface in dark (muted stone.900 is darker than surface-raised stone.800, so the highlight recedes). Pairs with text/text-text at AA."
+      "$description": "Highlight/hover fill for items on a RAISED surface (popovers, menus) - a subtle lift on the white raised surface (feedback 0006). Steps toward the foreground on surface-raised in BOTH themes, unlike base muted which inverts on a raised surface in dark (muted stone.900 is darker than surface-raised stone.800, so the highlight recedes). Pairs with text/text-text at AA."
     },
     "success": {
       "DEFAULT": {
@@ -174,17 +174,17 @@
     "danger-hover": {
       "$value": "{color.danger.700}",
       "$type": "color",
-      "$description": "Danger role — hover state."
+      "$description": "Danger role - hover state."
     },
     "danger-active": {
       "$value": "{color.danger.800}",
       "$type": "color",
-      "$description": "Danger role — active/pressed state. Deepens 600 → 700 → 800 like primary/secondary so the destructive button gives press feedback; near-white danger-foreground (danger.50) stays well above AA on the darker fill."
+      "$description": "Danger role - active/pressed state. Deepens 600 → 700 → 800 like primary/secondary so the destructive button gives press feedback; near-white danger-foreground (danger.50) stays well above AA on the darker fill."
     },
     "disabled": {
       "$value": "{color.stone.100}",
       "$type": "color",
-      "$description": "Disabled surface — a muted fill for disabled controls. Pairs with disabled-foreground; components may also use opacity where a control just dims."
+      "$description": "Disabled surface - a muted fill for disabled controls. Pairs with disabled-foreground; components may also use opacity where a control just dims."
     },
     "disabled-foreground": {
       "$value": "{color.stone.400}",

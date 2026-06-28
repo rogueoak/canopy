@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { Separator } from './Separator';
 
 describe('Separator', () => {
-  it('is decorative by default — no separator role, exposed as role="none"', () => {
+  it('is decorative by default - no separator role, exposed as role="none"', () => {
     render(<Separator data-testid="sep" />);
     // Radix decorative separators carry role="none" and are hidden from the a11y tree.
     expect(screen.queryByRole('separator')).not.toBeInTheDocument();
