@@ -57,28 +57,33 @@ export interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 /**
- * TopNav — the root. Renders a `<header>` wrapping a `<nav aria-label>` landmark with the bar
- * styling, provides the `TopNavContext`, and owns the dismissal effect: while the panel is open, a
- * document `pointerdown` outside the header closes it, and `Escape` closes it AND returns focus to
- * the menu button (mirroring Dialog's return-to-trigger, without the modal weight). `forwardRef`
- * exposes the `<header>` element; native `<header>` props spread through.
+ * TopNav — the root. Renders a `<header>` banner wrapping the `<nav aria-label>` landmark that is
+ * the styled bar; provides the `TopNavContext`, and owns the dismissal effect: while the panel is
+ * open, a document `pointerdown` outside the nav closes it, and `Escape` closes it AND returns
+ * focus to the menu button (mirroring Dialog's return-to-trigger, without the modal weight). The
+ * public surface is the `<nav>`: `className`, the forwarded `ref`, and native props all land on
+ * it (the element the caller styles), with the `<header>` a thin semantic wrapper.
  */
 export const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
   ({ className, children, ariaLabel = 'Main', ...props }, ref) => {
     const [open, setOpen] = React.useState(false);
     const panelId = React.useId();
     const menuButtonRef = React.useRef<HTMLButtonElement | null>(null);
-    const headerRef = React.useRef<HTMLElement | null>(null);
+    const navRef = React.useRef<HTMLElement | null>(null);
 
-    React.useImperativeHandle(ref, () => headerRef.current as HTMLElement);
+    React.useImperativeHandle(ref, () => navRef.current as HTMLElement);
 
     const close = React.useCallback(() => setOpen(false), []);
 
+    // Hand-rolled dismiss (open-gated outside-pointerdown + Escape + focus-return). Kept inline
+    // rather than extracted to a shared hook: TopNav is the only hand-rolled disclosure — SideNav
+    // (0026) gets the same behaviour from Radix Dialog (its drawer), so there is no second consumer
+    // to share with yet (extract on the rule of three, not before).
     React.useEffect(() => {
       if (!open) return;
 
       function onPointerDown(event: PointerEvent) {
-        if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        if (navRef.current && !navRef.current.contains(event.target as Node)) {
           close();
         }
       }
@@ -104,13 +109,15 @@ export const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
 
     return (
       <TopNavContext.Provider value={value}>
-        <header ref={headerRef} {...props}>
+        <header>
           <nav
+            ref={navRef}
             aria-label={ariaLabel}
             className={cn(
               'relative flex h-14 w-full items-center gap-4 border-b border-border bg-surface px-4 text-text',
               className,
             )}
+            {...props}
           >
             {children}
           </nav>
@@ -137,7 +144,7 @@ export const TopNavBrand = React.forwardRef<HTMLSpanElement, TopNavBrandProps>(
     return (
       <Comp
         ref={ref}
-        className={cn('mr-2 flex items-center font-semibold text-h4 text-text', className)}
+        className={cn('mr-2 flex items-center text-h4 text-text', className)}
         {...props}
       />
     );
@@ -164,7 +171,7 @@ export const TopNavLinks = React.forwardRef<HTMLDivElement, TopNavLinksProps>(
         className={cn(
           'md:static md:flex md:flex-row md:items-center md:gap-1 md:border-0 md:bg-transparent md:p-0 md:shadow-none',
           open
-            ? 'absolute left-0 right-0 top-14 z-40 flex flex-col gap-1 border-b border-border bg-surface p-2 shadow-md'
+            ? 'absolute left-0 right-0 top-full z-40 flex flex-col gap-1 border-b border-border bg-surface p-2 shadow-md'
             : 'hidden',
           className,
         )}
@@ -199,7 +206,11 @@ export const TopNavLink = React.forwardRef<HTMLAnchorElement, TopNavLinkProps>(
 
     const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
       onClick?.(event);
-      close();
+      // Respect a caller that cancels the event (the `composeEventHandlers` convention): only
+      // dismiss the panel when the click wasn't prevented.
+      if (!event.defaultPrevented) {
+        close();
+      }
     };
 
     return (
@@ -248,18 +259,26 @@ export const TopNavMenuButton = React.forwardRef<HTMLButtonElement, TopNavMenuBu
   ({ className, onClick, ...props }, ref) => {
     const { open, setOpen, panelId, menuButtonRef } = useTopNavContext('TopNavMenuButton');
 
-    const setRef = (node: HTMLButtonElement | null) => {
-      menuButtonRef.current = node;
-      if (typeof ref === 'function') {
-        ref(node);
-      } else if (ref) {
-        ref.current = node;
-      }
-    };
+    // Memoized so the merged ref callback is stable across renders — an inline ref would detach
+    // (briefly nulling `menuButtonRef.current`) and reattach on every render, including each toggle.
+    const setRef = React.useCallback(
+      (node: HTMLButtonElement | null) => {
+        menuButtonRef.current = node;
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      },
+      [menuButtonRef, ref],
+    );
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(event);
-      setOpen((prev) => !prev);
+      // Respect a caller that cancels the event before toggling (composeEventHandlers convention).
+      if (!event.defaultPrevented) {
+        setOpen((prev) => !prev);
+      }
     };
 
     return (

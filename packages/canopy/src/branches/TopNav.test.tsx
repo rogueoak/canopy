@@ -74,13 +74,13 @@ describe('TopNav', () => {
     expect(panel).toHaveClass('hidden');
 
     await user.click(button);
-    // Open: aria-expanded true, the label flips, the panel is shown as the disclosure column.
+    // Open: aria-expanded true, the label flips, the panel is no longer hidden. (Show/hide is
+    // proven by aria-expanded + the `hidden` toggle; cosmetic layout classes aren't asserted.)
     expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
     expect(panel).not.toHaveClass('hidden');
-    expect(panel).toHaveClass('flex', 'flex-col');
 
     await user.click(screen.getByRole('button', { name: 'Close menu' }));
     expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute(
@@ -141,6 +141,24 @@ describe('TopNav', () => {
     );
   });
 
+  it('does not close when a pointerdown occurs inside the nav', async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+    const button = screen.getByRole('button', { name: 'Open menu' });
+    await user.click(button);
+    expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+
+    // A pointerdown INSIDE the nav (the brand) must not dismiss — only outside-pointerdown / Esc do.
+    await user.pointer({ keys: '[MouseLeft]', target: screen.getByText('Acme') });
+    expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
+
   it('closes the panel when a link is clicked', async () => {
     const user = userEvent.setup();
     render(<Basic />);
@@ -162,7 +180,7 @@ describe('TopNav', () => {
     );
     const brand = screen.getByRole('link', { name: 'Acme home' });
     expect(brand.tagName).toBe('A');
-    expect(brand).toHaveClass('font-semibold');
+    expect(brand).toHaveClass('text-h4');
   });
 
   it('asChild on TopNavLink renders the child <a> with the link classes (no wrapper)', () => {
@@ -195,7 +213,7 @@ describe('TopNav', () => {
     expect(nav).toHaveClass('h-14', 'border-b', 'border-border');
   });
 
-  it('forwards a ref to the root <header> element', () => {
+  it('forwards a ref to the styled <nav> (the public surface)', () => {
     const ref = createRef<HTMLElement>();
     render(
       <TopNav ref={ref}>
@@ -203,7 +221,8 @@ describe('TopNav', () => {
       </TopNav>,
     );
     expect(ref.current).toBeInstanceOf(HTMLElement);
-    expect(ref.current?.tagName).toBe('HEADER');
-    expect(ref.current).toContainElement(screen.getByRole('navigation'));
+    // The ref resolves to the element the caller styles (the nav bar), not the wrapper header.
+    expect(ref.current).toBe(screen.getByRole('navigation'));
+    expect(ref.current).toHaveClass('h-14', 'bg-surface');
   });
 });
