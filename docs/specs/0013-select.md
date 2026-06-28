@@ -1,12 +1,12 @@
-# 0013 — Select
+# 0013 - Select
 
 ## Problem
 
-With the Seeds recipe established in [0005](0005-button.md), add the **Select** atom — a
+With the Seeds recipe established in [0005](0005-button.md), add the **Select** atom - a
 single-choice dropdown for longer option lists where a Radio Group would be too tall (country,
 status, category). Select is the menu-style field primitive for forms and later Twigs.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — no new infra beyond
+Independently shippable: one component, one PR. Follows the 0005 recipe - no new infra beyond
 the Radix Select primitive.
 
 ## Outcome
@@ -21,18 +21,18 @@ the Radix Select primitive.
 ## Scope
 
 ### In
-- **Select family** — Radix Select: trigger + portalled content + items (with grouping/labels
+- **Select family** - Radix Select: trigger + portalled content + items (with grouping/labels
   and a selected indicator). Keyboard open/close + arrow navigation + typeahead (Radix);
   `disabled` trigger and `disabled` items; `invalid` (aria-invalid) trigger mirroring Input;
   focus-visible ring on trigger. Forwards `ref`, spreads native props.
 - New dep on `@rogueoak/canopy`: `@radix-ui/react-select`.
-- Stories: default, open, selected, disabled trigger, disabled item, invalid — light and dark.
+- Stories: default, open, selected, disabled trigger, disabled item, invalid - light and dark.
 - Tests: render, open/select, arrow-key + typeahead navigation, disabled, invalid/aria, focus.
 
 ### Out
 - **Multi-select / combobox / async search** → separate, later specs (different interaction
   model).
-- **Label** (0007) — pairs with Select but ships separately.
+- **Label** (0007) - pairs with Select but ships separately.
 - Twig-level FormField (label + control + error/help) → later.
 
 ## Approach

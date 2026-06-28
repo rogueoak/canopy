@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Input } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Input — the canopy text-field Seed (spec 0006).
+ * Seeds/Input - the canopy text-field Seed (spec 0006).
  *
  * Styled entirely with semantic-token utilities (cva → `border-border`, `bg-surface`,
  * `text-text`, the focus `ring`, the `disabled` pair, and the `aria-invalid` danger
@@ -50,7 +50,7 @@ export const WithPlaceholder: Story = {
 /* ----------------------------------------------------------------- Focused */
 
 /**
- * Focus is interactive — click into the field (or Tab to it) to see the focus-visible ring
+ * Focus is interactive - click into the field (or Tab to it) to see the focus-visible ring
  * (`focus-visible:ring-2 focus-visible:ring-ring`). Storybook can't paint a `:focus-visible`
  * state statically, so focus the input to view it.
  */
@@ -62,7 +62,7 @@ export const Focused: Story = {
 /* ----------------------------------------------------------------- Invalid */
 
 /**
- * `aria-invalid` drives the danger state — the `aria-invalid:` variant swaps the border and
+ * `aria-invalid` drives the danger state - the `aria-invalid:` variant swaps the border and
  * focus ring to the `danger` ramp, keeping the accessible attribute and the styling in sync.
  */
 export const Invalid: Story = {

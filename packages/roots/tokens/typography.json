@@ -3,12 +3,12 @@
     "sans": {
       "$value": "Figtree, ui-sans-serif, system-ui, -apple-system, sans-serif",
       "$type": "fontFamily",
-      "$description": "Default UI/body family — Figtree (variable, self-hosted via @fontsource-variable/figtree)."
+      "$description": "Default UI/body family - Figtree (variable, self-hosted via @fontsource-variable/figtree)."
     },
     "mono": {
       "$value": "Geist Mono, ui-monospace, SFMono-Regular, Menlo, monospace",
       "$type": "fontFamily",
-      "$description": "Monospace family for code — Geist Mono (self-hosted via @fontsource-variable/geist-mono)."
+      "$description": "Monospace family for code - Geist Mono (self-hosted via @fontsource-variable/geist-mono)."
     }
   },
   "text": {

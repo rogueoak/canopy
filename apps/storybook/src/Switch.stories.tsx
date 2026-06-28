@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Label, Switch } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Switch — the canopy on/off toggle Seed (spec 0010).
+ * Seeds/Switch - the canopy on/off toggle Seed (spec 0010).
  *
  * Styled entirely with semantic-token utilities (the pill track `bg-border` → `bg-primary` when
  * on, the `bg-surface` thumb, the focus `ring`). There is NO per-story theme code: toggle the
@@ -44,7 +44,7 @@ export const On: Story = {
 /* ------------------------------------------------------------------ Disabled */
 
 /**
- * Disabled — off and on. The `disabled` state uses `cursor-not-allowed` + reduced opacity and
+ * Disabled - off and on. The `disabled` state uses `cursor-not-allowed` + reduced opacity and
  * blocks toggling.
  */
 export const Disabled: Story = {
@@ -60,7 +60,7 @@ export const Disabled: Story = {
 /* ---------------------------------------------------------------- With Label */
 
 /**
- * Paired with the canopy `Label` via `htmlFor`/`id` — clicking the label toggles the switch and
+ * Paired with the canopy `Label` via `htmlFor`/`id` - clicking the label toggles the switch and
  * the two share one accessible name, the settings-row pattern.
  */
 export const WithLabel: Story = {

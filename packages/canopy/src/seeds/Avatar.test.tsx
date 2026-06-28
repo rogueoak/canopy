@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './Avatar';
 
 // NOTE on the jsdom image-load limitation:
 // Radix `AvatarImage` only renders (and the `AvatarFallback` only hides) once the underlying
-// `new Image()` fires `onload` — which jsdom never does, since it doesn't actually fetch images.
+// `new Image()` fires `onload` - which jsdom never does, since it doesn't actually fetch images.
 // So under jsdom the image element is never shown and the fallback is always the visible path.
 // That makes the FALLBACK the testable surface here: we assert it renders its initials and that
 // the root carries the right size/shape token classes. The image-loaded swap is covered visually
@@ -50,7 +50,7 @@ describe('Avatar', () => {
       'text-muted-foreground',
       'font-medium',
     );
-    // The fallback no longer pins a font-size — it inherits the root's size (so initials scale).
+    // The fallback no longer pins a font-size - it inherits the root's size (so initials scale).
     expect(fallback).not.toHaveClass('text-sm');
   });
 

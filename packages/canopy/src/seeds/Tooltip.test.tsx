@@ -4,7 +4,7 @@ import { createRef } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './Tooltip';
 
-// The Radix `Arrow` measures itself through `react-use-size`, which calls `ResizeObserver` —
+// The Radix `Arrow` measures itself through `react-use-size`, which calls `ResizeObserver` -
 // a browser API jsdom does not implement, so rendering the open tooltip throws without it. A
 // no-op stub satisfies the measurement and lets the real Radix interaction run under jsdom; this
 // is the only stub the Tooltip needs (focus-driven opening needs no pointer/scroll stubs).
@@ -19,10 +19,10 @@ beforeAll(() => {
 });
 
 // Radix Tooltip opens on hover (pointer events) AND keyboard focus. In jsdom, focus is the
-// reliable path — pointer/hover timing is flaky without a real layout/event loop — so these
+// reliable path - pointer/hover timing is flaky without a real layout/event loop - so these
 // tests drive the keyboard (`user.tab()`) per the spec. `delayDuration={0}` removes the open
 // delay so the content mounts synchronously after focus. No POINTER/SCROLL stubs are needed
-// (unlike Select) — only the ResizeObserver no-op above, which the Arrow's measurement requires.
+// (unlike Select) - only the ResizeObserver no-op above, which the Arrow's measurement requires.
 function Basic({ content = 'Add to library' }: { content?: string }) {
   return (
     <TooltipProvider delayDuration={0}>

@@ -151,7 +151,7 @@ describe('TopNav', () => {
       'true',
     );
 
-    // A pointerdown INSIDE the nav (the brand) must not dismiss — only outside-pointerdown / Esc do.
+    // A pointerdown INSIDE the nav (the brand) must not dismiss - only outside-pointerdown / Esc do.
     await user.pointer({ keys: '[MouseLeft]', target: screen.getByText('Acme') });
     expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute(
       'aria-expanded',

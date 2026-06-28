@@ -1,12 +1,12 @@
-# 0014 — Tooltip
+# 0014 - Tooltip
 
 ## Problem
 
-With the Seeds recipe established in [0005](0005-button.md), add the **Tooltip** atom — a small
+With the Seeds recipe established in [0005](0005-button.md), add the **Tooltip** atom - a small
 hover/focus hint for icon buttons, truncated text, and terse labels. Tooltip is the lightweight
 contextual-help primitive used across the catalogue.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — no new infra beyond
+Independently shippable: one component, one PR. Follows the 0005 recipe - no new infra beyond
 the Radix Tooltip primitive.
 
 ## Outcome
@@ -22,12 +22,12 @@ the Radix Tooltip primitive.
 ## Scope
 
 ### In
-- **Tooltip family** — Radix Tooltip: provider (shared delay) + root + trigger + portalled
+- **Tooltip family** - Radix Tooltip: provider (shared delay) + root + trigger + portalled
   content with an optional arrow. Opens on hover and keyboard focus, closes on blur/escape
   (Radix); `delayDuration` passthrough; side/align passthrough. Forwards `ref`, spreads native
   props.
 - New dep on `@rogueoak/canopy`: `@radix-ui/react-tooltip`.
-- Stories: default, with arrow, different sides/placements — light and dark.
+- Stories: default, with arrow, different sides/placements - light and dark.
 - Tests: render, opens on hover and focus, content has tooltip semantics, escape closes.
 
 ### Out

@@ -1,4 +1,4 @@
-# Plan 0002 — Repo Skeleton & Toolchain
+# Plan 0002 - Repo Skeleton & Toolchain
 
 Implements `docs/specs/0002-repo-skeleton.md`. Goal: an end-to-end pipeline proving every
 seam (monorepo → tokens → components → Storybook → CI) works, using **throwaway sample
@@ -27,8 +27,8 @@ canopy/
   .github/workflows/ci.yml
   .github/workflows/pages.yml
   packages/
-    roots/                # @rogueoak/roots — tokens
-    canopy/               # @rogueoak/canopy — components
+    roots/                # @rogueoak/roots - tokens
+    canopy/               # @rogueoak/canopy - components
   apps/
     storybook/            # private showcase
 ```
@@ -46,10 +46,10 @@ canopy/
 - ESLint flat config + Prettier. `.gitignore` already ignores `.worktrees/`; **add**
   `node_modules/`, `dist/`, `storybook-static/`, `.turbo/`, `*.tsbuildinfo`.
 
-### 2. `packages/roots` — Style Dictionary token pipeline
+### 2. `packages/roots` - Style Dictionary token pipeline
 - `tokens/` DTCG source with ONE clearly-labelled sample, e.g.
   `tokens/sample.json`: `{ "color": { "sample": { "$value": "#4a7c59", "$type": "color" } } }`
-  (earthy green placeholder — **not** the real palette; 0003 replaces this).
+  (earthy green placeholder - **not** the real palette; 0003 replaces this).
 - `style-dictionary.config.mjs` building to `dist/`:
   1. **CSS variables** → `dist/tokens.css`: `:root { --color-sample: #4a7c59; }`
   2. **Typed TS export** → `dist/tokens.ts` (or `.js` + `.d.ts`) exporting token values.
@@ -59,21 +59,21 @@ canopy/
 - `package.json` `@rogueoak/roots` v0.0.0: `build: style-dictionary build`, `exports` map for
   `./tokens.css`, `.` (TS export), `./tailwind-preset.css`. Ship `dist/`.
 
-### 3. `packages/canopy` — component package shell
+### 3. `packages/canopy` - component package shell
 - Tailwind v4 wired (via `@tailwindcss/vite` for Storybook; package CSS imports
   `@rogueoak/roots/tailwind-preset.css`).
 - One **placeholder component** under `src/seeds/` (e.g. `Sprout`) that **consumes a Roots
-  token** — import the sample value from `@rogueoak/roots` and render a labelled swatch.
+  token** - import the sample value from `@rogueoak/roots` and render a labelled swatch.
   This proves the cross-package + token seam (spec acceptance).
 - `src/index.ts` + `src/seeds/index.ts`. Build with **tsup** → ESM + `.d.ts`, multiple
   entries; `exports` map exposes `.` and `./seeds`. React/react-dom as peerDeps.
 - Vitest + Testing Library smoke test: render `Sprout`, assert it mounts and shows the token.
 
-### 4. `apps/storybook` — showcase shell
+### 4. `apps/storybook` - showcase shell
 - Storybook 8+ (`@storybook/react-vite`) with `@tailwindcss/vite`; global CSS imports
   Tailwind + `@rogueoak/roots/tokens.css` + preset.
 - `@storybook/addon-themes` `withThemeByClassName` toggling `.dark` (light default; themes
-  **empty** now — populated 0004). Toggle must be present in the toolbar.
+  **empty** now - populated 0004). Toggle must be present in the toolbar.
 - Stories: `Foundations/Sample` rendering the sample-token swatch, and a story for the
   `Sprout` placeholder component. `storybook build` → `storybook-static/`.
 

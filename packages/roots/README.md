@@ -1,7 +1,7 @@
 # @rogueoak/roots
 
 Design tokens for **[Canopy](https://github.com/rogueoak/canopy)**, the rogueoak design
-system — a [Style Dictionary](https://styledictionary.com) pipeline that compiles DTCG token
+system - a [Style Dictionary](https://styledictionary.com) pipeline that compiles DTCG token
 sources into CSS custom properties, a typed TypeScript export, and a Tailwind v4 preset. It is
 the foundation the [`@rogueoak/canopy`](https://www.npmjs.com/package/@rogueoak/canopy)
 components style against; components consume **only** semantic tokens, so light and dark theming
@@ -17,7 +17,7 @@ pnpm add @rogueoak/roots
 
 | Subpath                               | What it is                                                                                      |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `@rogueoak/roots`                     | the typed token export — `import { tokens } from '@rogueoak/roots'`                             |
+| `@rogueoak/roots`                     | the typed token export - `import { tokens } from '@rogueoak/roots'`                             |
 | `@rogueoak/roots/tokens.css`          | runtime CSS custom properties: `:root { … }` (light) + a `.dark { … }` block                    |
 | `@rogueoak/roots/tailwind-preset.css` | a Tailwind v4 `@theme inline` preset so utilities (`bg-primary`, `text-h2`) map onto the tokens |
 

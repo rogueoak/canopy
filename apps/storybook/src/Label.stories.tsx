@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Label } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Label — the form-field label Seed (spec 0007).
+ * Seeds/Label - the form-field label Seed (spec 0007).
  *
  * Built on `@radix-ui/react-label`: an `htmlFor` pointing at a control's `id` associates the
  * two for assistive tech AND focuses that control when the label is clicked. Styled with the
- * semantic typography `label` role (`text-label font-medium text-text`) — no per-story theme
+ * semantic typography `label` role (`text-label font-medium text-text`) - no per-story theme
  * code: toggle the toolbar Light / Dark control and every story re-themes via the token layer.
  *
  * Canopy's Input ships in a separate spec (0006); these stories pair Label with a plain native
@@ -79,7 +79,7 @@ export const PairedWithInput: Story = {
 };
 
 /**
- * The same association, but the field is required — Label's `*` next to a `required` input.
+ * The same association, but the field is required - Label's `*` next to a `required` input.
  */
 export const PairedRequired: Story = {
   name: 'Paired + required',

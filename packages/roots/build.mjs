@@ -1,5 +1,5 @@
 /**
- * Roots token build (spec 0004 — light + dark; generalized 0003-fix).
+ * Roots token build (spec 0004 - light + dark; generalized 0003-fix).
  *
  * Style Dictionary 4 resolves `source`/`include` per CONFIG (instance), not per
  * platform, so the light `:root` build and each theme remap run as separate SD
@@ -13,7 +13,7 @@
  *
  * `tokens.css` is then composed in a SINGLE write: read the freshly-built light
  * `tokens.css`, read each theme sidecar, and `writeFileSync` the concatenation. This is
- * a pure function of its inputs — re-running the whole build (or just this fold) is
+ * a pure function of its inputs - re-running the whole build (or just this fold) is
  * IDEMPOTENT and never double-appends (feedback 0003; the old append-in-place could
  * double-theme on a watch/standalone run). The theme passes + fold run inside a
  * `try/finally` that removes every sidecar even on error, so a throw can't leave a stale
@@ -32,7 +32,7 @@ await light.buildAllPlatforms();
 
 // Fold the overlay-motion partial onto the freshly-built preset in a SINGLE write. The
 // `@keyframes` + `@theme --animate-*` declarations are theme declarations, not utilities, so
-// Tailwind's `@source` scanner can never emit them — they must ship from the preset every
+// Tailwind's `@source` scanner can never emit them - they must ship from the preset every
 // consumer imports (the same reason tokens.css owns the runtime vars). Reading the just-built
 // preset (not the previous on-disk file) + the hand-authored partial makes this fold a pure
 // function of its inputs → re-running it is IDEMPOTENT and never double-appends (mirrors the
@@ -55,6 +55,6 @@ try {
   const themeBlocks = sidecars.map((file) => readFileSync(file, 'utf8'));
   writeFileSync(dist('tokens.css'), base + themeBlocks.join(''));
 } finally {
-  // Always drop the sidecars — even if a build/fold above threw — so they never linger.
+  // Always drop the sidecars - even if a build/fold above threw - so they never linger.
   for (const file of sidecars) rmSync(file, { force: true });
 }

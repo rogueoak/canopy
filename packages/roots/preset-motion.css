@@ -2,10 +2,10 @@
  * Roots overlay-motion partial (the design system's keyframed motion).
  *
  * `@keyframes` and `@theme --animate-*` are THEME declarations, not utilities, so Tailwind's
- * `@source` scanner can NEVER emit them — they must ship from CSS every consumer already imports.
+ * `@source` scanner can NEVER emit them - they must ship from CSS every consumer already imports.
  * This partial is folded into `dist/tailwind-preset.css` by `build.mjs` (an idempotent single
  * write), so any consumer importing `@rogueoak/roots/tailwind-preset.css` gets the `animate-dialog-*`
- * / `animate-drawer-*` utilities — and their motion — for free. The `--animate-*` values COMPOSE the
+ * / `animate-drawer-*` utilities - and their motion - for free. The `--animate-*` values COMPOSE the
  * Roots `--duration-*` / `--ease-*` motion tokens (not hardcoded ms/easing), so motion stays
  * token-driven.
  *

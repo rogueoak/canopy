@@ -1,9 +1,9 @@
-# 0005 — Button (the Seeds recipe)
+# 0005 - Button (the Seeds recipe)
 
 ## Problem
 
-Roots is locked (0003) and themeable (0004). Time to grow the first **Seed** — the first
-real component — and with it establish the **component recipe** every later atom will follow.
+Roots is locked (0003) and themeable (0004). Time to grow the first **Seed** - the first
+real component - and with it establish the **component recipe** every later atom will follow.
 Button is the right vehicle: it exercises variants, sizes, interaction states, focus rings,
 and polymorphism, so getting it right sets the conventions for Input, Label, Badge, and
 beyond.
@@ -11,7 +11,7 @@ beyond.
 This spec is deliberately the heavy one of the Seeds group: it carries the shared infra (the
 `cn()` util, cva setup, component deps, the consumer styling seam) **plus** Button. The
 sibling specs (0006 Input, 0007 Label, 0008 Badge) reference the recipe established here and
-stay small — one independently shippable component each, per the protocol's
+stay small - one independently shippable component each, per the protocol's
 "one spec = one feature = one PR" rule.
 
 Audience: rogueoak app teams building UIs, and us (locking the component recipe).
@@ -23,7 +23,7 @@ When done:
 - `@rogueoak/canopy/seeds` exports an accessible, themed `Button`.
 - The **component recipe** exists and is proven end-to-end: cva variants → semantic-token
   utilities, `cn()` for class merging, Radix where behaviour/a11y warrant, semantic tokens
-  only (no raw palette, no per-component theme code) — light/dark "just works" via 0004.
+  only (no raw palette, no per-component theme code) - light/dark "just works" via 0004.
 - The **Tailwind-source consumer styling seam** is implemented and documented in the README.
 - The throwaway `Sprout` placeholder is removed; Storybook gains a real **Seeds** section.
 - Button has stories (variants · sizes · states · both themes) and tests
@@ -33,20 +33,20 @@ When done:
 ## Scope
 
 ### In
-- **Button** — variants `primary` / `secondary` / `outline` / `ghost` / `destructive`; sizes
+- **Button** - variants `primary` / `secondary` / `outline` / `ghost` / `destructive`; sizes
   `sm` / `md` / `lg` / `icon`; `disabled` + hover/active via 0004 interaction tokens;
   focus-visible ring; `asChild` (Radix Slot) for polymorphism.
 - **Component infra (the recipe, lives here):**
-  - `cn()` util — `clsx` + `tailwind-merge`.
+  - `cn()` util - `clsx` + `tailwind-merge`.
   - `class-variance-authority` (cva) for variant→token mapping.
-  - Radix primitives where behaviour/a11y warrant — `@radix-ui/react-slot` for Button.
+  - Radix primitives where behaviour/a11y warrant - `@radix-ui/react-slot` for Button.
   - Deps added to `@rogueoak/canopy`: `@radix-ui/react-slot`, `class-variance-authority`,
     `clsx`, `tailwind-merge` (Radix as deps; React stays peer).
-- **Consumer styling seam (decision below)** — implemented and **documented in the README**.
-- **Accessibility** — focus-visible ring (`ring`/`ring-offset` tokens), correct role, full
+- **Consumer styling seam (decision below)** - implemented and **documented in the README**.
+- **Accessibility** - focus-visible ring (`ring`/`ring-offset` tokens), correct role, full
   keyboard support.
-- **Stories** — all variants/sizes/states, rendered in light and dark.
-- **Tests** — render, variant classes, disabled/keyboard/interaction (Testing Library +
+- **Stories** - all variants/sizes/states, rendered in light and dark.
+- **Tests** - render, variant classes, disabled/keyboard/interaction (Testing Library +
   user-event).
 - Remove `Sprout`; create a real **Seeds** section in Storybook.
 - README: quick start shows a real `Button`; tick `0005`.
@@ -62,18 +62,18 @@ When done:
 
 - **shadcn as the source of patterns, adapted.** Use shadcn's Button structure (Radix +
   Tailwind + cva) as the starting point, but style against **canopy semantic tokens** and
-  ship as a **compiled library** (the established distribution decision — not a copy-in
+  ship as a **compiled library** (the established distribution decision - not a copy-in
   registry).
 - **Variants** via cva mapping to semantic-token utilities (`bg-primary
   text-primary-foreground hover:bg-primary-hover …`). Interaction states use the 0004 tokens;
   focus uses `ring`.
-- **Theme-agnostic by construction** — Button never references a palette value or a theme;
+- **Theme-agnostic by construction** - Button never references a palette value or a theme;
   verified by rendering every story in both Storybook themes.
-- **Testing** — Vitest + Testing Library + `@testing-library/user-event` for behaviour and
+- **Testing** - Vitest + Testing Library + `@testing-library/user-event` for behaviour and
   a11y (focus, keyboard, disabled, aria).
 
-### Decision (locked) — how component styles reach consumers
-**A — Tailwind-source.** canopy ships `className` strings (Tailwind utilities); the consumer
+### Decision (locked) - how component styles reach consumers
+**A - Tailwind-source.** canopy ships `className` strings (Tailwind utilities); the consumer
 runs Tailwind v4 + the `@rogueoak/roots` preset and adds `@rogueoak/canopy` to their content
 sources, so the utilities are generated (and tree-shaken) in their own build:
 

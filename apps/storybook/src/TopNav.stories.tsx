@@ -11,11 +11,11 @@ import {
 } from '@rogueoak/canopy/branches';
 
 /**
- * Branches/TopNav — the responsive top navigation bar (spec 0025), and the first **non-portalled,
+ * Branches/TopNav - the responsive top navigation bar (spec 0025), and the first **non-portalled,
  * stateful** Branch. Where Dialog leans on Radix for a portal + focus trap, TopNav owns its
  * interaction state directly: a hand-rolled disclosure (a ☰ menu button + `aria-expanded` /
  * `aria-controls`, an `Esc` + outside-click effect, and focus-return-to-toggle), coordinated through
- * a small context — no Radix disclosure primitive, no new dependency, no new token.
+ * a small context - no Radix disclosure primitive, no new dependency, no new token.
  *
  * It is a slot-based compound rendered as a `<header>` + `<nav aria-label>` landmark: a brand slot,
  * a primary-links container (inline on `md+`, a disclosure panel below the bar on mobile), and a
@@ -63,7 +63,7 @@ export const Basic: Story = {
 
 /* -------------------------------------------------------------------- ActiveLink */
 
-/** One link marked `active` — it carries `aria-current="page"` and the active styling. */
+/** One link marked `active` - it carries `aria-current="page"` and the active styling. */
 export const ActiveLink: Story = {
   render: () => (
     <TopNav>

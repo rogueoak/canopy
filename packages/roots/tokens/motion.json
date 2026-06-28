@@ -20,17 +20,17 @@
     "standard": {
       "$value": "cubic-bezier(0.2, 0, 0, 1)",
       "$type": "cubicBezier",
-      "$description": "Standard ease — most transitions."
+      "$description": "Standard ease - most transitions."
     },
     "emphasized": {
       "$value": "cubic-bezier(0.3, 0, 0, 1)",
       "$type": "cubicBezier",
-      "$description": "Emphasized — entrances that need attention."
+      "$description": "Emphasized - entrances that need attention."
     },
     "decelerate": {
       "$value": "cubic-bezier(0, 0, 0, 1)",
       "$type": "cubicBezier",
-      "$description": "Decelerate — elements entering and settling."
+      "$description": "Decelerate - elements entering and settling."
     }
   }
 }

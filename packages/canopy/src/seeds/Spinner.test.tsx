@@ -53,7 +53,7 @@ describe('Spinner', () => {
     const { container } = render(<Spinner className="text-primary" />);
     const spinner = screen.getByRole('status');
     expect(spinner).toHaveClass('text-primary');
-    // BOTH stroked shapes (track circle + arc path) must inherit currentColor — assert each so a
+    // BOTH stroked shapes (track circle + arc path) must inherit currentColor - assert each so a
     // regression that drops it on just one is caught.
     const stroked = container.querySelectorAll('[stroke]');
     expect(stroked.length).toBeGreaterThanOrEqual(2);

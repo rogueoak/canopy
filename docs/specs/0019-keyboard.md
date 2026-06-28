@@ -1,14 +1,14 @@
-# 0019 — Keyboard
+# 0019 - Keyboard
 
 ## Problem
 
-With the Seeds recipe established in [0005](0005-button.md), add the **Keyboard** atom — a small
+With the Seeds recipe established in [0005](0005-button.md), add the **Keyboard** atom - a small
 presentational element that renders a keyboard key (`⌘K`, `Esc`, `Ctrl`) in help text, command
 menus, and tooltips. It is the keyboard-hint primitive reused across the catalogue. (Named
-`Keyboard`, not `Kbd` — the abbreviation isn't descriptive; it still renders the semantic
+`Keyboard`, not `Kbd` - the abbreviation isn't descriptive; it still renders the semantic
 `<kbd>` element.)
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — presentational, no Radix.
+Independently shippable: one component, one PR. Follows the 0005 recipe - presentational, no Radix.
 
 ## Outcome
 
@@ -21,11 +21,11 @@ Independently shippable: one component, one PR. Follows the 0005 recipe — pres
 ## Scope
 
 ### In
-- **Keyboard** — renders a semantic `<kbd>` element with a key-cap look (small fill, hairline
+- **Keyboard** - renders a semantic `<kbd>` element with a key-cap look (small fill, hairline
   border, subtle radius); sizes `sm` / `md`; composes (multiple `Keyboard` for a combo). Forwards
   `ref`, spreads native props.
 - No new dep (presentational).
-- Stories: single key, combo (e.g. `⌘` + `K`), each size, inline within a sentence — light and
+- Stories: single key, combo (e.g. `⌘` + `K`), each size, inline within a sentence - light and
   dark.
 - Tests: render, renders a `<kbd>` element, sizes.
 

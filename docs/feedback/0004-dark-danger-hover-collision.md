@@ -1,6 +1,6 @@
-# 0004 — Dark destructive hover was invisible (danger-hover == danger)
+# 0004 - Dark destructive hover was invisible (danger-hover == danger)
 
-Source: designer review of PR #7 (Button, spec 0005) — a **major**. Surfaced by the first
+Source: designer review of PR #7 (Button, spec 0005) - a **major**. Surfaced by the first
 real component to render the destructive role; the Foundations swatches never showed it.
 
 ## Symptom
@@ -13,7 +13,7 @@ visually, while in light mode it darkened correctly (`danger.600` → `.700`).
 Two compounding gaps in the Roots token layer:
 
 1. **Collision.** In `.dark`, `color-danger` resolved to `danger.300` and `color-danger-hover`
-   *also* resolved to `danger.300` — identical fills, so `hover:bg-danger-hover` was a no-op.
+   *also* resolved to `danger.300` - identical fills, so `hover:bg-danger-hover` was a no-op.
    The dark `danger` base sits at `.300` (not `.400` like success/warning) so the near-black
    `danger-foreground` keeps AA; the dark hover was left at `.300` and never differentiated.
 2. **The guard didn't catch it.** `tokens.test.ts`'s AA contrast guard checks every role pair
@@ -22,7 +22,7 @@ Two compounding gaps in the Roots token layer:
    theme**. So a hover equal to its base passed every test.
 
 There was also no `danger-active` at all, so the most consequential button gave no press state
-(unlike primary/secondary) — a related minor from the same review.
+(unlike primary/secondary) - a related minor from the same review.
 
 ## Fix
 
@@ -33,7 +33,7 @@ Token layer (`packages/roots/tokens/color/`):
   secondary), dark `danger.100` (continues the dark `.300 → .200 → .100` lighten-on-press path).
 
 Guard (`packages/roots/tokens.test.ts`):
-- New describe — **base/hover/active resolve to distinct hexes within each theme** (light and
+- New describe - **base/hover/active resolve to distinct hexes within each theme** (light and
   dark), for primary/secondary/danger. This directly closes the gap that let the collision ship.
 - Added `danger-foreground` on `danger-active` to the AA contrast pairs.
 
@@ -44,6 +44,6 @@ Component (`packages/canopy/src/seeds/Button.tsx`):
 
 Rolled into `overview/learnings.md`: **guard interaction states for within-theme distinctness,
 not just cross-theme difference and AA.** A swatch grid renders each token in isolation, so a
-hover that equals its base looks fine there — only a real interactive component reveals it.
+hover that equals its base looks fine there - only a real interactive component reveals it.
 Expect the first component that exercises a role to expose token gaps the Foundations stories
 can't; treat that as the token layer's true acceptance test.

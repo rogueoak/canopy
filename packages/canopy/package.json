@@ -1,7 +1,7 @@
 {
   "name": "@rogueoak/canopy",
   "version": "0.0.0",
-  "description": "Canopy components — built on Roots tokens, Tailwind v4, Radix/shadcn (later).",
+  "description": "Canopy components - built on Roots tokens, Tailwind v4, Radix/shadcn (later).",
   "license": "MIT",
   "repository": {
     "type": "git",

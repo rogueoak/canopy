@@ -1,12 +1,12 @@
-# 0015 — Avatar
+# 0015 - Avatar
 
 ## Problem
 
-With the Seeds recipe established in [0005](0005-button.md), add the **Avatar** atom — a user
+With the Seeds recipe established in [0005](0005-button.md), add the **Avatar** atom - a user
 image with a graceful initials fallback for headers, comment rows, and member lists. Avatar is
 the identity primitive reused across the catalogue.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — no new infra beyond
+Independently shippable: one component, one PR. Follows the 0005 recipe - no new infra beyond
 the Radix Avatar primitive.
 
 ## Outcome
@@ -20,12 +20,12 @@ the Radix Avatar primitive.
 ## Scope
 
 ### In
-- **Avatar family** — Radix Avatar: root + image + fallback. Fallback shows initials (or a
+- **Avatar family** - Radix Avatar: root + image + fallback. Fallback shows initials (or a
   placeholder) when the image is missing, loading, or errors. Sizes `sm` / `md` / `lg` (the size
   also scales the fallback initials). Always a circle (`rounded-full`). Forwards `ref`, spreads
   native props.
 - New dep on `@rogueoak/canopy`: `@radix-ui/react-avatar`.
-- Stories: with image, fallback initials, each size — light and dark.
+- Stories: with image, fallback initials, each size - light and dark.
 - Tests: fallback renders (jsdom never fires image load, so the fallback is the testable path),
   sizes, `alt`/aria.
 

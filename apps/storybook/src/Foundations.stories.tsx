@@ -3,11 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import { tokens } from '@rogueoak/roots';
 
 /**
- * Foundations — the living spec for Canopy Roots (spec 0003, theming added in 0004).
+ * Foundations - the living spec for Canopy Roots (spec 0003, theming added in 0004).
  *
  * Every swatch/sample is driven by the generated Roots tokens: Tailwind utilities
  * (backed by the @theme preset) where a utility exists, and the runtime CSS vars /
- * typed TS export otherwise. Stories read correctly in BOTH themes — toggle Light/Dark
+ * typed TS export otherwise. Stories read correctly in BOTH themes - toggle Light/Dark
  * in the toolbar (`.dark` on <html> remaps the semantic vars; see the Theme story).
  */
 
@@ -207,9 +207,9 @@ function Colours() {
           maxWidth: 640,
         }}
       >
-        Each hex below is read LIVE from the rendered swatch, so it reflects the active theme —
+        Each hex below is read LIVE from the rendered swatch, so it reflects the active theme -
         toggle Light/Dark in the toolbar and the values flip with the fills. On light,{' '}
-        <code>accent</code> (amber.500) is a <strong>fill-only</strong> role — ~2.83:1 on{' '}
+        <code>accent</code> (amber.500) is a <strong>fill-only</strong> role - ~2.83:1 on{' '}
         <code>bg</code>, below AA for text; use <code>accent-strong</code> (amber.700, ~6.15:1) for
         accent <strong>text / icon / border</strong>.
       </p>
@@ -257,7 +257,7 @@ const WEIGHTS = [
   ['bold', 'font-bold', 700],
 ] as const;
 
-// Semantic text roles — each `text-<role>` utility applies font-size + line-height +
+// Semantic text roles - each `text-<role>` utility applies font-size + line-height +
 // font-weight (+ letter-spacing) in one class. Tailwind v4's text-* utility does NOT
 // expand a font-family companion, so the `code` role pairs `text-code font-mono` (the
 // role token still carries --text-code--font-family for native/non-Tailwind consumers).
@@ -278,7 +278,7 @@ const TEXT_ROLES: [string, string, string][] = [
 function Typography() {
   return (
     <div style={wrap}>
-      <h2 style={h2}>Figtree — specimen</h2>
+      <h2 style={h2}>Figtree - specimen</h2>
       <div className="font-sans" style={{ marginBottom: '2rem' }}>
         <div className="text-5xl font-bold" style={{ letterSpacing: 'var(--tracking-tight)' }}>
           The quick brown fox
@@ -356,7 +356,7 @@ function Typography() {
             className={`text-2xl font-sans ${util}`}
             style={{ marginBottom: '0.25rem' }}
           >
-            {name} ({val}) — Roots
+            {name} ({val}) - Roots
           </div>
         ))}
       </div>
@@ -389,7 +389,7 @@ function Typography() {
         ))}
       </div>
 
-      <h2 style={h2}>Geist Mono — code</h2>
+      <h2 style={h2}>Geist Mono - code</h2>
       <pre
         className="font-mono text-sm"
         style={{
@@ -568,7 +568,7 @@ const DURATIONS = ['fast', 'base', 'slow'];
 function Motion() {
   return (
     <div style={wrap}>
-      <h2 style={h2}>Motion — durations &amp; easing</h2>
+      <h2 style={h2}>Motion - durations &amp; easing</h2>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 0 }}>
         Hover a bar to play its easing/duration token.
       </p>
@@ -612,7 +612,7 @@ function Motion() {
 
 // [label, foreground role var, background role var, min ratio]. min 3.0 = AA Large
 // (text-subtle is large-text-only); everything else is AA-normal (4.5). Ratios are
-// COMPUTED LIVE from the resolved CSS vars at render — so the numbers (and pass/fail)
+// COMPUTED LIVE from the resolved CSS vars at render - so the numbers (and pass/fail)
 // flip with the theme instead of being hardcoded light-only strings (feedback 0003).
 const CONTRAST_PAIRS: [string, string, string, number][] = [
   ['text on bg', 'color-text', 'color-bg', 4.5],
@@ -657,7 +657,7 @@ type Row = { pair: string; ratio: number; min: number };
 
 function Contrast() {
   // A hidden probe whose color/background we set to each role var, then read the resolved
-  // rgb() back via getComputedStyle — so the ratio reflects the ACTIVE theme. Recomputes
+  // rgb() back via getComputedStyle - so the ratio reflects the ACTIVE theme. Recomputes
   // when the `.dark` class on <html> toggles (same MutationObserver pattern as swatches).
   const probe = useRef<HTMLDivElement>(null);
   const [rows, setRows] = useState<Row[]>([]);
@@ -686,7 +686,7 @@ function Contrast() {
   return (
     <div style={wrap}>
       <div ref={probe} style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} />
-      <h2 style={h2}>WCAG AA contrast — text roles</h2>
+      <h2 style={h2}>WCAG AA contrast - text roles</h2>
       <p
         style={{
           fontSize: 'var(--text-sm)',
@@ -695,9 +695,9 @@ function Contrast() {
           maxWidth: 640,
         }}
       >
-        Ratios are computed LIVE from the resolved tokens of the active theme — toggle Light/Dark in
+        Ratios are computed LIVE from the resolved tokens of the active theme - toggle Light/Dark in
         the toolbar and the numbers (and pass/fail) flip with the tokens. <code>text-subtle</code>{' '}
-        (tertiary text — captions, placeholders) is held to AA-Large (≥ 3:1); every other pair to
+        (tertiary text - captions, placeholders) is held to AA-Large (≥ 3:1); every other pair to
         AA-normal (≥ 4.5:1).
       </p>
       <table style={{ borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
@@ -747,11 +747,11 @@ function Contrast() {
 // A small UI built ENTIRELY from semantic utilities / vars (no per-theme code). Toggle
 // the toolbar Light/Dark control: `.dark` on <html> overrides the semantic runtime vars,
 // so every surface/text/role/state below re-resolves automatically. This is the 0004
-// proof — re-theming with only the `.dark` class.
+// proof - re-theming with only the `.dark` class.
 function ThemeDemo() {
   return (
     <div style={wrap}>
-      <h2 style={h2}>Theme — one class re-themes everything</h2>
+      <h2 style={h2}>Theme - one class re-themes everything</h2>
       <p
         style={{
           fontSize: 'var(--text-sm)',
@@ -761,7 +761,7 @@ function ThemeDemo() {
         }}
       >
         Flip the <strong>Light / Dark</strong> toggle in the toolbar. Nothing below has per-theme
-        code — every colour is a semantic token (<code>bg-surface</code>, <code>text-default</code>,{' '}
+        code - every colour is a semantic token (<code>bg-surface</code>, <code>text-default</code>,{' '}
         <code>bg-primary</code>, the interaction-state and status roles). Toggling{' '}
         <code>.dark</code> on <code>&lt;html&gt;</code> remaps the semantic vars, so the whole card
         re-themes.
@@ -785,7 +785,7 @@ function ThemeDemo() {
           <span style={{ color: 'var(--color-text-subtle)' }}>text-subtle</span>.
         </p>
 
-        {/* Role buttons — fills + foregrounds + a hover swatch, all semantic. */}
+        {/* Role buttons - fills + foregrounds + a hover swatch, all semantic. */}
         <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap', marginTop: '1rem' }}>
           <span
             style={{

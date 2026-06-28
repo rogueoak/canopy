@@ -3,9 +3,9 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../lib/cn';
 
 /**
- * keyboardVariants — the cva recipe that maps `size` onto canopy semantic-token Tailwind
+ * keyboardVariants - the cva recipe that maps `size` onto canopy semantic-token Tailwind
  * utilities (spec 0019). All class strings are FULL LITERALS so Tailwind v4's source scanner
- * emits each utility — never build a class name dynamically. There is no `dark:` here:
+ * emits each utility - never build a class name dynamically. There is no `dark:` here:
  * light/dark flips automatically through the token layer (spec 0004).
  *
  * The base gives a subtle key-cap look: a hairline `border` outline around a `muted` fill with
@@ -14,7 +14,7 @@ import { cn } from '../lib/cn';
  * cap box: `sm` for dense help text, `md` (default) for inline hints and command menus.
  */
 export const keyboardVariants = cva(
-  // Base — the key-cap look shared by every size. Presentational (non-interactive, no focus ring).
+  // Base - the key-cap look shared by every size. Presentational (non-interactive, no focus ring).
   'inline-flex items-center justify-center rounded border border-border bg-muted align-middle font-mono text-muted-foreground',
   {
     variants: {
@@ -33,10 +33,10 @@ export interface KeyboardProps
   extends React.HTMLAttributes<HTMLElement>, VariantProps<typeof keyboardVariants> {}
 
 /**
- * Keyboard — a small, presentational element that renders a keyboard key (`⌘`, `Esc`, `Ctrl`) for
+ * Keyboard - a small, presentational element that renders a keyboard key (`⌘`, `Esc`, `Ctrl`) for
  * help text, command menus, and tooltips. Follows the component recipe: a cva `size` variant over
  * semantic tokens, `cn()` class merge, `forwardRef`, and a full spread of native props. Renders the
- * semantic `<kbd>` element and is themed entirely by tokens — no per-component theme code.
+ * semantic `<kbd>` element and is themed entirely by tokens - no per-component theme code.
  *
  * Display-only: it carries no key-binding logic (capturing or registering presses is out of scope).
  * For a combo, compose multiple `Keyboard` with a separator between them, e.g.

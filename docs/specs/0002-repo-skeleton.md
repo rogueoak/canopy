@@ -1,14 +1,14 @@
-# 0002 — Repo Skeleton & Toolchain
+# 0002 - Repo Skeleton & Toolchain
 
 ## Problem
 
 Canopy is the design system for the **rogueoak** org: a tree-themed, atomic design
 system built on Radix + shadcn + Tailwind, shipped as consumable npm packages with a
-Storybook showcase on GitHub Pages. Before we can tune colour, type, and spacing — the
-foundation we must get right first — the repo needs its plumbing: a monorepo, a token
+Storybook showcase on GitHub Pages. Before we can tune colour, type, and spacing - the
+foundation we must get right first - the repo needs its plumbing: a monorepo, a token
 build pipeline, a component build, a Storybook shell, and CI to publish it.
 
-This spec delivers **only the skeleton**. No real palette, type, spacing, or components —
+This spec delivers **only the skeleton**. No real palette, type, spacing, or components - 
 those come in 0003 (Roots/Foundations), 0004 (theming) and later. The goal is an end-to-end
 pipeline that proves every seam works with throwaway sample values.
 
@@ -23,7 +23,7 @@ When done, from a clean clone:
 - `pnpm dev` (or `pnpm storybook`) serves Storybook locally showing a placeholder story.
 - `pnpm test` runs a passing smoke test.
 - A token JSON source compiles via Style Dictionary into CSS variables, a TS export, and a
-  Tailwind v4 preset — demonstrated with one throwaway sample token.
+  Tailwind v4 preset - demonstrated with one throwaway sample token.
 - `@rogueoak/canopy` consumes a token from `@rogueoak/roots` and renders it in a Storybook
   placeholder component, proving the cross-package + token seam.
 - A GitHub Actions workflow builds Storybook and deploys it to GitHub Pages on push to main.
@@ -35,13 +35,13 @@ When done, from a clean clone:
 ### In
 - pnpm workspace monorepo + Turborepo task pipeline (cached `build`/`lint`/`test`).
 - TypeScript (strict), shared tsconfig base.
-- `packages/roots` — Style Dictionary pipeline (DTCG-format JSON source) generating
+- `packages/roots` - Style Dictionary pipeline (DTCG-format JSON source) generating
   CSS variables, a TS token export, and a Tailwind v4 preset/`@theme` CSS. Seeded with a
-  single **sample** token (e.g. `color.sample`) — not the real palette.
-- `packages/canopy` — component package shell. Tailwind v4 wired to the Roots preset.
+  single **sample** token (e.g. `color.sample`) - not the real palette.
+- `packages/canopy` - component package shell. Tailwind v4 wired to the Roots preset.
   tsup build → ESM + `.d.ts`. Subpath export structure stubbed (`/seeds`, etc.). One
   placeholder component proving it consumes a Roots token.
-- `apps/storybook` — Storybook 8 (Vite/React) rendering one Foundations placeholder + the
+- `apps/storybook` - Storybook 8 (Vite/React) rendering one Foundations placeholder + the
   placeholder component, with a light/dark toggle wired (themes empty for now).
 - Linting/formatting: ESLint + Prettier.
 - Testing: Vitest + Testing Library; one smoke test.
@@ -62,7 +62,7 @@ When done, from a clean clone:
 - **Tokens (Roots):** Style Dictionary is the source of truth. DTCG token JSON →
   generated outputs: (1) `dist/tokens.css` CSS custom properties, (2) `dist/tokens.ts`
   typed export, (3) a Tailwind v4 preset that maps tokens into the `@theme`. This is the
-  seam that lets a Swift target be added later as just another Style Dictionary platform —
+  seam that lets a Swift target be added later as just another Style Dictionary platform - 
   we build only the web platforms now.
   - *Trade-off:* more upfront pipeline than hand-written CSS vars, accepted deliberately to
     future-proof for native (Swift) per the distribution decision.
@@ -70,7 +70,7 @@ When done, from a clean clone:
   Built with shadcn/Radix primitives in later specs. Compiled with tsup to ESM + types.
   Consumed as a versioned npm library (not a shadcn copy-in registry).
 - **Theming:** light/dark handled at the token layer (semantic tokens remap per theme);
-  the toggle is wired in Storybook now (empty), populated in 0003–0004.
+  the toggle is wired in Storybook now (empty), populated in 0003-0004.
 - **Showcase:** Storybook 8 + Vite, deployed to GitHub Pages via Actions. Storybook is
   also our visual workbench for tuning foundations in 0003.
 - **Release:** Changesets for versioning; publish step present but disabled until ready.
@@ -97,4 +97,4 @@ When done, from a clean clone:
 - [ ] `pnpm changeset` runs and is configured for `@rogueoak/*`.
 - [ ] CI builds + tests on PR and deploys Storybook to GitHub Pages on main.
 - [ ] README updated with the now-working dev setup (install/build/storybook) and the
-      Storybook Pages link — keeping docs truthful to working software.
+      Storybook Pages link - keeping docs truthful to working software.
