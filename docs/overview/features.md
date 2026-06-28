@@ -498,6 +498,35 @@ bar whose disclosure is **hand-rolled** (no Radix primitive, no new dependency, 
   themes automatically; NO `dark:`. Stories prove composition: brand + links + an actions cluster
   (a Button and an Avatar), an active link, and the responsive collapse in a constrained container.
 
+## Branches: SideNav (0026)
+
+The vertical side-navigation Branch — a collapsible, responsive app-shell rail, companion to TopNav.
+
+- **SideNav** (`@rogueoak/canopy/branches`) — a slot-based compound: `SideNav` (root) +
+  `SideNavHeader` / `SideNavFooter` (optional slots) + `SideNavSection` (a `role="group"` with an
+  optional `label` heading that hides when collapsed) + `SideNavItem` (a nav link) +
+  `SideNavTrigger` (the mobile menu button) + `SideNavCollapseToggle` (flips collapse). Rendered as
+  an `<aside>`/`<nav aria-label>` landmark; the root owns the `collapsed` + mobile-`open` state in a
+  `SideNavContext` and wraps a `TooltipProvider` so collapsed-item tooltips work with no consumer
+  setup. **Responsive in two axes:** a controlled/uncontrolled `collapsed` (`defaultCollapsed` +
+  `onCollapsedChange`) shrinks the desktop rail from `w-60` to a `w-16` icon column — section + item
+  labels become `sr-only` (the link keeps its accessible name) and each item surfaces its label via
+  a **Tooltip** Seed on hover/focus; below `768px` (a `useIsMobile()` matchMedia hook) the rail
+  becomes an **off-canvas drawer** built directly on the **`@radix-ui/react-dialog` primitive** (the
+  spec's "reuse Dialog's pattern, don't re-invent modal mechanics" — the Radix primitive, NOT
+  canopy's centred Dialog component): a `bg-overlay/80` scrim + a left-anchored full-height panel
+  with an sr-only `Title`, with Radix owning the focus trap, scroll lock, `Esc`/outside-click
+  dismiss; SideNav captures the opener on `onOpenAutoFocus` and returns focus to it on close.
+  `SideNavItem active` sets both `aria-current="page"` and the active fill (`bg-muted text-text`),
+  driven by the consumer's router; `asChild` styles a router `<Link>`; an item click closes the
+  drawer. `useIsMobile` renders the nav content **once** (single landmark, no duplicated
+  `aria-current`). The `SideNavTrigger` is intentionally **decoupled** (it lives in the app bar, a
+  sibling of SideNav, so it can't share context): the consumer wires its `onClick` to open and
+  passes `aria-expanded`/`aria-controls`. Composition only — **no new token, no `dark:`** (semantic
+  tokens flip via the layer; the portalled drawer themes correctly because `.dark` lives on
+  `<html>`). Stories: expanded grouped rail with an active item, the collapsed icon-rail (Tooltip
+  labels), and the mobile drawer (defaults to a mobile viewport).
+
 ## npm publishing (0023)
 
 Releases now **publish to npm**, driven by git tags — a tag _is_ the release.
@@ -521,5 +550,5 @@ Releases now **publish to npm**, driven by git tags — a tag _is_ the release.
   exists with the publishing identity as a member, and configuring the trusted publisher
   (repo + `release.yml`) on each package at `npmjs.com/package/<pkg>/access`.
 
-Not yet built: more **Branches** (the layer is open with Dialog · TopNav — SideNav, DataTable to
-come) and more Twigs as needed, then **Boughs** (templates), and the native Swift token target.
+Not yet built: more **Branches** (the layer is open — Dialog · TopNav · SideNav are live; DataTable
+to come) and more Twigs as needed, then **Boughs** (templates), and the native Swift token target.

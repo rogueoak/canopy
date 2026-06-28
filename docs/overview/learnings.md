@@ -323,6 +323,39 @@ and put `main` in a red-lint state (feedback 0007).
 `format:check`) as a **required** status check so a red `main` can't happen: a failing lint
 should block the merge, not be discovered a spec later.
 
+## A control outside a Branch's subtree can't use its context — decouple it and own focus-return
+
+SideNav's mobile drawer (0026) is opened by a `SideNavTrigger` that, in a real app shell, lives in
+the **top bar** — a *sibling* of `<SideNav>`, not a descendant. So it cannot read SideNav's React
+context (context only flows down): a trigger that called `useSideNavContext()` threw
+"must be used within a <SideNav>", and there is no common ancestor to hoist a provider onto without
+inventing a wrapper component the spec didn't ask for. The fix is to **decouple the trigger**: the
+consumer already owns the drawer's `open` state (it passes `open`/`onOpenChange` to SideNav), so the
+trigger is a presentational Button the consumer wires (`onClick` to open, `aria-expanded`/
+`aria-controls` for the disclosure), and SideNav coordinates `aria-controls` via a shared `id`.
+
+That breaks Radix Dialog's **return-focus**, though: Radix restores focus to its `DialogTrigger`'s
+ref, and there is no DialogTrigger here (the opener is an unrelated sibling) — Radix's
+`onCloseAutoFocus` unconditionally `preventDefault()`s and focuses a null trigger ref, so focus is
+lost to `<body>` and `FocusScope`'s own restore is suppressed. Recover it **without** a trigger ref:
+capture the opener in the content's **`onOpenAutoFocus`** (which fires while `document.activeElement`
+is *still* the element that opened the dialog, before focus moves in), then restore it in
+`onCloseAutoFocus` (`preventDefault()` + `opener.focus()`). This returns focus to whatever opened the
+drawer with zero coupling to the trigger.
+
+Two more SideNav points worth keeping: (1) pick the responsive wrapper in **JS** (a `useIsMobile()`
+matchMedia hook), not by rendering both a desktop and a mobile form behind `md:` visibility
+utilities — that keeps the `<nav aria-label>` **landmark single** (no duplicated landmark, no
+doubled `aria-current`). (2) Radix `aria-hidden`s the background while a modal is open, so a query
+like `getByRole('button', { name: 'Open navigation' })` can't find the (now hidden) trigger after
+opening — assert on the **captured node reference** instead, which React still updates in place.
+
+**Apply it:** when a Branch's control must sit outside the Branch's DOM subtree, don't force a
+context onto it — decouple it (consumer-wired) and have the Branch own any side effects that the
+missing context would have carried (here, focus-return via `onOpenAutoFocus`/`onCloseAutoFocus`).
+Render responsive variants single-landmark via a JS breakpoint hook, and remember a Radix modal
+hides its background from role queries.
+
 ## Animation/motion utilities ship from the preset, not `@source`
 
 Canopy's distribution seam (Decision A) is that components ship `className` strings and the

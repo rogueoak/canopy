@@ -35,3 +35,22 @@ export type {
   TopNavActionsProps,
   TopNavMenuButtonProps,
 } from './TopNav';
+
+export {
+  SideNav,
+  SideNavHeader,
+  SideNavFooter,
+  SideNavSection,
+  SideNavItem,
+  SideNavTrigger,
+  SideNavCollapseToggle,
+} from './SideNav';
+export type {
+  SideNavProps,
+  SideNavHeaderProps,
+  SideNavFooterProps,
+  SideNavSectionProps,
+  SideNavItemProps,
+  SideNavTriggerProps,
+  SideNavCollapseToggleProps,
+} from './SideNav';

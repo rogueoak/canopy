@@ -393,6 +393,29 @@ themed by the layers it composes and the tokens already provisioned.
   + Radix-driven (Dialog)** and **in-flow + hand-rolled (TopNav)**, sharing the same recipe rules
   (`cn()`, full-literal classes, `forwardRef` + native spread, no `dark:`, no new token).
 
+- **Responsive landmark organism (SideNav, 0026).** The side rail (spec 0026) shows the second
+  Branches shape: a compound that owns a small `SideNavContext` (the desktop `collapsed` state, the
+  mobile `open` state) and renders one of two wrappers picked by a **`useIsMobile()`** matchMedia
+  hook (`(max-width: 767px)`, SSR-safe `false`). Choosing the wrapper in JS — rather than rendering
+  both forms behind `md:` visibility utilities — means the single `<nav aria-label>` landmark
+  renders **exactly once**, so there is never a duplicated navigation landmark or a doubled
+  `aria-current`. The **mobile drawer reuses `@radix-ui/react-dialog` directly** — the Radix
+  *primitive* (already a dep from Dialog 0024, already in tsup `external`), NOT canopy's centred
+  `Dialog` component, whose centring / `max-w-lg` / baked close button would fight a side drawer.
+  This is the spec's "reuse Dialog's pattern, don't re-invent modal mechanics": Radix supplies the
+  focus trap, scroll lock, `Esc`/outside-click dismiss; we style its `Overlay` as the same
+  `bg-overlay/80` scrim and its `Content` as a left-anchored full-height panel with an sr-only
+  `DialogPrimitive.Title` (Radix requires a Title for the dialog's accessible name). Because the
+  `SideNavTrigger` lives in the app bar (a **sibling** of SideNav, not a descendant), it can't share
+  the context — so it is decoupled (consumer-wired: `onClick` to open, `aria-expanded`/`-controls`
+  passed in), and **return-focus is handled by SideNav**, which captures the opener in the drawer's
+  `onOpenAutoFocus` (still the active element at that point) and restores it in `onCloseAutoFocus`
+  rather than relying on a Radix DialogTrigger that doesn't exist. Collapsed labels ride the
+  **Tooltip Seed** (the rail wraps a `TooltipProvider` internally so it works with no consumer
+  setup) and items keep their accessible name via an `sr-only` label — never an unlabelled
+  icon-only link. **No new dependency, no new token, no `dark:`** — the rail/drawer/scrim style on
+  existing semantic tokens and the portalled drawer themes correctly (`.dark` on `<html>`).
+
 ## Showcase + theming (Storybook)
 
 **Storybook 8** (`@storybook/react-vite`) with `@tailwindcss/vite`. A global CSS imports
