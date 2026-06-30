@@ -561,5 +561,29 @@ Releases now **publish to npm**, driven by git tags — a tag _is_ the release.
   exists with the publishing identity as a member, and configuring the trusted publisher
   (repo + `release.yml`) on each package at `npmjs.com/package/<pkg>/access`.
 
+## Icons (0027)
+
+A curated icon set ships as its own package, **`@rogueoak/icons`**.
+
+- **Curated, semantic re-exports** — a starter set of ~46 icons re-exported from
+  [`react-icons`](https://react-icons.github.io/react-icons/) under Canopy-semantic names
+  (`Home`, `Search`, `Settings`, ...), so the `react-icons` family prefixes (`Lu*`/`Fa*`) never
+  leak. Standard glyphs are **Lucide** (`react-icons/lu`); the five social marks (`Github`,
+  `Linkedin`, `X`, `Facebook`, `Instagram`) are **Font Awesome 6 brands** (`react-icons/fa6`),
+  because Simple Icons no longer ships LinkedIn. The dismiss glyph is named `Close` so `X` is free
+  for the X (Twitter) brand. The set is data-driven from `src/icons.ts`; `iconRegistry` / `iconNames`
+  expose it as data, and an exported-names test guards that exports, registry, and catalog can't drift.
+- **Tree-shakeable** — each icon is an individual named export; importing one never pulls the rest.
+- **Size + a11y wrapper** — `Icon` renders a glyph at the default `1em` / `currentColor` and gives it
+  the right semantics (decorative `aria-hidden` by default; a labelled `role="img"` when given a
+  `title`, which react-icons does not do on its own). `IconProvider` sets size/color/className defaults
+  for a subtree. Icons depend on **neither Roots nor Tailwind** — they colour via `currentColor`, so
+  they theme through inherited text colour.
+- **Storybook catalog** — an `Icons/Catalog` section renders every icon with its name (a live filter,
+  social + standard groups) plus sizing and wrapper/a11y stories, driven by the same `iconRegistry`.
+- **Published, lockstep** — `@rogueoak/icons` joins the tag-driven release (the `packages/*` glob picks
+  it up automatically), so a release now publishes **three** packages at the tag version. Same
+  developer-performed npm bootstrap as roots/canopy (manual first publish + trusted-publisher config).
+
 Not yet built: more **Branches** (the layer is open — Dialog · TopNav · SideNav are live; DataTable
 to come) and more Twigs as needed, then **Boughs** (templates), and the native Swift token target.

@@ -13,6 +13,7 @@
     "@fontsource-variable/figtree": "^5.2.10",
     "@fontsource-variable/geist-mono": "^5.2.8",
     "@rogueoak/canopy": "workspace:*",
+    "@rogueoak/icons": "workspace:*",
     "@rogueoak/roots": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
