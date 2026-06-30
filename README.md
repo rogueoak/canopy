@@ -44,7 +44,7 @@ Atomic design, renamed by tree anatomy:
 | Atomic layer        | Canopy name  | What lives here                                                                                                        |
 | ------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | Design tokens       | **Roots** 🌱 | primitive + semantic tokens — colour, type, spacing, radii, elevation, motion. Everything draws nourishment from here. |
-| Atoms               | **Seeds**    | the smallest components — Button, Input, Label, Icon, Badge                                                            |
+| Atoms               | **Seeds**    | the smallest components — Button, Input, Label, Badge (icons ship separately, see below)                               |
 | Molecules           | **Twigs**    | small compositions — FormField, SearchBar, Card                                                                        |
 | Organisms           | **Branches** | larger assemblies — NavBar, DataTable, Dialog                                                                          |
 | Templates _(later)_ | **Boughs**   | page scaffolds and layout patterns                                                                                     |
@@ -53,6 +53,12 @@ Atomic design, renamed by tree anatomy:
 **Components only ever consume Roots semantic tokens** (`color-surface`, `text-primary`,
 `radius-control`) — never raw palette values. Light and dark are a property of the token
 layer: semantic tokens remap per theme, so a component is themed without knowing it.
+
+**Icons** are atom-tier too, but ship as their own package - `@rogueoak/icons`, a curated,
+tree-shakeable set re-exported from [`react-icons`](https://react-icons.github.io/react-icons/)
+(Lucide glyphs + the popular social marks). They sit apart from `@rogueoak/canopy` because their
+dependency footprint (react-icons, no tokens) and release cadence differ; they render in
+`currentColor`, so they theme through whatever text colour they inherit.
 
 ## Tokens & theming
 
@@ -143,13 +149,14 @@ dark values too, ready for the first components.
 
 Canopy publishes under the **`@rogueoak`** npm scope as a small set of versioned packages:
 
-| Package            | Holds                                        | Status    |
-| ------------------ | -------------------------------------------- | --------- |
-| `@rogueoak/roots`  | design tokens + Tailwind preset              | published |
-| `@rogueoak/canopy` | components (`/seeds`, `/twigs`, `/branches`) | published |
+| Package            | Holds                                           | Status    |
+| ------------------ | ----------------------------------------------- | --------- |
+| `@rogueoak/roots`  | design tokens + Tailwind preset                 | published |
+| `@rogueoak/canopy` | components (`/seeds`, `/twigs`, `/branches`)    | published |
+| `@rogueoak/icons`  | curated icon set (re-exported from react-icons) | published |
 
-Releases are **tag-driven**: pushing a bare-SemVer tag (`X.Y.Z`, no `v` prefix) publishes both
-packages at that version via GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml),
+Releases are **tag-driven**: pushing a bare-SemVer tag (`X.Y.Z`, no `v` prefix) publishes all
+three packages at that version via GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml),
 npm trusted publishing / OIDC).
 
 ## Quick start
@@ -238,6 +245,7 @@ Built foundation-first, so there's **always working software and working docs** 
 - [x] **Seeds** — the atoms; the full first catalogue is live
 - [x] **Twigs** — molecules; the first compositions are live (FormField · SearchBar · Card)
 - [ ] **Branches** — organisms; the layer is open (**Dialog · TopNav · SideNav** are live; DataTable to come)
+- [x] **Icons** — `@rogueoak/icons`, a curated tree-shakeable set (Lucide + social marks) re-exported from react-icons
 - [ ] **Boughs** — page scaffolds and layout patterns
 
 Development follows the [Spectra protocol](docs/spectra/protocol.md): every change is built and

@@ -12,10 +12,11 @@ workspace dependencies do). A shared `tsconfig.base.json` (strict, `moduleResolu
 bundler`, `jsx: react-jsx`) is extended by each package. ESLint (flat config) + Prettier
 and Vitest are configured once at the root.
 
-Three projects:
+Four projects:
 
 - **`packages/roots`** → `@rogueoak/roots` — design tokens.
 - **`packages/canopy`** → `@rogueoak/canopy` — components.
+- **`packages/icons`** → `@rogueoak/icons` — curated icon set (spec 0027).
 - **`apps/storybook`** → private showcase, deployed to GitHub Pages.
 
 The tree-themed atomic layers (Roots → Seeds → Twigs → Branches → Boughs) are documented in
@@ -464,7 +465,7 @@ Two GitHub Actions workflows:
 - `pages.yml` (push main): builds Storybook and deploys `apps/storybook/storybook-static`
   to GitHub Pages (`upload-pages-artifact` + `deploy-pages`, `pages: write` /
   `id-token: write`). **Requires Pages enabled** in repo settings (Source: GitHub Actions).
-- `release.yml` (push of a bare-SemVer tag): publishes both packages to npm — see below.
+- `release.yml` (push of a bare-SemVer tag): publishes every `packages/*` package to npm — see below.
 
 **Releases are tag-driven and lockstep** (spec 0023). A **strict bare-SemVer git tag** (`X.Y.Z`,
 no `v` prefix, no prerelease suffix, per trellis `rules/guidelines.md`) *is* the version:
@@ -472,18 +473,21 @@ no `v` prefix, no prerelease suffix, per trellis `rules/guidelines.md`) *is* the
 placeholder, so the tag is the single source of truth — no version-bump PRs, no bot write
 access, no changelogs. (Bootstrap: trusted publishing requires the package to pre-exist, so the
 first version of each — `0.1.0` — was published manually before the publisher was configured;
-the first CI tag is `0.1.1`.)
+the first CI tag is `0.1.1`. **`@rogueoak/icons` (0027) needs the same one-time bootstrap before
+its first tag release** — a manual first publish + trusted-publisher config — since the release is
+lockstep and would otherwise fail the OIDC publish for an unconfigured package.)
 `release.yml` (trigger `on: push: tags: ['[0-9]*.[0-9]*.[0-9]*']`) checks out, sets up pnpm +
 Node 24, `pnpm install --frozen-lockfile`, validates `$GITHUB_REF_NAME` is SemVer, then stamps
-**both** packages with `pnpm -r --filter './packages/*' exec npm version "$GITHUB_REF_NAME"
---no-git-tag-version --allow-same-version`, runs a clean `pnpm build` (tsup `clean: true`
-rebuilds `canopy/dist`, including the `./twigs` subpath its `exports` references), gates on
-`pnpm test` (a tag is immutable, so this is the last stop for a regression that still compiles),
-and publishes with `pnpm -r --filter './packages/*' publish --no-git-checks --access public`.
-pnpm rewrites canopy's `workspace:*` dep on `@rogueoak/roots` to the published version, skips
-the private Storybook app, and publishes roots before canopy via the workspace dep graph.
-Both packages carry `publishConfig.access: public` and a `prepublishOnly: pnpm build` guard so
-a manual publish can't ship stale `dist`.
+**every `packages/*` package** with `pnpm -r --filter './packages/*' exec npm version
+"$GITHUB_REF_NAME" --no-git-tag-version --allow-same-version`, runs a clean `pnpm build` (tsup
+`clean: true` rebuilds `canopy/dist`, including the `./twigs` subpath its `exports` references),
+gates on `pnpm test` (a tag is immutable, so this is the last stop for a regression that still
+compiles), and publishes with `pnpm -r --filter './packages/*' publish --no-git-checks --access
+public`. pnpm rewrites canopy's `workspace:*` dep on `@rogueoak/roots` to the published version,
+skips the private Storybook app, and publishes roots before canopy via the workspace dep graph
+(`@rogueoak/icons` has no workspace deps, so it publishes independently). Every package carries
+`publishConfig.access: public` and a `prepublishOnly: pnpm build` guard so a manual publish can't
+ship stale `dist`.
 
 Auth is **npm trusted publishing (OIDC)** — no `NPM_TOKEN` secret. The job grants
 `id-token: write`; npm verifies the run against each package's trusted-publisher config
@@ -500,3 +504,29 @@ pnpm 11 gates package build scripts; the workspace approves esbuild, style-dicti
 `@bundled-es-modules/glob` via `allowBuilds` in `pnpm-workspace.yaml`. A `.npmrc`
 `public-hoist-pattern` for `*storybook*` is required so Storybook's preset loader resolves
 `@storybook/react-vite/preset` under pnpm's isolated node_modules layout.
+
+## Icons package (`@rogueoak/icons`, 0027)
+
+A standalone package - **not** a `@rogueoak/canopy` subpath - because its dependency footprint
+(`react-icons`, no Roots/Tailwind) and its add-an-icon cadence differ from the components. It is
+deliberately decoupled: `@rogueoak/canopy` does **not** depend on it, and icons colour via
+`currentColor` (react-icons' default), so they need no token layer to theme - they inherit the
+text colour wherever they render.
+
+- **Distribution model: thin curated re-exports.** `src/icons.ts` is the single source of truth -
+  one line per icon, `export { LuHouse as Home } from 'react-icons/lu'` - mapping `react-icons`
+  glyphs to Canopy-semantic names. Lucide (`lu`) for standard glyphs, Font Awesome 6 brands (`fa6`)
+  for the five social marks (Simple Icons dropped LinkedIn, so all five come from one family).
+  `react-icons` is a runtime **dependency** (we own the version backing our names), externalized by
+  tsup like every other dep; only first-party source is bundled.
+- **Tree-shaking.** Individual named exports + `sideEffects: false` keep single-icon imports lean.
+  `registry.ts` derives `iconRegistry` (name → component) and `iconNames` from `src/icons.ts` by a
+  namespace spread - it references the whole set (for the catalog / dynamic use), so it is dropped by
+  the consumer's bundler unless explicitly imported.
+- **`Icon` / `IconProvider` (`src/Icon.tsx`).** react-icons does not hide a decorative icon or set
+  `role="img"` for a titled one, so the `Icon` wrapper owns that: `aria-hidden` by default, a labelled
+  `role="img"` when given a `title`, plus the default `1em` size and className merge. `IconProvider`
+  is a thin alias of react-icons' `IconContext.Provider` for subtree defaults.
+- **No-drift guard.** Because the catalog (Storybook `Icons/Catalog`), the registry, and the public
+  exports all derive from `src/icons.ts`, a test asserts every registry name is a package export and
+  renders an `<svg>` - the rendered docs cannot diverge from what consumers import.
