@@ -54,7 +54,7 @@ Atomic design, renamed by tree anatomy:
 `radius-control`) — never raw palette values. Light and dark are a property of the token
 layer: semantic tokens remap per theme, so a component is themed without knowing it.
 
-**Icons** are atom-tier too, but ship as their own package - `@rogueoak/icons`, a curated,
+**Icons** are atom-tier too, but ship as their own package — `@rogueoak/icons`, a curated,
 tree-shakeable set re-exported from [`react-icons`](https://react-icons.github.io/react-icons/)
 (Lucide glyphs + the popular social marks). They sit apart from `@rogueoak/canopy` because their
 dependency footprint (react-icons, no tokens) and release cadence differ; they render in
@@ -153,7 +153,7 @@ Canopy publishes under the **`@rogueoak`** npm scope as a small set of versioned
 | ------------------ | ----------------------------------------------- | --------- |
 | `@rogueoak/roots`  | design tokens + Tailwind preset                 | published |
 | `@rogueoak/canopy` | components (`/seeds`, `/twigs`, `/branches`)    | published |
-| `@rogueoak/icons`  | curated icon set (re-exported from react-icons) | pending   |
+| `@rogueoak/icons`  | curated icon set (re-exported from react-icons) | published |
 
 Releases are **tag-driven**: pushing a bare-SemVer tag (`X.Y.Z`, no `v` prefix) publishes all
 three packages at that version via GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml),

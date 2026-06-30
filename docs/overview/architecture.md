@@ -507,21 +507,21 @@ pnpm 11 gates package build scripts; the workspace approves esbuild, style-dicti
 
 ## Icons package (`@rogueoak/icons`, 0027)
 
-A standalone package - **not** a `@rogueoak/canopy` subpath - because its dependency footprint
+A standalone package — **not** a `@rogueoak/canopy` subpath — because its dependency footprint
 (`react-icons`, no Roots/Tailwind) and its add-an-icon cadence differ from the components. It is
 deliberately decoupled: `@rogueoak/canopy` does **not** depend on it, and icons colour via
-`currentColor` (react-icons' default), so they need no token layer to theme - they inherit the
+`currentColor` (react-icons' default), so they need no token layer to theme — they inherit the
 text colour wherever they render.
 
-- **Distribution model: thin curated re-exports.** `src/icons.ts` is the single source of truth -
-  one line per icon, `export { LuHouse as Home } from 'react-icons/lu'` - mapping `react-icons`
+- **Distribution model: thin curated re-exports.** `src/icons.ts` is the single source of truth —
+  one line per icon, `export { LuHouse as Home } from 'react-icons/lu'` — mapping `react-icons`
   glyphs to Canopy-semantic names. Lucide (`lu`) for standard glyphs, Font Awesome 6 brands (`fa6`)
   for the five social marks (Simple Icons dropped LinkedIn, so all five come from one family).
   `react-icons` is a runtime **dependency** (we own the version backing our names), externalized by
   tsup like every other dep; only first-party source is bundled.
 - **Tree-shaking.** Individual named exports + `sideEffects: false` keep single-icon imports lean.
   `registry.ts` derives `iconRegistry` (name → component) and `iconNames` from `src/icons.ts` by a
-  namespace spread - it references the whole set (for the catalog / dynamic use), so it is dropped by
+  namespace spread — it references the whole set (for the catalog / dynamic use), so it is dropped by
   the consumer's bundler unless explicitly imported.
 - **`Icon` / `IconProvider` (`src/Icon.tsx`).** react-icons does not hide a decorative icon or set
   `role="img"` for a titled one, so the `Icon` wrapper owns that: `aria-hidden` by default, a labelled
@@ -529,4 +529,4 @@ text colour wherever they render.
   is a thin alias of react-icons' `IconContext.Provider` for subtree defaults.
 - **No-drift guard.** Because the catalog (Storybook `Icons/Catalog`), the registry, and the public
   exports all derive from `src/icons.ts`, a test asserts every registry name is a package export and
-  renders an `<svg>` - the rendered docs cannot diverge from what consumers import.
+  renders an `<svg>` — the rendered docs cannot diverge from what consumers import.
