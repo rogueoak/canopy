@@ -253,7 +253,9 @@ export type TopNavMenuButtonProps = Omit<
  * Button Seed (`variant="ghost" size="icon"`), wired with `aria-expanded={open}` and
  * `aria-controls={panelId}` (the `TopNavLinks` id), and a state-aware `aria-label`
  * (`"Open menu"` / `"Close menu"`). Registers its ref into context for focus-return, and swaps an
- * inline hamburger / X SVG (`currentColor`, `aria-hidden`) with the open state.
+ * inline hamburger / X SVG (`currentColor`, `aria-hidden`) with the open state. It carries
+ * `order-first` so it sits at the start (left) of the bar on mobile regardless of where the consumer
+ * places it in markup; the literal is inert at `md+` where the button is hidden.
  */
 export const TopNavMenuButton = React.forwardRef<HTMLButtonElement, TopNavMenuButtonProps>(
   ({ className, onClick, ...props }, ref) => {
@@ -291,7 +293,7 @@ export const TopNavMenuButton = React.forwardRef<HTMLButtonElement, TopNavMenuBu
         aria-expanded={open}
         aria-controls={panelId}
         onClick={handleClick}
-        className={cn('md:hidden', className)}
+        className={cn('order-first md:hidden', className)}
         {...props}
       >
         {open ? (

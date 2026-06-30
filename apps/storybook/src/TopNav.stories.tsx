@@ -40,6 +40,7 @@ type Story = StoryObj<typeof meta>;
 export const Basic: Story = {
   render: () => (
     <TopNav>
+      <TopNavMenuButton />
       <TopNavBrand asChild>
         <a href="#">Acme</a>
       </TopNavBrand>
@@ -56,7 +57,6 @@ export const Basic: Story = {
           <AvatarFallback>AL</AvatarFallback>
         </Avatar>
       </TopNavActions>
-      <TopNavMenuButton />
     </TopNav>
   ),
 };
@@ -67,6 +67,7 @@ export const Basic: Story = {
 export const ActiveLink: Story = {
   render: () => (
     <TopNav>
+      <TopNavMenuButton />
       <TopNavBrand asChild>
         <a href="#">Acme</a>
       </TopNavBrand>
@@ -85,7 +86,6 @@ export const ActiveLink: Story = {
           <AvatarFallback>AL</AvatarFallback>
         </Avatar>
       </TopNavActions>
-      <TopNavMenuButton />
     </TopNav>
   ),
 };
@@ -102,6 +102,7 @@ export const Responsive: Story = {
   render: () => (
     <div className="mx-auto max-w-md border border-border">
       <TopNav>
+        <TopNavMenuButton />
         <TopNavBrand asChild>
           <a href="#">Acme</a>
         </TopNavBrand>
@@ -117,7 +118,6 @@ export const Responsive: Story = {
             <AvatarFallback>AL</AvatarFallback>
           </Avatar>
         </TopNavActions>
-        <TopNavMenuButton />
       </TopNav>
       <p className="p-4 text-body-sm text-text-muted">
         Below the <code>md</code> breakpoint the links collapse behind the ☰ button. Open it to see
