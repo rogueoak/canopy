@@ -411,3 +411,26 @@ node exists, not that the label becomes perceivable. The fix adds a test that fo
 outcome** (a `role="tooltip"` appears on focus, focus returns to the trigger on close), not of the
 scaffolding that enables it (an `sr-only` node exists). Write the test that would **fail if the promise
 broke** — not the one that passes because a hidden element is present.
+
+## A re-export package's dependency floor is part of its contract
+
+`@rogueoak/icons` (0027) re-exports curated names from `react-icons` (`LuHouse as Home`,
+`FaXTwitter as X`, …). Those upstream symbols are **renamed and added across versions** (Lucide
+churns names; `FaXTwitter` only exists in recent FA6), so the curated names are only valid against a
+new-enough `react-icons`. The package shipped with a `^5.4.0` floor while the verified names needed
+`5.6.0`: a consumer (or a dedupe) that resolves an **older** `5.4.x` gets `undefined` for a missing
+re-export — and because a missing named import is `undefined`, not a type error, it compiles, ships,
+and only fails at **render** (`Element type is invalid`). Caught in review by the architect persona,
+not by the build. Fix: raise the floor to the version the names were verified against (`^5.6.0`).
+
+The matching test lesson (tester persona): a count-based check (`length >= 40` + a few `toContain`s)
+does **not** guard the headline "no `Lu*`/`Fa*` prefix leaks" promise — a forgotten `as` alias would
+leak a raw name and the count still holds. Guard a curated **surface** with an assertion over its
+*shape* (no name matches a family-prefix regex) plus an explicit list of promised names, so a rename
+or a leak fails loudly.
+
+**Apply it:** when a package's value *is* a curated re-export of another, treat the upstream **version
+floor as a contract** — pin it to the version the curated names were verified against, never lower,
+because a too-low floor fails silently at runtime (missing named export → `undefined` → render-time
+crash), invisible to types and the build. And test the curated surface's **shape** (prefix-leak guard
++ promised-name list), not just its size.
