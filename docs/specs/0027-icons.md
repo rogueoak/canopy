@@ -129,9 +129,11 @@ workflow's `--filter './packages/*'` cover it with no workflow edit. Add `@rogue
 workflow publishes **all** `packages/*` lockstep via OIDC trusted publishing. npm trusted
 publishing can only be configured on a package that already exists, so **before the first tag
 release that includes icons**, the developer must: (1) ensure the `@rogueoak` org membership,
-(2) manually publish the first `@rogueoak/icons` version (`pnpm --filter @rogueoak/icons publish
---access public`), (3) configure the trusted publisher (this repo, workflow `release.yml`) on the
-package. **Ordering risk to call out:** because publish is lockstep, if a tag is pushed before
+(2) manually publish the first `@rogueoak/icons` version - stamping the **current trio version**
+into the manifest first so the package lands aligned with roots/canopy (e.g. `npm version 0.2.0
+--no-git-tag-version` then `pnpm --filter @rogueoak/icons publish --access public`), **not** the
+`0.0.0` repo placeholder, (3) configure the trusted publisher (this repo, workflow `release.yml`)
+on the package. **Ordering risk to call out:** because publish is lockstep, if a tag is pushed before
 icons is bootstrapped, icons' OIDC publish fails and leaves a partial release (roots/canopy may
 already be live at that tag) - so the bootstrap must land before the next tag. `publishConfig`,
 `repository`/`homepage`/`bugs`, and a `prepublishOnly` clean-build guard go on the package's

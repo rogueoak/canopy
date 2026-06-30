@@ -153,7 +153,7 @@ Canopy publishes under the **`@rogueoak`** npm scope as a small set of versioned
 | ------------------ | ----------------------------------------------- | --------- |
 | `@rogueoak/roots`  | design tokens + Tailwind preset                 | published |
 | `@rogueoak/canopy` | components (`/seeds`, `/twigs`, `/branches`)    | published |
-| `@rogueoak/icons`  | curated icon set (re-exported from react-icons) | published |
+| `@rogueoak/icons`  | curated icon set (re-exported from react-icons) | pending   |
 
 Releases are **tag-driven**: pushing a bare-SemVer tag (`X.Y.Z`, no `v` prefix) publishes all
 three packages at that version via GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml),

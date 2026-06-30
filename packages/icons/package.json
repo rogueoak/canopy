@@ -1,7 +1,7 @@
 {
   "name": "@rogueoak/icons",
   "version": "0.0.0",
-  "description": "Canopy icons - a curated, tree-shakeable React icon set re-exported from react-icons (Lucide + Simple Icons).",
+  "description": "Canopy icons - a curated, tree-shakeable React icon set re-exported from react-icons (Lucide + Font Awesome 6 brands).",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -36,7 +36,7 @@
     "react": "^19.0.0"
   },
   "dependencies": {
-    "react-icons": "^5.4.0"
+    "react-icons": "^5.6.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

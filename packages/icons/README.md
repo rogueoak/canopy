@@ -87,6 +87,12 @@ Standard glyphs come from **Lucide** (`react-icons/lu`); the social marks come f
 6 brands** (`react-icons/fa6`) - Simple Icons no longer ships LinkedIn, so all five social marks
 come from one family for a consistent look.
 
+Note the two families differ in weight by design: Lucide glyphs are **stroke** (outline) icons,
+while the brand marks are **filled** logos (their canonical form). At the same `1em` a filled brand
+mark therefore reads heavier than a stroke glyph - expected when mixing a UI icon and a logo, but
+worth knowing if you place them side by side (the Storybook catalog groups them separately for
+this reason).
+
 - **Social:** `Github`, `Linkedin`, `X`, `Facebook`, `Instagram`.
 - **Standard:** navigation and chevrons/arrows, actions (`Plus`, `Minus`, `Trash`, `Edit`, `Copy`,
   `Download`, `Upload`), status (`Info`, `AlertTriangle`, `AlertCircle`, `CheckCircle`, `Loader`),
