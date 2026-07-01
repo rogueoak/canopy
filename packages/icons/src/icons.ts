@@ -60,6 +60,21 @@ export {
   LuLock as Lock,
   LuLockOpen as Unlock,
   LuLogOut as LogOut,
+  // Documents & content
+  LuFile as File,
+  LuFileText as FileText,
+  LuNewspaper as Newspaper,
+  LuBriefcase as Briefcase,
+  LuTag as Tag,
+  // Time & place
+  LuClock as Clock,
+  LuMapPin as MapPin,
+  LuGlobe as Globe,
+  // Web & dev
+  LuCode as Code,
+  LuLink as Link,
+  LuRss as Rss,
+  LuMessageSquare as MessageSquare,
 } from 'react-icons/lu';
 
 // --- Social / brand marks - Font Awesome 6 brands (react-icons/fa6) -------------------------

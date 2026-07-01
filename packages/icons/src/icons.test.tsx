@@ -54,6 +54,18 @@ const EXPECTED_STANDARD = [
   'Lock',
   'Unlock',
   'LogOut',
+  'File',
+  'FileText',
+  'Newspaper',
+  'Briefcase',
+  'Tag',
+  'Clock',
+  'MapPin',
+  'Globe',
+  'Code',
+  'Link',
+  'Rss',
+  'MessageSquare',
 ];
 
 describe('curated icon set', () => {
