@@ -1,12 +1,12 @@
-# 0008 — Badge
+# 0008 - Badge
 
 ## Problem
 
-Round out the first Seeds batch with **Badge** — a small, non-interactive label for status and
+Round out the first Seeds batch with **Badge** - a small, non-interactive label for status and
 metadata. It's the first component to exercise the semantic **status** tokens
 (`success`/`warning`/`danger`/`info`) end-to-end, proving they read correctly in both themes.
 
-Independently shippable: one component, one PR. Follows the [0005](0005-button.md) recipe — no
+Independently shippable: one component, one PR. Follows the [0005](0005-button.md) recipe - no
 new infra, no Radix (it's presentational).
 
 ## Outcome
@@ -14,12 +14,12 @@ new infra, no Radix (it's presentational).
 - `@rogueoak/canopy/seeds` exports a themed `Badge`.
 - Variants map to semantic role/status tokens; light/dark "just works" via 0004.
 - Stories (every variant, both themes) and tests (render · variant classes).
-- README/Storybook updated; `0008` ticked — first Seeds batch complete.
+- README/Storybook updated; `0008` ticked - first Seeds batch complete.
 
 ## Scope
 
 ### In
-- **Badge** — variants `neutral` / `primary` / `success` / `warning` / `danger` / `info`,
+- **Badge** - variants `neutral` / `primary` / `success` / `warning` / `danger` / `info`,
   using the semantic status tokens. Optional subtle vs. solid emphasis if it stays within the
   token set without bespoke values. Renders as `span` (presentational); `asChild` optional.
 - Stories: every variant, light and dark.
@@ -33,7 +33,7 @@ new infra, no Radix (it's presentational).
 
 Follows the **0005 recipe**: cva variant→semantic-token mapping, `cn()`, semantic tokens only,
 theme-agnostic by construction. No Radix needed (non-interactive). The status variants are the
-first real consumers of the functional ramps' semantic roles — stories in both themes are the
+first real consumers of the functional ramps' semantic roles - stories in both themes are the
 verification that those roles are legible.
 
 ## Acceptance

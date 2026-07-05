@@ -7,15 +7,15 @@ import { AA_PAIRS as PAIRS, contrast, parseDecls } from './contrast.mjs';
 
 /**
  * These tests read the BUILT `dist/` outputs (the package must build before it is
- * tested — see `turbo.json` `test.dependsOn`). They guard the two-tier token system:
+ * tested - see `turbo.json` `test.dependsOn`). They guard the two-tier token system:
  * primitive ramps are emitted as literals, and semantic tokens survive as *references*
- * to their primitive CSS vars (not flattened to literals) across all three outputs —
+ * to their primitive CSS vars (not flattened to literals) across all three outputs -
  * the reference seam hardened in 0002 and relied on by the dark remap in 0004.
  */
 const distUrl = (file: string) => fileURLToPath(new URL(`./dist/${file}`, import.meta.url));
 const read = (file: string) => readFileSync(distUrl(file), 'utf8');
 
-describe('Roots token outputs — primitives', () => {
+describe('Roots token outputs - primitives', () => {
   it('tokens.css declares the approved primitive ramp hexes', () => {
     const css = read('tokens.css');
     // moss is the greener (less-yellow) ramp refined in 0004; light/dark primary anchors.
@@ -39,7 +39,7 @@ describe('Roots token outputs — primitives', () => {
   });
 });
 
-describe('Roots token outputs — semantic reference seam', () => {
+describe('Roots token outputs - semantic reference seam', () => {
   it('tokens.css keeps semantic tokens as references to primitives', () => {
     const css = read('tokens.css');
     expect(css).toContain('--color-primary: var(--color-moss-600)');
@@ -56,7 +56,7 @@ describe('Roots token outputs — semantic reference seam', () => {
   });
 });
 
-describe('Roots token outputs — Tailwind v4 namespaces', () => {
+describe('Roots token outputs - Tailwind v4 namespaces', () => {
   it('tailwind-preset.css uses @theme inline and emits the --spacing base', () => {
     const preset = read('tailwind-preset.css');
     expect(preset).toContain('@theme inline');
@@ -92,7 +92,7 @@ describe('Roots token outputs — Tailwind v4 namespaces', () => {
     expect(overlayIn).toContain('var(--ease-decelerate)');
 
     // The same partial now also carries the off-canvas drawer slide (first consumed by SideNav
-    // 0026) — assert its keyframes + token-composed animate value ship too.
+    // 0026) - assert its keyframes + token-composed animate value ship too.
     expect(preset).toContain('@keyframes drawer-in');
     expect(preset).toContain('--animate-drawer-in:');
     const drawerIn = /--animate-drawer-in:\s*([^;]+);/.exec(preset)?.[1] ?? '';
@@ -100,7 +100,7 @@ describe('Roots token outputs — Tailwind v4 namespaces', () => {
   });
 });
 
-describe('Roots token outputs — composite text roles', () => {
+describe('Roots token outputs - composite text roles', () => {
   it('emits each text-<role> as font-size + companion vars (reference-aware)', () => {
     const css = read('tokens.css');
     // text-h2 composes references to the primitives, not flattened literals.
@@ -133,7 +133,7 @@ describe('Roots token outputs — composite text roles', () => {
 /**
  * Executable AA guard (feedback 0002), extended in 0004 to BOTH themes. Instead of
  * trusting a hand-typed story table, resolve each semantic role to its real primitive
- * hex and compute the WCAG 2.1 contrast ratio — for the light `:root` AND the `.dark`
+ * hex and compute the WCAG 2.1 contrast ratio - for the light `:root` AND the `.dark`
  * remap. A ramp/remap edit that drops a pair below threshold now fails the build.
  *
  * The light theme resolves via the typed export's `var(--…)` references. The dark theme
@@ -154,7 +154,7 @@ const splitThemeBlocks = (css: string) => {
   return { root: parseDecls(rootBody), dark: parseDecls(darkBody) };
 };
 
-describe('Roots semantic colours — WCAG AA contrast (computed from real hexes)', () => {
+describe('Roots semantic colours - WCAG AA contrast (computed from real hexes)', () => {
   it('meets the documented AA thresholds for every role pair on its surface (light)', async () => {
     const { tokens } = await import('./dist/tokens.js');
     const t = tokens as Record<string, string>;
@@ -186,7 +186,7 @@ describe('Roots semantic colours — WCAG AA contrast (computed from real hexes)
 
     // Resolve a semantic role under .dark: the dark override re-points it at a primitive
     // var; chase that primitive to its `:root` hex literal. A role NOT overridden in
-    // .dark would fall through to its light :root value — but the coverage guard below
+    // .dark would fall through to its light :root value - but the coverage guard below
     // forbids that for themed roles, so any pair here is genuinely a dark value.
     const resolveVar = (name: string, seen = new Set<string>()): string => {
       if (seen.has(name)) throw new Error(`reference cycle at ${name}`);
@@ -214,9 +214,9 @@ describe('Roots semantic colours — WCAG AA contrast (computed from real hexes)
   });
 });
 
-describe('Roots theming — dark coverage guard', () => {
+describe('Roots theming - dark coverage guard', () => {
   // The set of themed semantic vars: `--color-*` vars in :root that REFERENCE a primitive
-  // (`var(--…)`), i.e. roles — not the primitive ramp literals (shared, theme-agnostic)
+  // (`var(--…)`), i.e. roles - not the primitive ramp literals (shared, theme-agnostic)
   // and not composite text roles.
   const themedRoles = (root: Record<string, string>) =>
     Object.keys(root).filter(
@@ -242,7 +242,7 @@ describe('Roots theming — dark coverage guard', () => {
   it('makes every dark override differ from its light value (catches copy-paste)', () => {
     const { root, dark } = splitThemeBlocks(read('tokens.css'));
     // A dark override re-pointing at the SAME primitive var as light is usually a
-    // copy-paste slip — the role would be visually identical across themes. The lone
+    // copy-paste slip - the role would be visually identical across themes. The lone
     // legitimate exception is a DELIBERATELY theme-invariant foreground: `accent` is a
     // fill role with a near-black foreground (amber.950) that reads on the amber fill in
     // BOTH themes (light fill amber.500, dark fill amber.400), so accent-foreground is
@@ -279,11 +279,11 @@ describe('Roots theming — dark coverage guard', () => {
   });
 });
 
-describe('Roots interaction states — base/hover/active are distinct within each theme', () => {
+describe('Roots interaction states - base/hover/active are distinct within each theme', () => {
   // The contrast guard proves each fill is legible; this proves the three states of a role
   // actually DIFFER inside a theme. The dark-coverage guard only compares dark-vs-light, so a
   // hover that collided with its OWN base in one theme (dark `danger-hover` == dark `danger`,
-  // which made the destructive button's hover invisible in dark — feedback 0004) slipped
+  // which made the destructive button's hover invisible in dark - feedback 0004) slipped
   // straight through. This closes that gap in both themes.
   const FAMILIES: [string, string[]][] = [
     ['primary', ['color-primary', 'color-primary-hover', 'color-primary-active']],
@@ -294,14 +294,14 @@ describe('Roots interaction states — base/hover/active are distinct within eac
   const distinctFailures = (label: string, resolve: (n: string) => string) => {
     const fails: string[] = [];
     for (const [role, steps] of FAMILIES) {
-      // Call with a single arg — `steps.map(resolve)` would pass the index as `resolve`'s
+      // Call with a single arg - `steps.map(resolve)` would pass the index as `resolve`'s
       // second param (its `seen` accumulator), breaking the cycle guard.
       const hexes = steps.map((step) => resolve(step));
       for (let i = 0; i < hexes.length; i++) {
         for (let j = i + 1; j < hexes.length; j++) {
           if (hexes[i] === hexes[j]) {
             fails.push(
-              `${label}: ${role} — ${steps[i]} and ${steps[j]} both resolve to ${hexes[i]}`,
+              `${label}: ${role} - ${steps[i]} and ${steps[j]} both resolve to ${hexes[i]}`,
             );
           }
         }

@@ -39,7 +39,7 @@ beforeAll(() => {
     Element.prototype.scrollIntoView = vi.fn();
   }
   // The collapsed-item Tooltip's Radix `Arrow` measures itself through `react-use-size`, which
-  // calls `ResizeObserver` — absent in jsdom, so opening the tooltip throws without a no-op stub.
+  // calls `ResizeObserver` - absent in jsdom, so opening the tooltip throws without a no-op stub.
   if (!globalThis.ResizeObserver) {
     globalThis.ResizeObserver = vi.fn(() => ({
       observe: vi.fn(),
@@ -130,7 +130,7 @@ describe('SideNav (collapsed)', () => {
 
     // ...but each item keeps its accessible name (the label is sr-only, not removed). With the rail
     // collapsed an item is wrapped in a Tooltip, so the label text appears for both the link's name
-    // and the (lazy) tooltip — assert the link name rather than a unique text node.
+    // and the (lazy) tooltip - assert the link name rather than a unique text node.
     const home = screen.getByRole('link', { name: 'Home' });
     expect(home).toBeInTheDocument();
     expect(within(home).getByText('Home')).toHaveClass('sr-only');
@@ -162,7 +162,7 @@ describe('SideNav (collapsed)', () => {
   it('surfaces a collapsed item label in a Tooltip on focus (the headline a11y promise)', async () => {
     render(<Sidebar defaultCollapsed />);
     // Radix Tooltip opens on focus immediately; the collapsed item is wrapped in one, so focusing
-    // the (icon-only) link must surface its label — the actual a11y behaviour, not just the sr-only
+    // the (icon-only) link must surface its label - the actual a11y behaviour, not just the sr-only
     // scaffolding.
     fireEvent.focus(screen.getByRole('link', { name: 'Projects' }));
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Projects');
@@ -172,7 +172,7 @@ describe('SideNav (collapsed)', () => {
     const user = userEvent.setup();
     const onCollapsedChange = vi.fn();
     const ref = createRef<HTMLElement>();
-    // `collapsed` is pinned `false`, so SideNav is controlled — the DOM must not change on its own.
+    // `collapsed` is pinned `false`, so SideNav is controlled - the DOM must not change on its own.
     render(<Sidebar ref={ref} collapsed={false} onCollapsedChange={onCollapsedChange} />);
 
     expect(ref.current).toHaveClass('w-60');
@@ -224,7 +224,7 @@ describe('SideNav (mobile drawer)', () => {
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
     // Radix `aria-hidden`s the background (including the trigger) while the modal is open, so the
-    // trigger is no longer reachable by role — assert on the captured node, which React updates.
+    // trigger is no longer reachable by role - assert on the captured node, which React updates.
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
   });
 

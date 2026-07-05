@@ -13,7 +13,7 @@ describe('Label', () => {
 
   it('applies the semantic label-role token classes', () => {
     render(<Label>Email</Label>);
-    // text-label carries its own (medium) weight — no separate font-medium.
+    // text-label carries its own (medium) weight - no separate font-medium.
     expect(screen.getByText('Email')).toHaveClass('text-label', 'text-text');
   });
 
@@ -61,7 +61,7 @@ describe('Label', () => {
     // tailwind-merge lets the caller win the text-COLOUR conflict...
     expect(label).toHaveClass('text-danger');
     expect(label).not.toHaveClass('text-text');
-    // ...while the typography ROLE survives — proving the cn() font-size-group fix keeps the
+    // ...while the typography ROLE survives - proving the cn() font-size-group fix keeps the
     // role and the colour orthogonal (without it, text-label would be dropped here).
     expect(label).toHaveClass('text-label');
   });

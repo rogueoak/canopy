@@ -12,7 +12,7 @@
     "md": {
       "$value": "0.5rem",
       "$type": "dimension",
-      "$description": "8px — default control radius"
+      "$description": "8px - default control radius"
     },
     "lg": {
       "$value": "0.75rem",

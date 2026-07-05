@@ -7,11 +7,11 @@ export type RadioGroupProps = React.ComponentPropsWithoutRef<typeof RadioGroupPr
 export type RadioGroupItemProps = React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>;
 
 /**
- * RadioGroup — the single-choice selection Seed (spec 0011). The root is a thin wrapper over
+ * RadioGroup - the single-choice selection Seed (spec 0011). The root is a thin wrapper over
  * `@radix-ui/react-radio-group`'s `Root`: Radix owns the selection state and the roving
  * keyboard model (arrow keys move focus AND selection, Tab enters/leaves the group), and this
  * Seed only paints a vertical `grid gap-2` layout and forwards `ref` + native props. There is
- * no per-component theme code — light/dark flips through the token layer (spec 0004).
+ * no per-component theme code - light/dark flips through the token layer (spec 0004).
  */
 export const RadioGroup = React.forwardRef<
   React.ComponentRef<typeof RadioGroupPrimitive.Root>,
@@ -22,7 +22,7 @@ export const RadioGroup = React.forwardRef<
 RadioGroup.displayName = 'RadioGroup';
 
 /**
- * RadioGroupItem — one selectable circle in a RadioGroup. A `h-5 w-5` token-styled circle with
+ * RadioGroupItem - one selectable circle in a RadioGroup. A `h-5 w-5` token-styled circle with
  * an idle `border-strong` ring over `bg-surface`; when selected the border becomes `primary`
  * (`data-[state=checked]:border-primary`) and the centred `RadioGroup.Indicator` reveals a
  * `bg-primary` dot. Carries the shared focus-visible ring for a11y, and the

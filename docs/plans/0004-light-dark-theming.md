@@ -1,4 +1,4 @@
-# Plan 0004 — Light & dark theming
+# Plan 0004 - Light & dark theming
 
 Implements `docs/specs/0004-light-dark-theming.md`. Adds the dark theme (a `.dark` semantic
 remap), interaction-state tokens (light + dark), a functional Storybook theme toggle, a
@@ -7,7 +7,7 @@ Reuses the 0003 pipeline; primitives stay the single shared ramp set (only `moss
 
 ## 1. Moss-green refinement (primitive)
 Replace the `moss` ramp in `packages/roots/tokens/color/primitive.json` with the greener
-(less-yellow) ramp below — one hue (~90°) across all steps, anchored at the approved
+(less-yellow) ramp below - one hue (~90°) across all steps, anchored at the approved
 `moss-400`/`moss-600`. Verify perceptual smoothness; adjust a step only if the contrast test
 or an even-step check fails.
 
@@ -19,7 +19,7 @@ or an even-step check fails.
 share the hue. No other ramp changes.
 
 ## 2. Dark semantic mapping
-Author `packages/roots/tokens/color/semantic.dark.json` — the **same token paths** as
+Author `packages/roots/tokens/color/semantic.dark.json` - the **same token paths** as
 `semantic.json`, with dark `$value`s that **reference primitives** (keep it reference-aware):
 
 - surfaces: `bg`→`{color.stone.950}`, `surface`→`{color.stone.900}`,
@@ -35,7 +35,7 @@ Author `packages/roots/tokens/color/semantic.dark.json` — the **same token pat
   `muted-foreground`→`{color.stone.300}`
 - status: `success/warning/danger/info` → their `.400` (DEFAULT role), `*-foreground` → their
   `.950`/`.50` as contrast dictates (tune for AA on dark surfaces). Status *surface* usage in
-  components will pair a dark status bg (`.900`) with light status text (`.300`) — expose what's
+  components will pair a dark status bg (`.900`) with light status text (`.300`) - expose what's
   needed.
 
 ## 3. Interaction-state tokens (light + dark)
@@ -55,7 +55,7 @@ Add to `semantic.json` (light) and `semantic.dark.json` (dark), referencing ramp
 (Disabled is a surface+foreground convention; components also use `opacity` where a control
 just dims. Document the convention.)
 
-## 4. Pipeline — emit `:root` (light) + `.dark` (dark) into tokens.css
+## 4. Pipeline - emit `:root` (light) + `.dark` (dark) into tokens.css
 The CSS output must become:
 ```css
 :root { /* all light tokens (primitives + light semantics) */ }
@@ -64,18 +64,18 @@ The CSS output must become:
 Implementation (pick the cleanest): build the existing light platform → `:root` as today, then a
 second pass over `semantic.dark.json` (resolved against the same primitives, reference-aware)
 emitting a `.dark { … }` block appended to `dist/tokens.css`. Primitives are NOT repeated in
-`.dark` (shared). The **Tailwind preset and typed TS export are unchanged** — they reference the
+`.dark` (shared). The **Tailwind preset and typed TS export are unchanged** - they reference the
 runtime vars, which `.dark` overrides; utilities (`bg-primary`, …) re-resolve under `.dark`
 automatically. Add `@custom-variant dark (&:where(.dark, .dark *))` to the Storybook/consumer CSS
 so explicit `dark:` utilities also work (rarely needed).
 
-## 5. Storybook — functional toggle
+## 5. Storybook - functional toggle
 Wire `@storybook/addon-themes` `withThemeByClassName` to toggle the `.dark` class on the
 preview `<html>` (light default). Ensure the global CSS imports give `:root` + `.dark`. Every
 Foundations story must read correctly in both themes; add a **Theme** demo (a small UI that
 re-themes live) and ensure the Colours story shows the dark semantic values when toggled.
 
-## 6. Contrast — guard BOTH themes
+## 6. Contrast - guard BOTH themes
 Extend `packages/roots/tokens.test.ts`: the contrast guard must resolve role pairs for **light
 and dark** and assert AA in each. Resolve dark values by reading the `.dark` block from the
 built `tokens.css` (or the dark token source) and chasing `var(--primitive)` to the primitive
@@ -83,7 +83,7 @@ hexes (primitives are literals in `:root`). Also assert: every semantic token pr
 `:root` that should theme has a `.dark` override (no token silently left at its light value).
 
 ## 7. Docs
-- README: a **Theming** section — the `.dark` class mechanism, the consumer toggle snippet, and
+- README: a **Theming** section - the `.dark` class mechanism, the consumer toggle snippet, and
   an optional `prefers-color-scheme` bootstrap; tick `0004` on the roadmap.
 - `architecture.md`: the `:root`/`.dark` emission model + interaction-state convention (replace
   the deferred note) + the moss-green refinement rationale.
@@ -102,7 +102,7 @@ hexes (primitives are literals in `:root`). Also assert: every semantic token pr
    confirm `.dark` block present so toggling re-themes.
 6. Confirm the Storybook theme toggle exists and flips `.dark` (story renders in both).
 
-Iterate until all pass — the `.dark` emission is the tricky bit; verify against the built CSS.
+Iterate until all pass - the `.dark` emission is the tricky bit; verify against the built CSS.
 
 ## Out of scope
 Real components (0005), multi-brand/density/high-contrast themes, OS auto-switching beyond a

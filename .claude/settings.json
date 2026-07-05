@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
-    "spectra@spectra": true
+    "spectra@spectra": true,
+    "trellis@trellis": true
   }
 }

@@ -4,24 +4,24 @@ import { cn } from '../lib/cn';
 import { Button } from '../seeds';
 
 /**
- * TopNav — the second canopy Branch (organism, spec 0025), and the first **non-portalled,
+ * TopNav - the second canopy Branch (organism, spec 0025), and the first **non-portalled,
  * stateful** Branch. Where Dialog (0024) leans on Radix for a portal + focus trap, TopNav owns its
  * interaction state directly: a hand-rolled disclosure (a menu button + `aria-expanded` /
  * `aria-controls`, an `Esc` + outside-click effect, and focus-return-to-toggle) coordinated through
- * a small `TopNavContext`. No Radix disclosure primitive, no new dependency, no new token — just the
+ * a small `TopNavContext`. No Radix disclosure primitive, no new dependency, no new token - just the
  * Button Seed for the ☰ toggle and Radix `Slot` (already a dep) for `asChild` on Brand/Link.
  *
  * It is a **slot-based compound** rendered as a `<header>` + `<nav aria-label>` landmark:
- * - `TopNav` — the root bar (`h-14`, `border-b border-border`, `bg-surface`); provides the context
+ * - `TopNav` - the root bar (`h-14`, `border-b border-border`, `bg-surface`); provides the context
  *   and owns the Esc + outside-click effect with focus-return to the menu button.
- * - `TopNavBrand` — the leading brand/wordmark slot; `asChild` so it can be the consumer's `<a>`.
- * - `TopNavLinks` — ONE element that is an inline row on `md+` and a mobile disclosure panel below
+ * - `TopNavBrand` - the leading brand/wordmark slot; `asChild` so it can be the consumer's `<a>`.
+ * - `TopNavLinks` - ONE element that is an inline row on `md+` and a mobile disclosure panel below
  *   the bar when `open`; carries `id={panelId}` so the menu button's `aria-controls` agrees.
- * - `TopNavLink` — a single link; `active` → `aria-current="page"` + active styling (vs muted idle).
+ * - `TopNavLink` - a single link; `active` → `aria-current="page"` + active styling (vs muted idle).
  *   `asChild` to wrap a router `<Link>`; closes the panel on click so a mobile tap dismisses.
- * - `TopNavActions` — the trailing, right-aligned (`ml-auto`) cluster for Buttons / Avatar /
+ * - `TopNavActions` - the trailing, right-aligned (`ml-auto`) cluster for Buttons / Avatar /
  *   SearchBar.
- * - `TopNavMenuButton` — the ☰ toggle, `md:hidden`; composes the Button Seed, wired with
+ * - `TopNavMenuButton` - the ☰ toggle, `md:hidden`; composes the Button Seed, wired with
  *   `aria-expanded` / `aria-controls`, swapping a hamburger / X SVG with state.
  *
  * Active state is the consumer's, surfaced accessibly: the attribute (`aria-current`) and the
@@ -35,7 +35,7 @@ interface TopNavContextValue {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   /** Closes the panel (used by `Esc`, outside-click, and a link tap). */
   close: () => void;
-  /** `React.useId` — shared by `TopNavMenuButton aria-controls` and `TopNavLinks id`. */
+  /** `React.useId` - shared by `TopNavMenuButton aria-controls` and `TopNavLinks id`. */
   panelId: string;
   /** The menu button's ref, registered by `TopNavMenuButton`, for focus-return on close. */
   menuButtonRef: React.RefObject<HTMLButtonElement | null>;
@@ -57,7 +57,7 @@ export interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 /**
- * TopNav — the root. Renders a `<header>` banner wrapping the `<nav aria-label>` landmark that is
+ * TopNav - the root. Renders a `<header>` banner wrapping the `<nav aria-label>` landmark that is
  * the styled bar; provides the `TopNavContext`, and owns the dismissal effect: while the panel is
  * open, a document `pointerdown` outside the nav closes it, and `Escape` closes it AND returns
  * focus to the menu button (mirroring Dialog's return-to-trigger, without the modal weight). The
@@ -76,7 +76,7 @@ export const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
     const close = React.useCallback(() => setOpen(false), []);
 
     // Hand-rolled dismiss (open-gated outside-pointerdown + Escape + focus-return). Kept inline
-    // rather than extracted to a shared hook: TopNav is the only hand-rolled disclosure — SideNav
+    // rather than extracted to a shared hook: TopNav is the only hand-rolled disclosure - SideNav
     // (0026) gets the same behaviour from Radix Dialog (its drawer), so there is no second consumer
     // to share with yet (extract on the rule of three, not before).
     React.useEffect(() => {
@@ -129,12 +129,12 @@ export const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
 TopNav.displayName = 'TopNav';
 
 export interface TopNavBrandProps extends React.HTMLAttributes<HTMLElement> {
-  /** Render as the single child element (Radix `Slot`) — e.g. the consumer's `<a>` to home. */
+  /** Render as the single child element (Radix `Slot`) - e.g. the consumer's `<a>` to home. */
   asChild?: boolean;
 }
 
 /**
- * TopNavBrand — the leading brand/wordmark slot. Default element is a `<span>` styled as a wordmark
+ * TopNavBrand - the leading brand/wordmark slot. Default element is a `<span>` styled as a wordmark
  * (`font-semibold text-h4`); `asChild` swaps it for the consumer's element (typically an `<a href>`
  * to home), merging the brand classes/props onto it via Radix `Slot`.
  */
@@ -155,7 +155,7 @@ TopNavBrand.displayName = 'TopNavBrand';
 export type TopNavLinksProps = React.HTMLAttributes<HTMLDivElement>;
 
 /**
- * TopNavLinks — the primary-links container, and the responsive heart of TopNav: ONE element that is
+ * TopNavLinks - the primary-links container, and the responsive heart of TopNav: ONE element that is
  * an **inline row on `md+`** and a **mobile disclosure panel** anchored below the bar when `open`.
  * It carries `id={panelId}` so `TopNavMenuButton`'s `aria-controls` resolves to it. The `md:*`
  * literals override the mobile `hidden`/panel styling at the breakpoint; all classes are full
@@ -189,12 +189,12 @@ export interface TopNavLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorEl
    * The consumer drives this from their router, so Canopy stays router-agnostic.
    */
   active?: boolean;
-  /** Render as the single child element (Radix `Slot`) — e.g. a router `<Link>`. */
+  /** Render as the single child element (Radix `Slot`) - e.g. a router `<Link>`. */
   asChild?: boolean;
 }
 
 /**
- * TopNavLink — a single nav link. `active` sets `aria-current="page"` and the active styling in
+ * TopNavLink - a single nav link. `active` sets `aria-current="page"` and the active styling in
  * lockstep; idle links are muted with a hover lift. `asChild` wraps a router `<Link>` (default
  * element `<a>`). Clicking closes the mobile panel, so a tap navigates AND dismisses. Carries the
  * shared focus-visible ring.
@@ -233,7 +233,7 @@ TopNavLink.displayName = 'TopNavLink';
 export type TopNavActionsProps = React.HTMLAttributes<HTMLDivElement>;
 
 /**
- * TopNavActions — the trailing, right-aligned (`ml-auto`) cluster for the consumer's Buttons /
+ * TopNavActions - the trailing, right-aligned (`ml-auto`) cluster for the consumer's Buttons /
  * Avatar / SearchBar.
  */
 export const TopNavActions = React.forwardRef<HTMLDivElement, TopNavActionsProps>(
@@ -249,7 +249,7 @@ export type TopNavMenuButtonProps = Omit<
 >;
 
 /**
- * TopNavMenuButton — the ☰ toggle, **only visible below the breakpoint** (`md:hidden`). Composes the
+ * TopNavMenuButton - the ☰ toggle, **only visible below the breakpoint** (`md:hidden`). Composes the
  * Button Seed (`variant="ghost" size="icon"`), wired with `aria-expanded={open}` and
  * `aria-controls={panelId}` (the `TopNavLinks` id), and a state-aware `aria-label`
  * (`"Open menu"` / `"Close menu"`). Registers its ref into context for focus-return, and swaps an
@@ -261,7 +261,7 @@ export const TopNavMenuButton = React.forwardRef<HTMLButtonElement, TopNavMenuBu
   ({ className, onClick, ...props }, ref) => {
     const { open, setOpen, panelId, menuButtonRef } = useTopNavContext('TopNavMenuButton');
 
-    // Memoized so the merged ref callback is stable across renders — an inline ref would detach
+    // Memoized so the merged ref callback is stable across renders - an inline ref would detach
     // (briefly nulling `menuButtonRef.current`) and reattach on every render, including each toggle.
     const setRef = React.useCallback(
       (node: HTMLButtonElement | null) => {

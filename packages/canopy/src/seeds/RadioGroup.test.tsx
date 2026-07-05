@@ -55,10 +55,10 @@ describe('RadioGroup', () => {
     expect(seed).toHaveAttribute('tabindex', '0');
     expect(sprout).toHaveAttribute('tabindex', '-1');
 
-    // ArrowDown rolls focus to the next item; ArrowUp rolls it back — the Radix roving model.
+    // ArrowDown rolls focus to the next item; ArrowUp rolls it back - the Radix roving model.
     // NOTE: WAI-ARIA also has arrow keys *select* (fire onValueChange) the focused radio. Radix
     // does this via a document-level keydown listener that, under jsdom's bubble-phase ordering,
-    // runs after RovingFocus has already moved focus — so arrow-auto-select can't be asserted
+    // runs after RovingFocus has already moved focus - so arrow-auto-select can't be asserted
     // here. It works in a real browser; cover that contract in a future Storybook play/e2e layer.
     await user.keyboard('{ArrowDown}');
     expect(sprout).toHaveFocus();

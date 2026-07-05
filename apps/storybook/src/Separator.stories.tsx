@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Separator } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Separator — the canopy hairline divider Seed (spec 0016).
+ * Seeds/Separator - the canopy hairline divider Seed (spec 0016).
  *
  * Styled entirely with semantic-token utilities (`bg-border` + the `data-[orientation=…]`
  * sizing rules). There is NO per-story theme code: toggle the toolbar Light / Dark control and
@@ -25,7 +25,7 @@ type Story = StoryObj<typeof meta>;
 /* ----------------------------------------------------------------- Horizontal */
 
 /**
- * A horizontal rule (the default) separating two blocks of text — the common case for
+ * A horizontal rule (the default) separating two blocks of text - the common case for
  * dividing sections of a card or page.
  */
 export const Horizontal: Story = {
@@ -48,7 +48,7 @@ export const Horizontal: Story = {
 /* ------------------------------------------------------------------- Vertical */
 
 /**
- * A vertical separator between inline items, sized to its `flex h-5 items-center` row — the
+ * A vertical separator between inline items, sized to its `flex h-5 items-center` row - the
  * toolbar / breadcrumb pattern.
  */
 export const Vertical: Story = {

@@ -1,12 +1,12 @@
-# 0016 — Separator
+# 0016 - Separator
 
 ## Problem
 
-With the Seeds recipe established in [0005](0005-button.md), add the **Separator** atom — a thin
+With the Seeds recipe established in [0005](0005-button.md), add the **Separator** atom - a thin
 divider between content groups (menu sections, toolbar clusters, list groupings). Separator is
 the structural hairline reused across the catalogue.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — no new infra beyond
+Independently shippable: one component, one PR. Follows the 0005 recipe - no new infra beyond
 the Radix Separator primitive.
 
 ## Outcome
@@ -20,11 +20,11 @@ the Radix Separator primitive.
 ## Scope
 
 ### In
-- **Separator** — Radix Separator; `orientation` horizontal / vertical; `decorative` flag
+- **Separator** - Radix Separator; `orientation` horizontal / vertical; `decorative` flag
   (decorative → no role; semantic → `role="separator"` with orientation aria). Forwards `ref`,
   spreads native props.
 - New dep on `@rogueoak/canopy`: `@radix-ui/react-separator`.
-- Stories: horizontal, vertical, decorative, semantic — light and dark.
+- Stories: horizontal, vertical, decorative, semantic - light and dark.
 - Tests: render, orientation, decorative vs semantic role/aria.
 
 ### Out

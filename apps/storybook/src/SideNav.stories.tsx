@@ -12,14 +12,14 @@ import {
 } from '@rogueoak/canopy/branches';
 
 /**
- * Branches/SideNav — the vertical side-navigation Branch (spec 0026), the companion to TopNav. A
+ * Branches/SideNav - the vertical side-navigation Branch (spec 0026), the companion to TopNav. A
  * landmark organism that lists grouped items down the side of an app shell, responsive in two axes:
  * a collapsed icon-rail ↔ expanded toggle on desktop (labels surface via a Tooltip when collapsed),
- * and an off-canvas drawer below `768px` (built on the `@radix-ui/react-dialog` primitive — Radix
+ * and an off-canvas drawer below `768px` (built on the `@radix-ui/react-dialog` primitive - Radix
  * gives the focus trap, return-focus, `Esc`/outside-click dismiss).
  *
- * There is NO per-story theme code: toggle the toolbar Light / Dark control and every story — the
- * portalled mobile drawer included — re-themes via the token layer (spec 0004). SideNav composes
+ * There is NO per-story theme code: toggle the toolbar Light / Dark control and every story - the
+ * portalled mobile drawer included - re-themes via the token layer (spec 0004). SideNav composes
  * lower layers (Button / Avatar Seeds) and adds no new token. The icons below are inline literal-class
  * SVGs (no icon library).
  */
@@ -201,7 +201,7 @@ export const Collapsed: Story = {
  * The off-canvas drawer. This story defaults to a mobile viewport (use the toolbar Viewport control
  * to change it) so SideNav renders its Radix-Dialog drawer rather than the desktop rail: a
  * `SideNavTrigger` (a `md:hidden` hamburger Button, visible below `768px`) opens the rail over a
- * scrim — dismissed by `Esc`, an outside click, or selecting an item. Open state lives in this
+ * scrim - dismissed by `Esc`, an outside click, or selecting an item. Open state lives in this
  * top-level component (never a hook in the `render` arrow).
  */
 function MobileDrawerShell() {

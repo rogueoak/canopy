@@ -1,7 +1,7 @@
 {
   "name": "@rogueoak/roots",
   "version": "0.0.0",
-  "description": "Canopy design tokens — Style Dictionary pipeline (CSS vars, typed TS, Tailwind v4 preset).",
+  "description": "Canopy design tokens - Style Dictionary pipeline (CSS vars, typed TS, Tailwind v4 preset).",
   "license": "MIT",
   "repository": {
     "type": "git",

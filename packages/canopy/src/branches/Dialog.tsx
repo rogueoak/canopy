@@ -3,35 +3,35 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { cn } from '../lib/cn';
 
 /**
- * Dialog — the first canopy Branch (organism, spec 0024), built on `@radix-ui/react-dialog`.
+ * Dialog - the first canopy Branch (organism, spec 0024), built on `@radix-ui/react-dialog`.
  * Where a Seed is an atom and a Twig composes atoms, a **Branch** owns interaction state and a
  * portal: Radix supplies the open/close state machine, the focus trap, return-focus, scroll lock,
  * and the `role="dialog"` + `aria-modal` / `aria-labelledby` / `aria-describedby` ARIA contract,
- * so this component is composition + token styling — not hand-rolled focus management.
+ * so this component is composition + token styling - not hand-rolled focus management.
  *
  * It reuses the established raised-surface pattern (the third portalled surface after Select 0013
  * and Tooltip 0014): the content card sits on `bg-surface-raised` + `border` + the primitive
  * `shadow-lg`, and the scrim uses the **pre-provisioned** `color-overlay` token at reduced opacity
- * (`bg-overlay/80`) — so the first Branch adds NO new token. There is NO `dark:` on the common
+ * (`bg-overlay/80`) - so the first Branch adds NO new token. There is NO `dark:` on the common
  * path: light/dark flips through the token layer (spec 0004), and because `.dark` lives on
  * `<html>`, the portalled overlay + content (mounted under `<body>`) theme correctly too.
  *
  * The family mirrors the shadcn surface area:
- * - `Dialog` — the stateful root (`open` / `onOpenChange`; controlled or uncontrolled via
+ * - `Dialog` - the stateful root (`open` / `onOpenChange`; controlled or uncontrolled via
  *   `defaultOpen`).
- * - `DialogTrigger` — opens the dialog; `asChild` to wrap a Button Seed.
- * - `DialogClose` — closes the dialog; `asChild` to wrap a Button (e.g. a footer "Cancel").
- * - `DialogContent` — the portalled card with a built-in `X` close affordance; owns focus trap,
+ * - `DialogTrigger` - opens the dialog; `asChild` to wrap a Button Seed.
+ * - `DialogClose` - closes the dialog; `asChild` to wrap a Button (e.g. a footer "Cancel").
+ * - `DialogContent` - the portalled card with a built-in `X` close affordance; owns focus trap,
  *   return-focus, scroll lock, and `Esc`-to-close (Radix).
- * - `DialogHeader` / `DialogFooter` — layout slots (stacked header; right-aligned action footer).
- * - `DialogTitle` — the accessible title (`text-h3`), wired as `aria-labelledby`.
- * - `DialogDescription` — muted supporting copy (`text-body-sm`), wired as `aria-describedby`.
+ * - `DialogHeader` / `DialogFooter` - layout slots (stacked header; right-aligned action footer).
+ * - `DialogTitle` - the accessible title (`text-h3`), wired as `aria-labelledby`.
+ * - `DialogDescription` - muted supporting copy (`text-body-sm`), wired as `aria-describedby`.
  *
  * Enter/exit fade + zoom are gated with `motion-reduce:animate-none`, so a reduced-motion user
  * gets an instant show/hide. The named `animate-dialog-*` keyframes + utilities now ship from the
  * Roots **preset** (`@rogueoak/roots/tailwind-preset.css`, composing the `--duration-*`/`--ease-*`
- * motion tokens), so the motion works out of the box for any consumer importing the preset — no
- * longer consumer-provided. Centred modal only — drawer/sheet and `alertdialog` are later specs
+ * motion tokens), so the motion works out of the box for any consumer importing the preset - no
+ * longer consumer-provided. Centred modal only - drawer/sheet and `alertdialog` are later specs
  * (spec 0024, Out of scope).
  */
 const Dialog = DialogPrimitive.Root;
@@ -41,11 +41,11 @@ const DialogTrigger = DialogPrimitive.Trigger;
 const DialogClose = DialogPrimitive.Close;
 
 /**
- * DialogOverlay — the full-viewport scrim. `bg-overlay/80` is the pre-provisioned `color-overlay`
+ * DialogOverlay - the full-viewport scrim. `bg-overlay/80` is the pre-provisioned `color-overlay`
  * semantic token (authored in 0004 "used at reduced opacity behind modals") at reduced opacity, so
  * the modal reads through it in both themes. Fades in/out via Radix's `data-[state]` hooks, gated
  * with `motion-reduce:animate-none`. **Module-internal:** `DialogContent` bakes in the scrim, so the
- * overlay is not exported — a public standalone overlay would be a double-scrim footgun.
+ * overlay is not exported - a public standalone overlay would be a double-scrim footgun.
  */
 const DialogOverlay = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Overlay>,
@@ -63,7 +63,7 @@ const DialogOverlay = React.forwardRef<
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 /**
- * DialogContent — the portalled content card. Rendered through `DialogPrimitive.Portal` (so it
+ * DialogContent - the portalled content card. Rendered through `DialogPrimitive.Portal` (so it
  * escapes overflow/stacking contexts) over the `DialogOverlay`, centred in the viewport on the
  * raised-surface pattern (`bg-surface-raised` + `border border-border` + `rounded-lg` + the
  * primitive `shadow-lg`), `p-6`, capped at `max-w-lg`. Includes a built-in close affordance: an
@@ -117,7 +117,7 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 /**
- * DialogHeader — the stacked header region (title + description). Text-left, a small vertical gap.
+ * DialogHeader - the stacked header region (title + description). Text-left, a small vertical gap.
  * `pr-6` keeps a long title clear of the absolutely-positioned close `X` in the top-right corner.
  */
 const DialogHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -128,7 +128,7 @@ const DialogHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 DialogHeader.displayName = 'DialogHeader';
 
 /**
- * DialogFooter — the action region. Stacks reversed on mobile (the primary action ends up on top)
+ * DialogFooter - the action region. Stacks reversed on mobile (the primary action ends up on top)
  * and becomes a right-aligned row on `sm+`, mirroring the shadcn footer layout.
  */
 const DialogFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -143,7 +143,7 @@ const DialogFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 DialogFooter.displayName = 'DialogFooter';
 
 /**
- * DialogTitle — the accessible title (`DialogPrimitive.Title`), in the `text-h3` role; Radix wires
+ * DialogTitle - the accessible title (`DialogPrimitive.Title`), in the `text-h3` role; Radix wires
  * it as the dialog's `aria-labelledby`.
  */
 const DialogTitle = React.forwardRef<
@@ -155,7 +155,7 @@ const DialogTitle = React.forwardRef<
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
 /**
- * DialogDescription — muted supporting copy (`DialogPrimitive.Description`), `text-body-sm` on the
+ * DialogDescription - muted supporting copy (`DialogPrimitive.Description`), `text-body-sm` on the
  * muted text token; Radix wires it as the dialog's `aria-describedby`.
  */
 const DialogDescription = React.forwardRef<

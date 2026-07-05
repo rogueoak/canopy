@@ -8,12 +8,12 @@ import {
 } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Tooltip — the hover/focus hint Seed (spec 0014), built on `@radix-ui/react-tooltip`.
+ * Seeds/Tooltip - the hover/focus hint Seed (spec 0014), built on `@radix-ui/react-tooltip`.
  *
  * Styled entirely with semantic-token utilities: the portalled content sits on a raised-surface
  * card (`bg-surface-raised` + `border` + `shadow-md`) with terse `text-xs`, and the arrow is
  * filled with `fill-surface-raised` to match. There is NO per-story theme code: toggle the
- * toolbar Light / Dark control and every story — including the portalled hint — re-themes via the
+ * toolbar Light / Dark control and every story - including the portalled hint - re-themes via the
  * token layer (spec 0004).
  *
  * Wrap the examples in a `TooltipProvider` (shared open delay). The tooltip opens on hover AND
@@ -32,7 +32,7 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * A basic tooltip on a `Button` trigger (`asChild` so the Button stays the real element). Hover
- * the button or Tab to it — the hint appears after the provider's delay and points at the trigger.
+ * the button or Tab to it - the hint appears after the provider's delay and points at the trigger.
  */
 export const Basic: Story = {
   render: () => (

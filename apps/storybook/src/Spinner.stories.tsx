@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Button, Spinner } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Spinner — the canopy busy-indicator Seed (spec 0017).
+ * Seeds/Spinner - the canopy busy-indicator Seed (spec 0017).
  *
  * Pure CSS/SVG: a `<span role="status">` with an `aria-label` (default "Loading") and an inline
  * spinning SVG drawn with `currentColor`, so it inherits the surrounding text colour or a token
@@ -42,7 +42,7 @@ export const Sizes: Story = {
 /* -------------------------------------------------------------------- Tinted */
 
 /**
- * Colour comes from `currentColor`, so a text-colour token tints the indicator — here
+ * Colour comes from `currentColor`, so a text-colour token tints the indicator - here
  * `text-primary` and `text-muted-foreground`.
  */
 export const Tinted: Story = {
@@ -58,7 +58,7 @@ export const Tinted: Story = {
 /* ------------------------------------------------------------- On a surface */
 
 /**
- * The same indicator on the default surface and a raised-surface card — it inherits the text
+ * The same indicator on the default surface and a raised-surface card - it inherits the text
  * colour of whatever it sits on.
  */
 export const OnSurfaces: Story = {
@@ -79,7 +79,7 @@ export const OnSurfaces: Story = {
 /* ------------------------------------------------------------ Inside a Button */
 
 /**
- * A Spinner inside a Button — the loading-action pattern. The indicator inherits the button's
+ * A Spinner inside a Button - the loading-action pattern. The indicator inherits the button's
  * `currentColor` (`text-primary-foreground`), so it needs no explicit tint.
  */
 export const InButton: Story = {

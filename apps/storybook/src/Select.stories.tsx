@@ -9,14 +9,14 @@ import {
 } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Select — the single-choice dropdown Seed (spec 0013), built on
+ * Seeds/Select - the single-choice dropdown Seed (spec 0013), built on
  * `@radix-ui/react-select`.
  *
  * Styled entirely with semantic-token utilities: the trigger mirrors the Input field
  * (`border-border` / `bg-surface` / `text-text`, the focus `ring`, the `disabled` pair, and
  * `aria-invalid:` danger overrides), and the portalled content sits on a raised-surface card
  * (`bg-surface-raised` + `border` + `shadow-md`). There is NO per-story theme code: toggle the
- * toolbar Light / Dark control and every story — including the portalled popup — re-themes via
+ * toolbar Light / Dark control and every story - including the portalled popup - re-themes via
  * the token layer (spec 0004).
  */
 const meta = {
@@ -64,7 +64,7 @@ export const Basic: Story = {
 
 /**
  * The invalid state is the native `aria-invalid` attribute on the trigger (styled via the
- * `aria-invalid:` variant) — the danger ramp takes over the border and focus ring, exactly as
+ * `aria-invalid:` variant) - the danger ramp takes over the border and focus ring, exactly as
  * an invalid Input, keeping a11y and styling in lockstep.
  */
 export const Invalid: Story = {

@@ -4,13 +4,13 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../lib/cn';
 
 /**
- * avatarVariants — the cva recipe that maps the Avatar `size` onto canopy semantic-token
+ * avatarVariants - the cva recipe that maps the Avatar `size` onto canopy semantic-token
  * Tailwind utilities (spec 0015). Class strings are FULL LITERALS so Tailwind v4's source
- * scanner emits each utility — never build a class name dynamically. There is no `dark:` here:
+ * scanner emits each utility - never build a class name dynamically. There is no `dark:` here:
  * the `bg-muted` surface flips light/dark automatically through the token layer (spec 0004).
  *
  * The root is always a circle (`rounded-full`); shapes other than circle are out of scope for
- * this Seed (spec 0015 — square/rounded deferred). Size drives a fixed square box so the image
+ * this Seed (spec 0015 - square/rounded deferred). Size drives a fixed square box so the image
  * and initials fallback both fill it; the size also sets the font-size so the `AvatarFallback`
  * initials scale WITH the circle (they inherit it): sm `h-8 w-8`/`text-xs`, md `h-10 w-10`/
  * `text-sm`, lg `h-12 w-12`/`text-base`.
@@ -34,7 +34,7 @@ export interface AvatarProps
     VariantProps<typeof avatarVariants> {}
 
 /**
- * Avatar — the canopy identity Seed (spec 0015), built on `@radix-ui/react-avatar` and the
+ * Avatar - the canopy identity Seed (spec 0015), built on `@radix-ui/react-avatar` and the
  * 0005 component recipe: semantic-token utilities, `cn()` class merge, and `forwardRef` with a
  * full native prop spread. The root sizes the circle and provides the `bg-muted` surface that
  * shows through while the image loads or if it is absent. Compose with `AvatarImage` and
@@ -51,7 +51,7 @@ Avatar.displayName = AvatarPrimitive.Root.displayName;
 export type AvatarImageProps = React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>;
 
 /**
- * AvatarImage — the user photo (`AvatarPrimitive.Image`). Radix only reveals it once the image
+ * AvatarImage - the user photo (`AvatarPrimitive.Image`). Radix only reveals it once the image
  * has actually loaded, so the `AvatarFallback` shows through until then (and stays if the image
  * is missing or errors). `aspect-square` + `h-full w-full` + `object-cover` make it fill the
  * circle without distortion. Always pass a meaningful `alt`.
@@ -71,7 +71,7 @@ AvatarImage.displayName = AvatarPrimitive.Image.displayName;
 export type AvatarFallbackProps = React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>;
 
 /**
- * AvatarFallback — the graceful fallback (`AvatarPrimitive.Fallback`) shown while the image is
+ * AvatarFallback - the graceful fallback (`AvatarPrimitive.Fallback`) shown while the image is
  * loading, or whenever it is absent or fails to load. Typically holds the user's initials; it
  * centres them on the `bg-muted` surface with `text-muted-foreground`. The font-size is INHERITED
  * from the Avatar root's `size` (so the initials scale with the circle); set `text-*` here only

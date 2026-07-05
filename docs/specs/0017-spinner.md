@@ -1,12 +1,12 @@
-# 0017 — Spinner
+# 0017 - Spinner
 
 ## Problem
 
-With the Seeds recipe established in [0005](0005-button.md), add the **Spinner** atom — an
+With the Seeds recipe established in [0005](0005-button.md), add the **Spinner** atom - an
 accessible busy indicator for in-flight actions (button loading, inline fetches). Spinner is the
 "working…" primitive reused across the catalogue.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — pure CSS/SVG, no Radix.
+Independently shippable: one component, one PR. Follows the 0005 recipe - pure CSS/SVG, no Radix.
 
 ## Outcome
 
@@ -19,12 +19,12 @@ Independently shippable: one component, one PR. Follows the 0005 recipe — pure
 ## Scope
 
 ### In
-- **Spinner** — CSS/SVG spinning indicator; `role="status"` with an accessible `aria-label`
+- **Spinner** - CSS/SVG spinning indicator; `role="status"` with an accessible `aria-label`
   (default "Loading", overridable); sizes `sm` / `md` / `lg`; `currentColor` so it inherits or
   takes a token utility. Respects `prefers-reduced-motion` (animation reduced/stilled).
   Forwards `ref`, spreads native props.
 - No new dep (pure CSS/SVG).
-- Stories: each size, on default and raised surfaces, reduced-motion — light and dark.
+- Stories: each size, on default and raised surfaces, reduced-motion - light and dark.
 - Tests: render, `role="status"` + `aria-label`, sizes, reduced-motion respected.
 
 ### Out

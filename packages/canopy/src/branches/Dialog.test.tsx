@@ -16,7 +16,7 @@ import {
 // Radix Dialog drives dismissal on Pointer Events and locks scroll; jsdom implements neither, so
 // without these stubs `user.click` throws (no `hasPointerCapture`) and `react-remove-scroll`'s
 // scroll measurement throws (no `scrollIntoView`). Stubbing them lets the real Radix interaction
-// run under jsdom — the standard Radix-in-jsdom workaround (mirrors the Select test).
+// run under jsdom - the standard Radix-in-jsdom workaround (mirrors the Select test).
 beforeAll(() => {
   if (!Element.prototype.hasPointerCapture) {
     Element.prototype.hasPointerCapture = vi.fn(() => false);
@@ -114,7 +114,7 @@ describe('Dialog', () => {
     await user.click(screen.getByRole('button', { name: 'Open dialog' }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    // Clicking content (the title) must NOT close — only the scrim / Esc / close button dismiss.
+    // Clicking content (the title) must NOT close - only the scrim / Esc / close button dismiss.
     await user.click(screen.getByText('Invite teammate'));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });

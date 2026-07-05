@@ -20,7 +20,7 @@ jobs:
       - uses: pnpm/action-setup@v4
 
       # Node 24 + pnpm 11.8 (pinned via packageManager): pnpm's OIDC publish path needs the
-      # post-11.0.8 fix (pnpm/pnpm#11526), which 11.8 includes. No registry-url here — that
+      # post-11.0.8 fix (pnpm/pnpm#11526), which 11.8 includes. No registry-url here - that
       # would write an .npmrc auth stub and get in the way of the OIDC exchange.
       - uses: actions/setup-node@v4
         with:
@@ -43,16 +43,16 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # Gate the release on the suite — `prepublishOnly` only builds, so without this a
+      # Gate the release on the suite - `prepublishOnly` only builds, so without this a
       # regression that still compiles would ship to `latest`. A tag is immutable, so this is
       # the last point a bad release can be stopped.
       - name: Test
         run: pnpm test
 
       # pnpm (not npm) so the canopy → roots `workspace:*` dep is rewritten to the real
-      # version on publish. Auth is OIDC — no NODE_AUTH_TOKEN. Publishes roots before canopy
+      # version on publish. Auth is OIDC - no NODE_AUTH_TOKEN. Publishes roots before canopy
       # via the workspace dep graph. Recovery: if roots publishes but canopy fails, the same
-      # tag can't be re-run (roots EPUBLISHCONFLICT) — publish canopy manually
+      # tag can't be re-run (roots EPUBLISHCONFLICT) - publish canopy manually
       # (`pnpm --filter @rogueoak/canopy publish ...`) or cut the next patch tag.
       - name: Publish
         run: pnpm -r --filter './packages/*' publish --no-git-checks --access public

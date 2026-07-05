@@ -1,12 +1,12 @@
-# 0011 — Radio Group
+# 0011 - Radio Group
 
 ## Problem
 
-With the Seeds recipe established in [0005](0005-button.md), add the **Radio Group** atom —
+With the Seeds recipe established in [0005](0005-button.md), add the **Radio Group** atom - 
 single-choice selection from a small set (plans, options, segmented preferences). Radio Group
 is the mutually-exclusive selection primitive for forms and later Twigs.
 
-Independently shippable: one component, one PR. Follows the 0005 recipe — no new infra beyond
+Independently shippable: one component, one PR. Follows the 0005 recipe - no new infra beyond
 the Radix Radio Group primitive.
 
 ## Outcome
@@ -20,16 +20,16 @@ the Radix Radio Group primitive.
 ## Scope
 
 ### In
-- **RadioGroup** (root) + **RadioGroupItem** — Radix Radio Group; single-selection; roving
+- **RadioGroup** (root) + **RadioGroupItem** - Radix Radio Group; single-selection; roving
   keyboard focus (arrow keys move + select); per-item and whole-group `disabled`;
   focus-visible ring; selected indicator dot. Forwards `ref`, spreads native props.
 - New dep on `@rogueoak/canopy`: `@radix-ui/react-radio-group`.
-- Stories: default, selected, one disabled item, disabled group, items paired with Labels —
+- Stories: default, selected, one disabled item, disabled group, items paired with Labels - 
   light and dark.
 - Tests: render, selection, arrow-key roving focus, disabled (item + group), focus ring, aria.
 
 ### Out
-- **Checkbox** (0009) and **Switch** (0010) — sibling selection atoms, separate specs.
+- **Checkbox** (0009) and **Switch** (0010) - sibling selection atoms, separate specs.
 - Twig-level FormField (label + control + error/help) → later.
 
 ## Approach

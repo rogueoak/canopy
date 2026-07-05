@@ -1,14 +1,14 @@
-# 0021 — SearchBar
+# 0021 - SearchBar
 
 ## Problem
 
 With the Twigs composition recipe established in [0020](0020-form-field.md), add the
-**SearchBar** Twig — the search-input molecule reused in toolbars, command launchers, and
+**SearchBar** Twig - the search-input molecule reused in toolbars, command launchers, and
 filter headers. It composes the **Input** Seed with a leading search icon, an optional clear
 affordance (the **Button** Seed, ghost/icon), and an optional **Keyboard** shortcut hint
 (e.g. `⌘K`), wiring them into one accessible search control.
 
-Independently shippable: one composition, one PR. Follows the 0020 recipe — composes Seeds,
+Independently shippable: one composition, one PR. Follows the 0020 recipe - composes Seeds,
 adds no token.
 
 ## Outcome
@@ -25,33 +25,33 @@ adds no token.
 
 ### In
 
-- **SearchBar** — composes Input + a leading search icon + optional clear Button + optional
+- **SearchBar** - composes Input + a leading search icon + optional clear Button + optional
   `Keyboard` hint:
   - `type="search"`, `role="searchbox"` semantics; accessible name (`aria-label` default
     "Search", overridable).
   - **Controlled or uncontrolled** value (`value`/`defaultValue` + `onValueChange`), mirroring
     the native input contract.
-  - **Clear** — when there is a value and not disabled, a ghost icon Button (×) appears; click
+  - **Clear** - when there is a value and not disabled, a ghost icon Button (×) appears; click
     clears the value, fires `onValueChange('')`, and returns focus to the input. Hidden when
     empty. Has its own accessible name ("Clear search").
-  - **onSearch** — fired on Enter / form submit with the current value (the input is wrapped in
+  - **onSearch** - fired on Enter / form submit with the current value (the input is wrapped in
     a `<form role="search">` so Enter submits).
-  - **shortcutHint** — optional; when set, renders a `Keyboard` at the trailing edge (purely
-    visual; SearchBar does not bind the key — display-only, like Keyboard 0019). Hidden while
+  - **shortcutHint** - optional; when set, renders a `Keyboard` at the trailing edge (purely
+    visual; SearchBar does not bind the key - display-only, like Keyboard 0019). Hidden while
     there is a value (the clear button takes that slot).
-  - Leading **search icon** — hand-rolled inline SVG (no icon library), `currentColor`, muted.
+  - Leading **search icon** - hand-rolled inline SVG (no icon library), `currentColor`, muted.
   - Forwards `ref` to the underlying `<input>`; spreads native input props.
-- Stories: default, typed value with clear, with `shortcutHint="⌘K"`, disabled — light + dark.
+- Stories: default, typed value with clear, with `shortcutHint="⌘K"`, disabled - light + dark.
 - Tests: renders a search input; clear button shows with a value and clears + refocuses;
   `onSearch` fires on submit with the value; clear hidden when empty/disabled.
 
 ### Out
 
-- **Shortcut key binding** (focusing the bar on `⌘K`) — the hint is display-only; binding is
+- **Shortcut key binding** (focusing the bar on `⌘K`) - the hint is display-only; binding is
   the consumer's (or a later hook). Out of scope, matching Keyboard 0019.
-- **Suggestions / autocomplete / async results dropdown** — that is a Combobox organism
+- **Suggestions / autocomplete / async results dropdown** - that is a Combobox organism
   (Branches), not this molecule.
-- **Debounced live `onSearch`-while-typing** — consumer composes with `onValueChange`; SearchBar
+- **Debounced live `onSearch`-while-typing** - consumer composes with `onValueChange`; SearchBar
   fires `onSearch` on submit only.
 
 ## Approach

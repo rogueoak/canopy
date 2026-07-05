@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /* Self-hosted fonts (no CDN). Roots ships the family *names* (--font-sans/--font-mono);
-   consumers install the @fontsource packages and import them once in their global CSS —
+   consumers install the @fontsource packages and import them once in their global CSS - 
    exactly as done here. Figtree (variable) is the UI/body sans; Geist Mono is for code. */
 @import '@fontsource-variable/figtree';
 @import '@fontsource-variable/geist-mono';
@@ -16,17 +16,17 @@
 
 /* Tailwind-source consumer seam (spec 0005, Decision A). Canopy ships `className` strings;
    the CONSUMER's Tailwind build generates (and tree-shakes) the utilities by scanning
-   canopy's component source. Storybook is the first consumer — without this `@source`,
+   canopy's component source. Storybook is the first consumer - without this `@source`,
    Button renders unstyled. `@source` takes a PATH (Tailwind v4 has no bare package-name
-   resolution — verified: `@source '@rogueoak/canopy'` emits nothing), so this points at
+   resolution - verified: `@source '@rogueoak/canopy'` emits nothing), so this points at
    canopy's source by relative path. Real apps point it at `@rogueoak/canopy` in node_modules
-   (see the README) — the path is relative to THIS file, so adjust the depth to match yours. */
+   (see the README) - the path is relative to THIS file, so adjust the depth to match yours. */
 @source '../../../packages/canopy/src';
 
 /* Dialog enter/exit motion (Branches/Dialog, spec 0024) now ships from the imported Roots preset
-   (@rogueoak/roots/tailwind-preset.css) — keyframes + token-composed `animate-dialog-*` utilities. */
+   (@rogueoak/roots/tailwind-preset.css) - keyframes + token-composed `animate-dialog-*` utilities. */
 
-/* Dark theme (spec 0004). The common path needs NO `dark:` utilities — semantic tokens
+/* Dark theme (spec 0004). The common path needs NO `dark:` utilities - semantic tokens
    auto-flip because `tokens.css` `.dark` overrides the runtime vars, so `bg-primary`,
    `text-default`, … re-resolve under `.dark` with zero per-component code. This custom
    variant only enables the rare EXPLICIT `dark:` utility (e.g. `dark:border-2`). It

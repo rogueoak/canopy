@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Button } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Button — the first real Canopy Seed (spec 0005).
+ * Seeds/Button - the first real Canopy Seed (spec 0005).
  *
  * Styled entirely with semantic-token utilities (cva → `bg-primary`, `hover:bg-primary-hover`,
  * the focus `ring`, the `disabled` pair, …). There is NO per-story theme code: toggle the
@@ -85,7 +85,7 @@ export const Sizes: Story = {
 /* -------------------------------------------------------------------- States */
 
 /**
- * Default · hover · disabled. Hover is interactive — move the pointer over the middle
+ * Default · hover · disabled. Hover is interactive - move the pointer over the middle
  * button to see `hover:bg-primary-hover`; disabled uses the `bg-disabled` /
  * `text-disabled-foreground` token pair, not opacity.
  */
@@ -104,7 +104,7 @@ export const States: Story = {
 
 /**
  * `asChild` renders the single child element (here an `<a>`) while inheriting Button's
- * classes/behaviour — for link-styled buttons without nesting an `<a>` inside a `<button>`.
+ * classes/behaviour - for link-styled buttons without nesting an `<a>` inside a `<button>`.
  */
 export const AsChildLink: Story = {
   name: 'asChild (link)',

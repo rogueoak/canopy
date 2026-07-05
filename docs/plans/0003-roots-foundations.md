@@ -1,8 +1,8 @@
-# Plan 0003 — Roots: Foundations
+# Plan 0003 - Roots: Foundations
 
 Implements `docs/specs/0003-roots-foundations.md`. Builds the real two-tier token system
 (primitive ramps + semantic tokens), typography (Figtree + Geist Mono, self-hosted), spacing,
-radii, elevation, and motion — generated through the existing 0002 Style Dictionary pipeline
+radii, elevation, and motion - generated through the existing 0002 Style Dictionary pipeline
 and rendered as Storybook **Foundations** stories for the visual lock. **Light theme only;
 dark is 0004.**
 
@@ -10,16 +10,16 @@ dark is 0004.**
 - Components consume **only semantic tokens**. Primitives are referenced by semantics, never
   used directly in components.
 - Reuse the 0002 pipeline (CSS vars + typed TS + `@theme inline` Tailwind preset). The custom
-  formats are already reference-aware — keep that working.
+  formats are already reference-aware - keep that working.
 - **Token names must map onto Tailwind v4 `@theme` namespaces** so utilities generate (see §3).
 
 ## 1. Token sources (DTCG JSON under `packages/roots/tokens/`)
 Replace the throwaway `sample.json`. Split by concern:
 
-- `color/primitive.json` — ramps 50–950 for `moss`, `bark`, `stone`, `amber`, `success`,
+- `color/primitive.json` - ramps 50-950 for `moss`, `bark`, `stone`, `amber`, `success`,
   `warning`, `danger`, `info`, using the **approved hexes in the spec** (§Approved starting
   palette). Add `base.white` (#FFFFFF). Each step `{ "$value": "#…", "$type": "color" }`.
-- `color/semantic.json` — light-theme semantic tokens that **reference** primitives. Names are
+- `color/semantic.json` - light-theme semantic tokens that **reference** primitives. Names are
   the flattened path under `color.*` so they land as `--color-*`:
   - `color.bg` → `{color.stone.50}`, `color.surface` → `{color.base.white}`,
     `color.surface-raised` → `{color.base.white}`
@@ -39,11 +39,11 @@ Replace the throwaway `sample.json`. Split by concern:
   - `text.xs…text.6xl` font sizes (rem; 12→60 on ~1.2 ratio) (`$type: dimension`)
   - `leading.none/tight/snug/normal/relaxed` line-heights; `tracking.tight/normal/wide`
   - `font-weight.normal(400)/medium(500)/semibold(600)/bold(700)`
-- `space.json` — `space.0…space.32` (rem, 4px base) for the typed export/docs. (Tailwind
-  spacing utilities derive from a single `--spacing` base — see §3.)
-- `radius.json` — `radius.none/sm(0.25rem)/md(0.5rem)/lg(0.75rem)/xl(1rem)/2xl(1.5rem)/full(9999px)`
-- `shadow.json` — `shadow.sm/md/lg/xl` as soft, slightly-warm box-shadow strings.
-- `motion.json` — `duration.fast(120ms)/base(200ms)/slow(320ms)`; `ease.standard/emphasized/decelerate`
+- `space.json` - `space.0…space.32` (rem, 4px base) for the typed export/docs. (Tailwind
+  spacing utilities derive from a single `--spacing` base - see §3.)
+- `radius.json` - `radius.none/sm(0.25rem)/md(0.5rem)/lg(0.75rem)/xl(1rem)/2xl(1.5rem)/full(9999px)`
+- `shadow.json` - `shadow.sm/md/lg/xl` as soft, slightly-warm box-shadow strings.
+- `motion.json` - `duration.fast(120ms)/base(200ms)/slow(320ms)`; `ease.standard/emphasized/decelerate`
   (cubic-beziers).
 
 ## 2. Fonts (self-hosted)
@@ -70,27 +70,27 @@ flatten to these names so the `@theme inline` preset produces working utilities:
 | `ease.standard` | `--ease-standard` | `ease-standard` |
 
 - The existing `tailwind/preset-v4` format already emits `--<name>: var(--<name>)` for every
-  token under `@theme inline` — which is correct for all the namespaces above. **Verify** each
+  token under `@theme inline` - which is correct for all the namespaces above. **Verify** each
   category actually generates a utility in the built Storybook CSS.
 - **Spacing special-case:** Tailwind v4 derives `p-*`/`gap-*`/`m-*` from a single `--spacing`
   base. Emit `--spacing: 0.25rem` in the preset (the build may special-case the `space` group,
   or add a literal). The `space.*` tokens remain in `tokens.css`/TS for direct use. Verify
   `p-4` = 1rem in Storybook.
 - If any category needs a tweak to the preset format, keep it reference-safe (don't reintroduce
-  flattened references — see feedback 0001).
+  flattened references - see feedback 0001).
 
 ## 4. Storybook Foundations stories (`apps/storybook/src/`)
 Replace the placeholder stories. Add a **Foundations** section:
-- `Foundations/Colours` — every primitive ramp (swatch + step + hex + AA note) and the semantic
+- `Foundations/Colours` - every primitive ramp (swatch + step + hex + AA note) and the semantic
   swatches grouped (surfaces / text / lines / roles / status), rendered via utilities + vars.
-- `Foundations/Typography` — Figtree specimen: the type scale (xs→6xl) via `text-*` utilities,
+- `Foundations/Typography` - Figtree specimen: the type scale (xs→6xl) via `text-*` utilities,
   weights, leading/tracking samples, and Geist Mono for code.
-- `Foundations/Spacing` — the space scale visualised.
-- `Foundations/Radii` — radius swatches.
-- `Foundations/Elevation` — shadow cards.
-- `Foundations/Motion` — duration/easing demo (CSS transitions).
+- `Foundations/Spacing` - the space scale visualised.
+- `Foundations/Radii` - radius swatches.
+- `Foundations/Elevation` - shadow cards.
+- `Foundations/Motion` - duration/easing demo (CSS transitions).
 Keep the `Seeds/Sprout` story or replace it with a small "in-context" demo card using semantic
-tokens (no real components yet — those are 0005).
+tokens (no real components yet - those are 0005).
 
 ## 5. Tests
 - Extend `packages/roots/tokens.test.ts` (reads built `dist/`): assert semantic tokens resolve
@@ -112,7 +112,7 @@ story or a short `Foundations/Contrast` note.
 - Reflect: update `overview/features.md` (the real foundation) and `overview/architecture.md`
   (token categories + Tailwind v4 namespace mapping). Learning only if real friction.
 
-## Verify (all must pass from the worktree — actually run)
+## Verify (all must pass from the worktree - actually run)
 - `pnpm build` green (roots emits real tokens.css/tokens.js/tailwind-preset.css; canopy;
   Storybook static).
 - `pnpm test` green (roots + canopy).
