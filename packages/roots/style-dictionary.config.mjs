@@ -83,9 +83,11 @@ const expandTypographyRole = (token, tokens) => {
 
 /**
  * The stock `css` transformGroup plus our `-default` strip appended after the
- * built-in `name/kebab` so the rename wins.
+ * built-in `name/kebab` so the rename wins. Exported so the brand pipeline
+ * (`brand.mjs`, spec 0028) transforms consumer brand tokens through the exact
+ * same kebab / DEFAULT / colour rules as the core build.
  */
-const cssTransforms = [
+export const cssTransforms = [
   'attribute/cti',
   'name/kebab',
   'name/kebab-no-default',
@@ -256,13 +258,18 @@ StyleDictionary.registerFormat({
  * `token.isSource` keeps only the theme's semantic overrides - primitives are not re-emitted.
  *
  * The format name is parameterized per theme (`css/theme-overrides-<name>`) so the
- * selector class is baked in, letting `themeConfig` stay a pure data factory.
+ * selector is baked in, letting `themeConfig` stay a pure data factory.
  *
  * A theme token MUST reference a primitive (`usesReferences`): a flat hex in a theme
  * override would silently fork the primitive layer and defeat the single-owner cascade,
- * so the non-reference branch HARD-ERRORS rather than emitting a literal.
+ * so the non-reference branch HARD-ERRORS rather than emitting a literal. The brand
+ * pipeline (spec 0028) reuses this exact format for a brand's dark block, so a brand that
+ * flat-hexes a dark value fails its build the same way Canopy's would.
+ *
+ * `selector` defaults to `.<name>` (Canopy's `.dark`); the brand pipeline passes a scoped
+ * selector (e.g. `.sunset.dark`) when a brand is scoped to a class rather than the document.
  */
-const registerThemeFormat = (name) => {
+const registerThemeFormat = (name, { selector = `.${name}` } = {}) => {
   StyleDictionary.registerFormat({
     name: `css/theme-overrides-${name}`,
     format: ({ dictionary }) => {
@@ -284,7 +291,7 @@ const registerThemeFormat = (name) => {
           }
           return `  --${token.name}: ${value};`;
         });
-      return `\n/* ${name} theme - semantic remap (spec 0004). Overrides the :root semantic vars;\n   primitives (shared ramps) are NOT repeated. Toggle by adding the \`${name}\` class to a\n   root element. */\n.${name} {\n${lines.join('\n')}\n}\n`;
+      return `\n/* ${name} theme - semantic remap. Overrides the base semantic vars;\n   primitives (shared ramps) are NOT repeated. Toggle by adding the \`${selector}\` selector\n   to a root element. */\n${selector} {\n${lines.join('\n')}\n}\n`;
     },
   });
 };
@@ -352,18 +359,27 @@ const lightConfig = {
  * `outputReferences` is intentionally NOT set: the custom format does its own reference →
  * `var(--…)` replacement, so the built-in `outputReferences` would be dead config.
  */
-export const themeConfig = (name, glob) => {
-  registerThemeFormat(name);
+export const themeConfig = (
+  name,
+  glob,
+  {
+    include = ['tokens/color/primitive.json'],
+    buildPath = 'dist/',
+    destination = `tokens.${name}.css`,
+    selector = `.${name}`,
+  } = {},
+) => {
+  registerThemeFormat(name, { selector });
   return {
-    include: ['tokens/color/primitive.json'],
+    include,
     source: [glob],
     platforms: {
       theme: {
         transforms: cssTransforms,
-        buildPath: 'dist/',
+        buildPath,
         files: [
           {
-            destination: `tokens.${name}.css`,
+            destination,
             format: `css/theme-overrides-${name}`,
           },
         ],

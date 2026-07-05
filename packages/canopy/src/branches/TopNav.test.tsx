@@ -20,6 +20,7 @@ function Basic({
 }) {
   return (
     <TopNav ariaLabel={ariaLabel}>
+      <TopNavMenuButton />
       <TopNavBrand>Acme</TopNavBrand>
       <TopNavLinks>
         <TopNavLink href="#dashboard" active={activeDashboard}>
@@ -30,7 +31,6 @@ function Basic({
       <TopNavActions>
         <button type="button">Sign in</button>
       </TopNavActions>
-      <TopNavMenuButton />
     </TopNav>
   );
 }
@@ -68,6 +68,9 @@ describe('TopNav', () => {
     render(<Basic />);
     const button = screen.getByRole('button', { name: 'Open menu' });
     const panel = document.getElementById(button.getAttribute('aria-controls')!)!;
+
+    // `order-first` keeps the toggle at the start (left) of the bar on mobile regardless of markup.
+    expect(button).toHaveClass('order-first');
 
     // Closed: aria-expanded false and the panel is hidden (`hidden` class, not the `md:flex` row).
     expect(button).toHaveAttribute('aria-expanded', 'false');

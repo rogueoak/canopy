@@ -52,7 +52,8 @@ Write `docs/feedback/NNNN-<slug>.md`:
 - **Symptom** - what went wrong / what hurt.
 - **Root cause** - why (best understanding).
 - **Fix** - the change.
-- **Learning** - what to do differently next time. Feeds `overview/learnings.md` in step 6.
+- **Learning** - the general rule to apply next time, not just this one fix. If it generalizes
+  past this change, it feeds `overview/learnings.md` in step 6.
 
 ## 4. Plan
 
@@ -102,10 +103,12 @@ Update only what changed:
 - structure/boundaries changed → `overview/architecture.md`
 - a lesson from feedback or friction → `overview/learnings.md`
 
-A **learning** is what you'd do *differently* next time, distilled from feedback or friction -
-**not** a description of what you shipped or why you designed it that way. Describing the feature
-is `features.md`; the design rationale is `architecture.md`. No feedback, no learning - don't
-manufacture one to fill the section.
+A **learning** is a rule you'd apply *differently* next time that **outlives the change that
+taught it** - it improves how the project is built from here on, not just how one feature turned
+out. Distil it from feedback or friction and keep it general: a lesson that only ever applies to
+the feature you just shipped belongs in that feature's story (`features.md` / `architecture.md`),
+not here. No feedback, no learning; nothing that generalizes, no learning - don't manufacture
+one to fill the section.
 
 A `pre-commit` hook reminds you if specs/plans/feedback changed without an overview update.
 The reminder is non-blocking - skip it only when truly nothing changed.

@@ -1,0 +1,8 @@
+{
+  "name": "sunset",
+  "primitives": "primitive.json",
+  "semantic": "semantic.json",
+  "semanticDark": "semantic.dark.json",
+  "outFile": "sunset.css",
+  "scope": null
+}
