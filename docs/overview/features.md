@@ -586,5 +586,35 @@ A curated icon set ships as its own package, **`@rogueoak/icons`**.
   it up automatically), so a release now publishes **three** packages at the tag version. Same
   developer-performed npm bootstrap as roots/canopy (manual first publish + trusted-publisher config).
 
+## Brand theming API (0028)
+
+A consumer-facing way to ship your OWN brand on top of Canopy - custom primitive ramps plus
+Canopy's same semantic role names - re-theming every component in light AND dark, AA-verified,
+**without forking `@rogueoak/roots`**. The seam `project.md` always promised ("future brands are a
+token concern") is now a real, tested pipeline.
+
+- **`buildBrand()`** (`@rogueoak/roots/brand`) + a **`roots-brand` CLI** (a package `bin`) - take a
+  brand's DTCG token files (new ramps + light/dark semantic mappings using Canopy's role names) and
+  emit a single `brand.css`: a `:root { }` block (brand primitives + light roles) and a `.dark { }`
+  block (dark roles), all reference-aware. Imported after `tokens.css`, it overrides Canopy's roles
+  by cascade - zero component changes, because components consume only semantic roles. A `scope`
+  option emits `.<brand>` / `.<brand>.dark` to scope a brand to a subtree instead of the document.
+- **Same guard, one definition** - the WCAG AA math + the canonical role-pair list are extracted to
+  `packages/roots/contrast.mjs`; the core `tokens.test.ts` and the brand pipeline both import it.
+  `buildBrand()` **fails the build** (throws) if any role/state pair breaks AA in either theme, if
+  the brand leaves any Canopy semantic role unmapped, or if a dark override is a flat hex instead of
+  a primitive reference (the last reuses the core theme format's existing hard-error). The
+  required-role contract is read from Canopy's OWN shipped `dist/tokens.css`, so it never drifts.
+- **Reuses the core pipeline** - the light block uses the same `css/variables-with-roles` format and
+  the dark block the same theme-overrides format Canopy's `.dark` uses (now generalized with a
+  `selector` parameter; Canopy's own build is byte-for-byte unchanged). `style-dictionary` is an
+  OPTIONAL peer dependency - needed only to run the brand pipeline, not for the token exports.
+- **Example brand `sunset`** (`packages/roots/examples/sunset/`) - its own ramp names
+  (`ember`/`orchid`/`blossom`/`dune` + status ramps), light + dark mappings, and a `brand.config.json`.
+  Ships in the package `files` as a copyable starting point and the test fixture; a test builds it and
+  asserts full role coverage + AA in both themes, plus that a broken brand fails.
+- **Runtime path** documented too - an app can redefine `--color-*` in its own `:root`/`.dark` for
+  quick cases that do not need the build-time guard.
+
 Not yet built: more **Branches** (the layer is open — Dialog · TopNav · SideNav are live; DataTable
 to come) and more Twigs as needed, then **Boughs** (templates), and the native Swift token target.

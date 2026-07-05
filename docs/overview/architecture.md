@@ -183,6 +183,51 @@ owns `:root` (light) + `.dark` (dark); primitives live once (in
 `@custom-variant dark (&:where(.dark, .dark *))` to their global CSS for the rare explicit
 `dark:` utility; the common path needs none.
 
+### Brand pipeline (spec 0028)
+
+The same `:root` + `.dark` seam that themes Canopy also lets a CONSUMER ship their own brand without
+forking roots. A brand is the two-tier model authored by the consumer: NEW primitive ramps (any
+names) plus semantic roles that reference them using **Canopy's role names**. `buildBrand()`
+(`packages/roots/brand.mjs`, exported at `@rogueoak/roots/brand`, with a `roots-brand` CLI in
+`cli.mjs`) compiles those DTCG files into one `brand.css`:
+
+- a **light pass** (brand primitives + light semantics) through the SAME `css/variables-with-roles`
+  format with `outputReferences`, emitting a `:root { }` block - brand primitives as hex literals,
+  light roles as `var(--<brand-primitive>)`;
+- a **dark pass** (dark semantics only) through the SAME theme-overrides format Canopy's `.dark`
+  uses, emitting a `.dark { }` block of `var(--<brand-primitive>)` overrides. To reuse that format,
+  `themeConfig`/`registerThemeFormat` gained a `selector` (+ `include`/`buildPath`/`destination`)
+  parameter; Canopy's own dark build passes none, so its output is unchanged.
+
+`brand.css` is composed in one write (light block + dark block; sidecars removed in `finally`, the
+same idempotent pattern as `build.mjs`). Imported after `tokens.css`, its `:root`/`.dark` win by
+cascade and re-point every role, so every component and utility re-themes with zero component code.
+A `scope` option emits `.<brand>` / `.<brand>.dark` instead of `:root` / `.dark`, scoping a brand to
+a subtree.
+
+The **WCAG AA guard is one definition, reused**: the relative-luminance math + the canonical
+role-pair list (`AA_PAIRS`) live in `packages/roots/contrast.mjs`; `tokens.test.ts` imports them to
+guard the core tokens, and `buildBrand()` runs `checkBrandCss()` over the generated `brand.css`.
+`buildBrand()` validates the composed CSS BEFORE writing `brand.css` (a failed build leaves no
+shippable file) and **throws** (fails the consumer's build) when any pair breaks AA in either theme,
+when a role is left unmapped, when a dark override resolves EQUAL to its light value (a copy-paste
+guard mirroring the core, allowlisting the one theme-invariant `accent-foreground`), or when a dark
+override is a flat hex (the last via the reused format's existing hard-error). The **required-role
+contract is derived from Canopy's own shipped `dist/tokens.css`** (its themed `--color-*` roles), so
+it can't drift from what Canopy actually ships. A consequence worth stating: **adding a semantic role
+to Canopy is a breaking change for the brand API** - an existing brand's `buildBrand` fails on the
+next roots upgrade until it maps the new role. That is intentional (a build-time failure, never a
+silent illegible ship), so a role addition warrants a version bump, not a patch. Because a brand
+renames its ramps, its status roles are plain leaves referencing those ramps - no `.DEFAULT` trick
+needed (that trick only exists to dodge a role/ramp name collision).
+
+`style-dictionary` is an OPTIONAL `peerDependency`: the token exports (`.`, `./tokens.css`,
+`./tailwind-preset.css`) never touch it; only the build-time brand pipeline does, so a consumer pays
+for it only if they use it. The pipeline source files (`brand.mjs`, `cli.mjs`, `contrast.mjs`,
+`style-dictionary.config.mjs`) and the `examples/sunset/` brand ship in the package `files`. A quick
+**runtime** path (an app redefining `--color-*` in its own `:root`/`.dark`) is documented for cases
+that don't need the guard.
+
 ### Naming convention
 
 The token key is the **flattened, kebab-cased Style Dictionary path** (`color.moss.600` →

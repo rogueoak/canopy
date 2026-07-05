@@ -20,6 +20,7 @@ pnpm add @rogueoak/roots
 | `@rogueoak/roots`                     | the typed token export — `import { tokens } from '@rogueoak/roots'`                             |
 | `@rogueoak/roots/tokens.css`          | runtime CSS custom properties: `:root { … }` (light) + a `.dark { … }` block                    |
 | `@rogueoak/roots/tailwind-preset.css` | a Tailwind v4 `@theme inline` preset so utilities (`bg-primary`, `text-h2`) map onto the tokens |
+| `@rogueoak/roots/brand`               | the `buildBrand()` brand pipeline (build-time) - see [Brand theming](#brand-theming)            |
 
 ## Tailwind v4 setup
 
@@ -45,6 +46,81 @@ For the rare explicit `dark:` utility, add the variant once:
 ```css
 @custom-variant dark (&:where(.dark, .dark *));
 ```
+
+## Brand theming
+
+Canopy is themeable across light and dark out of the box. A downstream app can also define its OWN
+brand - custom primitive ramps plus the same semantic role names - and re-theme every Canopy
+component in light AND dark, without forking roots.
+
+### Build-time pipeline (AA-guarded)
+
+Author a brand as DTCG token files: new primitive ramps (any names you like) and semantic mappings
+that reuse Canopy's role names (`color.primary`, `color.bg`, ...) and reference your ramps. Then
+generate a `brand.css` with `buildBrand()` or the `roots-brand` CLI:
+
+```js
+import { buildBrand } from '@rogueoak/roots/brand';
+
+await buildBrand({
+  name: 'sunset',
+  primitives: 'brand/primitive.json', // your ramps, e.g. { color: { ember: { 600: { $value: '#...' } } } }
+  semantic: 'brand/semantic.json', // Canopy role names -> { color.ember.600 } (light)
+  semanticDark: 'brand/semantic.dark.json', // Canopy role names -> dark ramp steps
+  outFile: 'dist/sunset.css',
+});
+```
+
+```bash
+# or from a brand.config.json (same fields), via the bundled CLI:
+npx roots-brand brand.config.json
+```
+
+`brand.css` holds a `:root { ... }` block (your primitives + light roles) and a `.dark { ... }`
+block (dark roles). Import it AFTER `tokens.css`, and every component re-themes by cascade - no
+component change, because components consume only semantic roles:
+
+```css
+@import '@rogueoak/roots/tokens.css';
+@import './sunset.css'; /* your brand overrides Canopy's roles */
+```
+
+Pass `scope: 'sunset'` to emit `.sunset { ... }` + `.sunset.dark { ... }` instead, so you can scope
+a brand to a subtree (`<div class="sunset">`) rather than the whole document.
+
+The pipeline reuses Canopy's OWN Style Dictionary formats and its WCAG AA guard. `buildBrand()`
+THROWS - failing your build - if any role/state pair breaks AA in either theme, if you leave any
+Canopy semantic role unmapped, if a dark override resolves to the SAME value as its light value (a
+copy-paste guard), or if a dark override is a flat hex instead of a primitive reference. So a brand
+can't ship an illegible, incomplete, or accidentally light-in-dark theme.
+
+Because the required roles are read from the Canopy version you build against, a new Canopy release
+that adds a semantic role will fail your brand build until you map it - by design (a loud build error
+beats a silently unstyled role). Pin the brand build to a known roots version and re-run it on upgrade.
+
+A runnable example brand lives in [`examples/sunset/`](./examples/sunset) - copy it as a starting
+point. `style-dictionary` is an OPTIONAL peer dependency, needed only if you run the brand pipeline;
+the token exports do not require it.
+
+### Runtime path (quick cases)
+
+For a quick override that does not need the AA guard, an app can redefine the semantic `--color-*`
+vars in its own CSS after importing `tokens.css` - Canopy reads them at runtime:
+
+```css
+@import '@rogueoak/roots/tokens.css';
+
+:root {
+  --color-primary: #b5473a; /* your brand primary */
+  --color-primary-foreground: #ffffff;
+}
+.dark {
+  --color-primary: #e08b80;
+  --color-primary-foreground: #2a0f0b;
+}
+```
+
+Prefer the build-time pipeline when you want the AA guarantee and full role coverage.
 
 ## Fonts
 
