@@ -47,7 +47,7 @@ const run = async () => {
   const primitives = (
     Array.isArray(config.primitives) ? config.primitives : [config.primitives]
   ).map(rel);
-  const { outFile, roles } = await buildBrand({
+  const { outFile, roles, inherited } = await buildBrand({
     name: config.name,
     primitives,
     semantic: rel(config.semantic),
@@ -55,8 +55,11 @@ const run = async () => {
     outFile: rel(outOverride ?? config.outFile),
     scope: config.scope ?? null,
   });
+  const mapped = roles.length - inherited.light.length;
+  const inheritedNote =
+    inherited.light.length > 0 ? `, ${inherited.light.length} inherited from Canopy` : '';
   console.log(
-    `roots-brand: wrote ${outFile} (${roles.length} semantic roles, AA verified in light + dark).`,
+    `roots-brand: wrote ${outFile} (${mapped}/${roles.length} semantic roles mapped${inheritedNote}, AA verified in light + dark).`,
   );
 };
 

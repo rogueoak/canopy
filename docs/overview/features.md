@@ -601,10 +601,13 @@ token concern") is now a real, tested pipeline.
   option emits `.<brand>` / `.<brand>.dark` to scope a brand to a subtree instead of the document.
 - **Same guard, one definition** - the WCAG AA math + the canonical role-pair list are extracted to
   `packages/roots/contrast.mjs`; the core `tokens.test.ts` and the brand pipeline both import it.
-  `buildBrand()` **fails the build** (throws) if any role/state pair breaks AA in either theme, if
-  the brand leaves any Canopy semantic role unmapped, or if a dark override is a flat hex instead of
-  a primitive reference (the last reuses the core theme format's existing hard-error). The
-  required-role contract is read from Canopy's OWN shipped `dist/tokens.css`, so it never drifts.
+  `buildBrand()` **fails the build** (throws) if any role/state pair breaks AA in either theme, or
+  if a dark override is a flat hex instead of a primitive reference (the last reuses the core theme
+  format's existing hard-error). A brand may map **any subset** of roles; each omitted role inherits
+  Canopy's default by cascade, and its AA is checked as the EFFECTIVE pair (a brand override against
+  the default it inherits), so a partial brand still can't ship an illegible combination (feedback
+  0011). The role list + each role's default hex are read from Canopy's OWN shipped
+  `dist/tokens.css`, so they never drift.
 - **Reuses the core pipeline** - the light block uses the same `css/variables-with-roles` format and
   the dark block the same theme-overrides format Canopy's `.dark` uses (now generalized with a
   `selector` parameter; Canopy's own build is byte-for-byte unchanged). `style-dictionary` is an
@@ -612,7 +615,8 @@ token concern") is now a real, tested pipeline.
 - **Example brand `sunset`** (`packages/roots/examples/sunset/`) - its own ramp names
   (`ember`/`orchid`/`blossom`/`dune` + status ramps), light + dark mappings, and a `brand.config.json`.
   Ships in the package `files` as a copyable starting point and the test fixture; a test builds it and
-  asserts full role coverage + AA in both themes, plus that a broken brand fails.
+  asserts full role coverage + AA in both themes, plus that a broken brand fails and that a PARTIAL
+  brand (roles omitted) builds and inherits Canopy's defaults.
 - **Runtime path** documented too - an app can redefine `--color-*` in its own `:root`/`.dark` for
   quick cases that do not need the build-time guard.
 
