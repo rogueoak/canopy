@@ -90,8 +90,13 @@ a brand to a subtree (`<div class="sunset">`) rather than the whole document.
 
 The pipeline reuses Canopy's OWN Style Dictionary formats and its WCAG AA guard. `buildBrand()`
 THROWS - failing your build - if any role/state pair breaks AA in either theme, if you leave any
-Canopy semantic role unmapped, or if a dark override is a flat hex instead of a primitive reference.
-So a brand can't ship an illegible or incomplete theme.
+Canopy semantic role unmapped, if a dark override resolves to the SAME value as its light value (a
+copy-paste guard), or if a dark override is a flat hex instead of a primitive reference. So a brand
+can't ship an illegible, incomplete, or accidentally light-in-dark theme.
+
+Because the required roles are read from the Canopy version you build against, a new Canopy release
+that adds a semantic role will fail your brand build until you map it - by design (a loud build error
+beats a silently unstyled role). Pin the brand build to a known roots version and re-run it on upgrade.
 
 A runnable example brand lives in [`examples/sunset/`](./examples/sunset) - copy it as a starting
 point. `style-dictionary` is an OPTIONAL peer dependency, needed only if you run the brand pipeline;

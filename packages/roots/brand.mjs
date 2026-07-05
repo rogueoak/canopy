@@ -83,8 +83,11 @@ export async function buildBrand({
   const slug = slugify(name) || 'brand';
   const out = toAbs(outFile);
   const outDir = dirname(out);
-  const lightSelector = scope ? `.${slug}` : ':root';
-  const darkSelector = scope ? `.${slug}.dark` : '.dark';
+  // `scope` carries the class NAME to scope the brand to (not just a flag): a string ->
+  // `.<scope>` / `.<scope>.dark`; null/empty -> the whole document (`:root` / `.dark`).
+  const scopeClass = scope ? slugify(scope) : null;
+  const lightSelector = scopeClass ? `.${scopeClass}` : ':root';
+  const darkSelector = scopeClass ? `.${scopeClass}.dark` : '.dark';
   mkdirSync(outDir, { recursive: true });
 
   const primitivePaths = asArray(primitives).map(toAbs);
@@ -127,13 +130,14 @@ export async function buildBrand({
     });
     await dark.buildAllPlatforms();
 
-    // Compose brand.css in ONE write (pure function of the two sidecars -> idempotent).
+    // Compose brand.css in memory (pure function of the two sidecars -> idempotent).
     const css = readFileSync(lightSidecarPath, 'utf8') + readFileSync(darkSidecarPath, 'utf8');
-    writeFileSync(out, css);
 
-    // Validate: AA in both themes + every Canopy role mapped. Throw on any failure.
+    // Validate BEFORE writing: AA in both themes, every Canopy role mapped, and each dark role
+    // actually differs from light. Writing only on success means a failed build leaves no
+    // shippable file behind (the "a broken brand can't ship" contract).
     const roles = requiredRoles();
-    const { failures, missingLight, missingDark } = checkBrandCss(css, {
+    const { failures, missingLight, missingDark, identicalDark } = checkBrandCss(css, {
       lightSelector,
       darkSelector,
       requiredRoles: roles,
@@ -141,14 +145,17 @@ export async function buildBrand({
     const problems = [];
     if (missingLight.length) problems.push(`unmapped in light: ${missingLight.join(', ')}`);
     if (missingDark.length) problems.push(`unmapped in dark: ${missingDark.join(', ')}`);
+    if (identicalDark.length)
+      problems.push(`dark override identical to light (copy-paste?): ${identicalDark.join(', ')}`);
     if (failures.length) problems.push(`AA failures:\n  ${failures.join('\n  ')}`);
     if (problems.length) {
       throw new Error(
-        `Brand "${name}" is not shippable - it must map every Canopy semantic role and meet ` +
-          `WCAG AA in light AND dark:\n${problems.join('\n')}`,
+        `Brand "${name}" is not shippable - it must map every Canopy semantic role, keep dark ` +
+          `distinct from light, and meet WCAG AA in light AND dark:\n${problems.join('\n')}`,
       );
     }
 
+    writeFileSync(out, css);
     return { outFile: out, css, roles, selectors: { light: lightSelector, dark: darkSelector } };
   } finally {
     // Always drop the sidecars, even on a thrown validation error.

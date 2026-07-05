@@ -1,4 +1,5 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -95,22 +96,25 @@ describe('Brand pipeline - sunset example output', () => {
 });
 
 describe('Brand pipeline - scoped brand', () => {
-  it('scopes to .<brand> / .<brand>.dark when a scope is given', async () => {
+  it('scopes to the SCOPE class (not the name) when a scope is given', async () => {
+    // scope deliberately DIFFERS from name, so the selector is proven to be driven by `scope`,
+    // not by `name` (the two shared a value in the original fixture and hid the bug - feedback 0010).
     const res = await buildBrand({
       name: 'sunset',
       primitives: sunset('primitive.json'),
       semantic: sunset('semantic.json'),
       semanticDark: sunset('semantic.dark.json'),
       outFile: join(outDir, 'sunset-scoped.css'),
-      scope: 'sunset',
+      scope: 'party',
     });
-    expect(res.selectors).toEqual({ light: '.sunset', dark: '.sunset.dark' });
-    expect(res.css).toMatch(/\.sunset\s*\{/);
-    expect(res.css).toMatch(/\.sunset\.dark\s*\{/);
-    // The scoped check must not confuse `.sunset.dark` for a bare `.dark`.
+    expect(res.selectors).toEqual({ light: '.party', dark: '.party.dark' });
+    expect(res.css).toMatch(/\.party\s*\{/);
+    expect(res.css).toMatch(/\.party\.dark\s*\{/);
+    expect(res.css).not.toMatch(/\.sunset\s*\{/);
+    // The scoped check must not confuse `.party.dark` for a bare `.dark`.
     const { failures } = checkBrandCss(res.css, {
-      lightSelector: '.sunset',
-      darkSelector: '.sunset.dark',
+      lightSelector: '.party',
+      darkSelector: '.party.dark',
       requiredRoles,
     });
     expect(failures, failures.join('\n')).toEqual([]);
@@ -144,7 +148,22 @@ describe('Brand pipeline - a broken brand fails the build', () => {
         semanticDark: badDark,
         outFile: join(brokenDir, 'aa.css'),
       }),
-    ).rejects.toThrow(/WCAG AA/);
+    ).rejects.toThrow(/AA failures/);
+  });
+
+  it('rejects a copy-pasted dark theme (dark identical to light)', async () => {
+    // Reusing the LIGHT semantic file as the dark file: full coverage, AA still passes (the light
+    // palette is legible), but it renders the light palette in dark mode - the copy-paste slip the
+    // core guards too (feedback 0004 / 0010).
+    await expect(
+      buildBrand({
+        name: 'sunset',
+        primitives: sunset('primitive.json'),
+        semantic: sunset('semantic.json'),
+        semanticDark: sunset('semantic.json'),
+        outFile: join(brokenDir, 'copy.css'),
+      }),
+    ).rejects.toThrow(/identical to light/);
   });
 
   it('rejects a flat-hex dark override (must reference a primitive)', async () => {
@@ -186,5 +205,28 @@ describe('AA guard is shared with the core tokens', () => {
     expect(AA_PAIRS.length).toBeGreaterThan(20);
     const flat = AA_PAIRS.map(([fg, bg]) => `${fg}|${bg}`);
     expect(flat).toContain('color-primary-foreground|color-primary-hover');
+  });
+});
+
+describe('Brand pipeline - roots-brand CLI', () => {
+  const cli = resolve(here, 'cli.mjs');
+
+  it('builds a brand from a config file, honoring --out and config-relative paths', () => {
+    const out = join(outDir, 'cli-sunset.css');
+    // The example config uses paths relative to itself (primitive.json, ...); --out redirects the
+    // output so the CLI's own path resolution + override are both exercised.
+    const stdout = execFileSync('node', [cli, sunset('brand.config.json'), '--out', out], {
+      encoding: 'utf8',
+    });
+    expect(stdout).toMatch(/wrote/);
+    expect(stdout).toMatch(/AA verified/);
+    expect(existsSync(out)).toBe(true);
+    expect(readFileSync(out, 'utf8')).toMatch(/:root\s*\{/);
+  });
+
+  it('exits non-zero on a missing config', () => {
+    expect(() =>
+      execFileSync('node', [cli, join(outDir, 'does-not-exist.json')], { stdio: 'pipe' }),
+    ).toThrow();
   });
 });

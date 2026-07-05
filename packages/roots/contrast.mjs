@@ -115,9 +115,15 @@ export const extractThemedRoles = (css) => {
  * - `requiredRoles` is the set of semantic roles the brand MUST map (derived from Canopy's own
  *   shipped tokens, so the contract can't drift).
  *
- * Returns `{ failures, missingLight, missingDark }`. Empty arrays == the brand is AA-safe and
- * complete. Resolution chases `var(--x)` references to a hex literal within the relevant block.
+ * Returns `{ failures, missingLight, missingDark, identicalDark }`. Empty arrays == the brand is
+ * AA-safe and complete. Resolution chases `var(--x)` references to a hex literal within the
+ * relevant block.
  */
+// The one role deliberately theme-invariant: a near-black accent foreground that reads on the
+// accent fill in BOTH themes, so its dark override legitimately equals its light value. Mirrors
+// the core tokens.test.ts allowlist so a brand's copy-paste guard matches Canopy's.
+const THEME_INVARIANT_ROLES = new Set(['color-accent-foreground']);
+
 export const checkBrandCss = (
   css,
   { lightSelector = ':root', darkSelector = '.dark', requiredRoles },
@@ -146,6 +152,17 @@ export const checkBrandCss = (
   const missingLight = requiredRoles.filter((r) => light[r] == null);
   const missingDark = requiredRoles.filter((r) => dark[r] == null);
 
+  // A dark override that resolves to the SAME hex as light is usually a copy-paste slip - the role
+  // would look identical across themes (a light palette rendered in dark mode). Guarded here the way
+  // the core guards it, minus the one deliberately theme-invariant role.
+  const identicalDark = requiredRoles.filter(
+    (r) =>
+      light[r] != null &&
+      dark[r] != null &&
+      !THEME_INVARIANT_ROLES.has(r) &&
+      resolveLight(r) === resolveDark(r),
+  );
+
   const failures = [];
   for (const [fg, bg, min] of AA_PAIRS) {
     // Skip pairs whose roles the coverage check already flagged as missing (avoids a noisy
@@ -157,5 +174,5 @@ export const checkBrandCss = (
     const dark1 = contrast(resolveDark(fg), resolveDark(bg));
     if (dark1 < min) failures.push(`dark: ${fg} on ${bg}: ${dark1.toFixed(2)} < ${min}`);
   }
-  return { failures, missingLight, missingDark };
+  return { failures, missingLight, missingDark, identicalDark };
 };

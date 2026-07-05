@@ -208,12 +208,18 @@ a subtree.
 The **WCAG AA guard is one definition, reused**: the relative-luminance math + the canonical
 role-pair list (`AA_PAIRS`) live in `packages/roots/contrast.mjs`; `tokens.test.ts` imports them to
 guard the core tokens, and `buildBrand()` runs `checkBrandCss()` over the generated `brand.css`.
-`buildBrand()` **throws** (fails the consumer's build) when any pair breaks AA in either theme, when
-a role is left unmapped, or when a dark override is a flat hex (the last via the reused format's
-existing hard-error). The **required-role contract is derived from Canopy's own shipped
-`dist/tokens.css`** (its themed `--color-*` roles), so it can't drift from what Canopy actually
-ships. Because a brand renames its ramps, its status roles are plain leaves referencing those ramps
-- no `.DEFAULT` trick needed (that trick only exists to dodge a role/ramp name collision).
+`buildBrand()` validates the composed CSS BEFORE writing `brand.css` (a failed build leaves no
+shippable file) and **throws** (fails the consumer's build) when any pair breaks AA in either theme,
+when a role is left unmapped, when a dark override resolves EQUAL to its light value (a copy-paste
+guard mirroring the core, allowlisting the one theme-invariant `accent-foreground`), or when a dark
+override is a flat hex (the last via the reused format's existing hard-error). The **required-role
+contract is derived from Canopy's own shipped `dist/tokens.css`** (its themed `--color-*` roles), so
+it can't drift from what Canopy actually ships. A consequence worth stating: **adding a semantic role
+to Canopy is a breaking change for the brand API** - an existing brand's `buildBrand` fails on the
+next roots upgrade until it maps the new role. That is intentional (a build-time failure, never a
+silent illegible ship), so a role addition warrants a version bump, not a patch. Because a brand
+renames its ramps, its status roles are plain leaves referencing those ramps - no `.DEFAULT` trick
+needed (that trick only exists to dodge a role/ramp name collision).
 
 `style-dictionary` is an OPTIONAL `peerDependency`: the token exports (`.`, `./tokens.css`,
 `./tailwind-preset.css`) never touch it; only the build-time brand pipeline does, so a consumer pays

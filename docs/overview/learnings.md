@@ -434,3 +434,22 @@ floor as a contract** — pin it to the version the curated names were verified 
 because a too-low floor fails silently at runtime (missing named export → `undefined` → render-time
 crash), invisible to types and the build. And test the curated surface's **shape** (prefix-leak guard
 + promised-name list), not just its size.
+
+## A public API option must consume its value, and a fixture must not let two params share one
+
+The brand pipeline's `buildBrand({ scope })` (spec 0028) documented `scope` as the CSS class to scope
+a brand to, but the code derived the selector from `slugify(name)` and used `scope` only as a truthy
+flag — so `{ name: 'My Brand', scope: 'acme' }` emitted `.my-brand`, not `.acme`. Both the engineer
+and architect personas caught it; the shipped test **masked** it because the only fixture passed the
+SAME string (`'sunset'`) for `name` and `scope`, so reading the wrong source still looked right
+(feedback 0010). Two more gaps rode along: `buildBrand` **wrote `brand.css` before validating**, so a
+failed build left an invalid file on disk (against its own "can't ship a broken brand" contract), and
+the new pipeline didn't **port the core's copy-paste guard** (dark must differ from light, from
+feedback 0004), so a brand whose dark file is a copy of its light file passed every check yet renders
+the light palette in dark.
+
+**Apply it:** when an API option carries a *value* (not just an on/off), make the code consume that
+value, and test it with a value **distinct from every sibling parameter** — two params sharing a
+value in the only fixture hides one being ignored. Validate an artifact **before** you write it, so a
+failed run leaves nothing shippable. And when a new pipeline re-states a guarantee the core already
+guards (AA, dark≠light, coverage), **port the guard** — a parallel surface does not inherit it.
