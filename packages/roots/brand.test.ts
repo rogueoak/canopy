@@ -11,6 +11,7 @@ import {
   contrast,
   extractBlock,
   extractThemedRoles,
+  resolveCanopyDefaults,
 } from './contrast.mjs';
 
 /**
@@ -179,22 +180,77 @@ describe('Brand pipeline - a broken brand fails the build', () => {
     ).rejects.toThrow(/must reference a primitive/);
   });
 
-  it('rejects a brand that leaves a semantic role unmapped', async () => {
-    const badLight: { color: Record<string, unknown> } = JSON.parse(
-      readFileSync(sunset('semantic.json'), 'utf8'),
-    );
-    delete badLight.color['primary-hover'];
-    const p = join(brokenDir, 'missing.json');
-    writeFileSync(p, JSON.stringify(badLight));
+  it('rejects a partial override that breaks AA against an inherited default', async () => {
+    // The safety property behind partial brands: an omitted role falls back to Canopy's default,
+    // but the EFFECTIVE pair is still AA-checked. Here the brand paints primary a pale ramp step
+    // and omits primary-foreground, so the inherited near-white default foreground lands on a pale
+    // fill - illegible - and the build must fail just as a full-brand break would.
+    const light: Dtcg = JSON.parse(readFileSync(sunset('semantic.json'), 'utf8'));
+    light.color.primary.$value = '{color.ember.100}';
+    delete (light.color as Record<string, unknown>)['primary-foreground'];
+    const p = join(brokenDir, 'pale-primary.json');
+    writeFileSync(p, JSON.stringify(light));
     await expect(
       buildBrand({
         name: 'sunset',
         primitives: sunset('primitive.json'),
         semantic: p,
         semanticDark: sunset('semantic.dark.json'),
-        outFile: join(brokenDir, 'missing.css'),
+        outFile: join(brokenDir, 'pale-primary.css'),
       }),
-    ).rejects.toThrow(/unmapped in light/);
+    ).rejects.toThrow(/AA failures[\s\S]*color-primary-foreground on color-primary/);
+  });
+});
+
+describe('Brand pipeline - a partial brand inherits Canopy defaults', () => {
+  let partialDir: string;
+  beforeAll(() => {
+    partialDir = mkdtempSync(join(tmpdir(), 'canopy-brand-partial-'));
+  });
+  afterAll(() => rmSync(partialDir, { recursive: true, force: true }));
+
+  // Drop a group of roles from both the light and dark sunset semantic files, so the built brand
+  // maps only a SUBSET and the rest fall back to Canopy's defaults - the Harbor-style case.
+  const withoutRoles = (roles: string[]) => {
+    const strip = (srcFile: string, outFile: string) => {
+      const json: { color: Record<string, unknown> } = JSON.parse(
+        readFileSync(sunset(srcFile), 'utf8'),
+      );
+      for (const r of roles) delete json.color[r];
+      const p = join(partialDir, outFile);
+      writeFileSync(p, JSON.stringify(json));
+      return p;
+    };
+    return {
+      semantic: strip('semantic.json', 'partial.json'),
+      semanticDark: strip('semantic.dark.json', 'partial.dark.json'),
+    };
+  };
+
+  it('builds when roles are omitted, and emits ONLY the mapped roles', async () => {
+    // Secondary is inherited (never referenced against a brand surface), so dropping it is safe:
+    // its AA pairs resolve to Canopy's own default bark ramp, which already passes.
+    const secondary = ['secondary', 'secondary-foreground', 'secondary-hover', 'secondary-active'];
+    const { semantic, semanticDark } = withoutRoles(secondary);
+    const res = await buildBrand({
+      name: 'harbor-ish',
+      primitives: sunset('primitive.json'),
+      semantic,
+      semanticDark,
+      outFile: join(partialDir, 'partial.css'),
+    });
+    const root = extractBlock(res.css, ':root')!;
+    const dark = extractBlock(res.css, '.dark')!;
+    // Omitted roles are absent from the brand css (they inherit Canopy's default by cascade)...
+    for (const role of secondary) {
+      expect(root[role], `light ${role}`).toBeUndefined();
+      expect(dark[role], `dark ${role}`).toBeUndefined();
+    }
+    // ...and are reported back as inherited (by full role name), while a mapped role stays present.
+    const inheritedNames = secondary.map((r) => `color-${r}`);
+    expect(res.inherited.light).toEqual(expect.arrayContaining(inheritedNames));
+    expect(res.inherited.dark).toEqual(expect.arrayContaining(inheritedNames));
+    expect(root['color-primary']).toMatch(/^var\(--color-[a-z0-9-]+\)$/i);
   });
 });
 
@@ -205,6 +261,19 @@ describe('AA guard is shared with the core tokens', () => {
     expect(AA_PAIRS.length).toBeGreaterThan(20);
     const flat = AA_PAIRS.map(([fg, bg]) => `${fg}|${bg}`);
     expect(flat).toContain('color-primary-foreground|color-primary-hover');
+  });
+
+  it('resolveCanopyDefaults resolves each role to a hex, distinct per theme', () => {
+    const tokensCss = readFileSync(resolve(here, 'dist/tokens.css'), 'utf8');
+    const { light, dark } = resolveCanopyDefaults(tokensCss);
+    // Every themed role resolves to a concrete hex in both themes (this is what an omitted brand
+    // role inherits and is AA-checked against).
+    for (const role of requiredRoles) {
+      expect(light[role], `light ${role}`).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(dark[role], `dark ${role}`).toMatch(/^#[0-9a-f]{6}$/i);
+    }
+    // A role Canopy overrides in dark resolves to different light/dark values (not a copy).
+    expect(light['color-bg']).not.toBe(dark['color-bg']);
   });
 });
 

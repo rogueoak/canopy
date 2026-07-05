@@ -97,7 +97,7 @@ export const extractBlock = (css, selector) => {
 /**
  * The themed semantic roles of a `:root` block: `--color-*` vars whose value REFERENCES a
  * primitive (`var(--...)`), i.e. roles - not the primitive ramp literals and not composite
- * text roles. This is what a brand must fully re-map.
+ * text roles. This is the full role surface a brand MAY re-map (it can map any subset).
  */
 export const extractThemedRoles = (css) => {
   const root = extractBlock(css, ':root') ?? {};
@@ -107,17 +107,55 @@ export const extractThemedRoles = (css) => {
 };
 
 /**
- * Validate a generated brand stylesheet against the AA guard and role coverage.
+ * Resolve Canopy's OWN default semantic roles to concrete hexes, per theme, from its shipped
+ * `tokens.css`. A brand that omits a role inherits the Canopy default by cascade (`brand.css` is
+ * imported AFTER `tokens.css`), so the AA guard resolves an omitted role to this default and can
+ * still validate the EFFECTIVE pair (a brand override combined with an inherited default).
+ *
+ * Returns `{ light: {role->hex}, dark: {role->hex} }` over every themed role. Light chases each
+ * role's `var(--...)` chain against `:root` (primitives + roles both live there). Dark chases
+ * against `.dark` overlaid on `:root`, so a role overridden in `.dark` wins and one that is not
+ * inherits its `:root` value; primitive literals resolve from `:root` either way.
+ */
+export const resolveCanopyDefaults = (tokensCss) => {
+  const root = extractBlock(tokensCss, ':root');
+  if (root == null) throw new Error('tokens.css is missing a `:root` block');
+  const darkOverlay = { ...root, ...(extractBlock(tokensCss, '.dark') ?? {}) };
+
+  const chaseIn = (block, name, seen = new Set()) => {
+    if (seen.has(name)) throw new Error(`reference cycle at ${name}`);
+    seen.add(name);
+    const raw = block[name];
+    if (raw == null) return null;
+    const ref = /^var\(--([a-z0-9-]+)\)$/i.exec(raw);
+    return ref ? chaseIn(block, ref[1], seen) : raw;
+  };
+
+  const light = {};
+  const dark = {};
+  for (const r of extractThemedRoles(tokensCss)) {
+    light[r] = chaseIn(root, r);
+    dark[r] = chaseIn(darkOverlay, r);
+  }
+  return { light, dark };
+};
+
+/**
+ * Validate a generated brand stylesheet against the AA guard.
  *
  * - `lightSelector` block holds brand primitives (hex literals) + light roles (`var(--primitive)`).
  * - `darkSelector` block holds dark roles (`var(--primitive)`); primitives resolve from the light
  *   block, which is where the brand declares them.
- * - `requiredRoles` is the set of semantic roles the brand MUST map (derived from Canopy's own
- *   shipped tokens, so the contract can't drift).
+ * - `requiredRoles` is the full set of Canopy semantic roles (derived from Canopy's own shipped
+ *   tokens, so the contract can't drift). A brand need NOT map them all: any it omits falls back to
+ *   `defaults` and is reported (non-fatally) in `missingLight` / `missingDark`.
+ * - `defaults` is `resolveCanopyDefaults(tokensCss)` — the Canopy value an omitted role inherits.
+ *   Optional: without it, pairs touching an omitted role are simply skipped (no fallback to check
+ *   against).
  *
- * Returns `{ failures, missingLight, missingDark, identicalDark }`. Empty arrays == the brand is
- * AA-safe and complete. Resolution chases `var(--x)` references to a hex literal within the
- * relevant block.
+ * Returns `{ failures, missingLight, missingDark, identicalDark }`. Empty `failures` +
+ * `identicalDark` == the brand is AA-safe (in both themes, for both its overrides and the effective
+ * override/inherited combinations). Resolution chases `var(--x)` references to a hex literal.
  */
 // The one role deliberately theme-invariant: a near-black accent foreground that reads on the
 // accent fill in BOTH themes, so its dark override legitimately equals its light value. Mirrors
@@ -126,7 +164,7 @@ const THEME_INVARIANT_ROLES = new Set(['color-accent-foreground']);
 
 export const checkBrandCss = (
   css,
-  { lightSelector = ':root', darkSelector = '.dark', requiredRoles },
+  { lightSelector = ':root', darkSelector = '.dark', requiredRoles, defaults },
 ) => {
   const light = extractBlock(css, lightSelector);
   const dark = extractBlock(css, darkSelector);
@@ -141,11 +179,16 @@ export const checkBrandCss = (
     const ref = /^var\(--([a-z0-9-]+)\)$/i.exec(raw);
     return ref ? chase(block, ref[1], seen) : raw;
   };
-  const resolveLight = (name) => chase(light, name);
-  // A dark role points at a brand primitive; primitives live in the light block.
+  // A role the brand declares resolves within its own blocks; one it omits falls back to the Canopy
+  // default it inherits by cascade. A role declared only in the light block keeps that value in dark
+  // too (the `.dark` block never overrides it), so light is the dark fallback before the default.
+  const resolveLight = (name) =>
+    light[name] != null ? chase(light, name) : defaults?.light?.[name];
   const resolveDark = (name) => {
     const raw = dark[name] ?? light[name];
-    const ref = /^var\(--([a-z0-9-]+)\)$/i.exec(raw ?? '');
+    if (raw == null) return defaults?.dark?.[name];
+    // A dark role points at a brand primitive; primitives live in the light block.
+    const ref = /^var\(--([a-z0-9-]+)\)$/i.exec(raw);
     return ref ? chase(light, ref[1]) : raw;
   };
 
@@ -153,8 +196,9 @@ export const checkBrandCss = (
   const missingDark = requiredRoles.filter((r) => dark[r] == null);
 
   // A dark override that resolves to the SAME hex as light is usually a copy-paste slip - the role
-  // would look identical across themes (a light palette rendered in dark mode). Guarded here the way
-  // the core guards it, minus the one deliberately theme-invariant role.
+  // would look identical across themes (a light palette rendered in dark mode). Only roles the brand
+  // declares in BOTH blocks are checked; an omitted role inherits its (already-distinct) Canopy
+  // default and is not the brand's to guard.
   const identicalDark = requiredRoles.filter(
     (r) =>
       light[r] != null &&
@@ -165,14 +209,21 @@ export const checkBrandCss = (
 
   const failures = [];
   for (const [fg, bg, min] of AA_PAIRS) {
-    // Skip pairs whose roles the coverage check already flagged as missing (avoids a noisy
-    // "unknown var" throw masking the clearer missing-role message).
-    if (missingLight.includes(fg) || missingLight.includes(bg)) continue;
-    const light1 = contrast(resolveLight(fg), resolveLight(bg));
-    if (light1 < min) failures.push(`light: ${fg} on ${bg}: ${light1.toFixed(2)} < ${min}`);
-    if (missingDark.includes(fg) || missingDark.includes(bg)) continue;
-    const dark1 = contrast(resolveDark(fg), resolveDark(bg));
-    if (dark1 < min) failures.push(`dark: ${fg} on ${bg}: ${dark1.toFixed(2)} < ${min}`);
+    // Resolve each side through brand-or-default; a pair is checkable when both sides resolve (they
+    // always do once `defaults` is supplied). This validates the EFFECTIVE pair, so an override that
+    // breaks AA against an inherited default fails the build just as a full-brand break would.
+    const lfg = resolveLight(fg);
+    const lbg = resolveLight(bg);
+    if (lfg && lbg) {
+      const light1 = contrast(lfg, lbg);
+      if (light1 < min) failures.push(`light: ${fg} on ${bg}: ${light1.toFixed(2)} < ${min}`);
+    }
+    const dfg = resolveDark(fg);
+    const dbg = resolveDark(bg);
+    if (dfg && dbg) {
+      const dark1 = contrast(dfg, dbg);
+      if (dark1 < min) failures.push(`dark: ${fg} on ${bg}: ${dark1.toFixed(2)} < ${min}`);
+    }
   }
   return { failures, missingLight, missingDark, identicalDark };
 };

@@ -159,10 +159,11 @@ pipeline (`buildBrand()` from `@rogueoak/roots/brand`, or the `roots-brand` CLI)
 @import './sunset.css'; /* your generated brand overrides */
 ```
 
+A brand can map **any subset** of the roles - omit one and it inherits Canopy's default by cascade.
 The pipeline reuses Canopy's WCAG AA guard: the build **fails** if any role/state pair breaks AA in
-either theme, if a role is left unmapped, or if a dark override is a flat hex. A quick **runtime**
-path (redefining `--color-*` in your own `:root`/`.dark`) is documented for cases that do not need
-the guard. See the [`@rogueoak/roots` brand theming guide](packages/roots/README.md#brand-theming)
+either theme (an omitted role's override is checked against the default it inherits), or if a dark
+override is a flat hex. A quick **runtime** path (redefining `--color-*` in your own `:root`/`.dark`)
+is documented for cases that do not need the guard. See the [`@rogueoak/roots` brand theming guide](packages/roots/README.md#brand-theming)
 and the [`sunset` example](packages/roots/examples/sunset).
 
 ## Distribution

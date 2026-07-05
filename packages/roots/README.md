@@ -89,14 +89,24 @@ Pass `scope: 'sunset'` to emit `.sunset { ... }` + `.sunset.dark { ... }` instea
 a brand to a subtree (`<div class="sunset">`) rather than the whole document.
 
 The pipeline reuses Canopy's OWN Style Dictionary formats and its WCAG AA guard. `buildBrand()`
-THROWS - failing your build - if any role/state pair breaks AA in either theme, if you leave any
-Canopy semantic role unmapped, if a dark override resolves to the SAME value as its light value (a
-copy-paste guard), or if a dark override is a flat hex instead of a primitive reference. So a brand
-can't ship an illegible, incomplete, or accidentally light-in-dark theme.
+THROWS - failing your build - if any role/state pair breaks AA in either theme, if a dark override
+resolves to the SAME value as its light value (a copy-paste guard), or if a dark override is a flat
+hex instead of a primitive reference. So a brand can't ship an illegible or accidentally
+light-in-dark theme.
 
-Because the required roles are read from the Canopy version you build against, a new Canopy release
-that adds a semantic role will fail your brand build until you map it - by design (a loud build error
-beats a silently unstyled role). Pin the brand build to a known roots version and re-run it on upgrade.
+**Partial brands.** You do NOT have to map every role. Map only the roles you want to change (a
+brand that re-points just `primary` and the neutrals is common); every role you omit keeps Canopy's
+own default by cascade, because `tokens.css` is imported first. The result of the build reports
+which roles were inherited (`inherited: { light, dark }`).
+
+The AA guard still holds for a partial brand: an omitted role is resolved to the Canopy default it
+inherits, and the **effective** pair is checked. So if you paint `primary` a pale step but omit
+`primary-foreground`, the build fails on the near-white default foreground landing on your pale
+fill - a partial brand can't ship an illegible combination any more than a full one can.
+
+A new Canopy release that adds a semantic role does NOT break your brand build - the new role simply
+inherits its Canopy default until you choose to map it. (Its default pairs are already AA-verified
+by Canopy's own build.)
 
 A runnable example brand lives in [`examples/sunset/`](./examples/sunset) - copy it as a starting
 point. `style-dictionary` is an OPTIONAL peer dependency, needed only if you run the brand pipeline;
@@ -120,7 +130,8 @@ vars in its own CSS after importing `tokens.css` - Canopy reads them at runtime:
 }
 ```
 
-Prefer the build-time pipeline when you want the AA guarantee and full role coverage.
+Prefer the build-time pipeline when you want the AA guarantee - including for a partial brand, whose
+overrides are still checked against the Canopy defaults they inherit.
 
 ## Fonts
 

@@ -40,5 +40,7 @@ Import `sunset.css` AFTER Canopy's tokens - it overrides the semantic vars by ca
 
 Every Canopy component now wears the sunset brand in light and dark, with no component change.
 
-The build FAILS if any role/state pair breaks WCAG AA in either theme, if a role is left unmapped,
-or if a dark override is a flat hex instead of a primitive reference.
+`sunset` maps every role, but a brand need not: omit a role and it inherits Canopy's default (this
+example maps all of them to show the full surface). The build FAILS if any role/state pair breaks
+WCAG AA in either theme - including an override checked against a default it inherits - or if a dark
+override is a flat hex instead of a primitive reference.
