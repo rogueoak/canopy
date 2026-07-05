@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { type ComponentProps } from 'react';
 import { IconContext, type IconBaseProps, type IconType } from 'react-icons';
 
 /**
@@ -14,7 +14,7 @@ import { IconContext, type IconBaseProps, type IconType } from 'react-icons';
  * ```
  */
 export const IconProvider = IconContext.Provider;
-export type IconProviderProps = React.ComponentProps<typeof IconProvider>;
+export type IconProviderProps = ComponentProps<typeof IconProvider>;
 
 /** The default icon size - `1em`, so an icon scales with the surrounding font-size by default. */
 const DEFAULT_SIZE = '1em';
