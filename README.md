@@ -145,6 +145,25 @@ roles (`color-primary-hover`/`-active`, `secondary`, `accent`, `danger-hover`) a
 `color-disabled` surface + `color-disabled-foreground` convention are defined with light and
 dark values too, ready for the first components.
 
+### Theming (your own brand)
+
+Beyond light and dark, a downstream app can define its **own brand** - custom primitive ramps plus
+Canopy's same semantic role names - and re-theme every component in light and dark **without forking
+roots**. Author the brand as DTCG token files and generate a `brand.css` with the build-time
+pipeline (`buildBrand()` from `@rogueoak/roots/brand`, or the `roots-brand` CLI); import it after
+`tokens.css` and it overrides Canopy's roles by cascade, so no component changes:
+
+```css
+@import '@rogueoak/roots/tokens.css';
+@import './sunset.css'; /* your generated brand overrides */
+```
+
+The pipeline reuses Canopy's WCAG AA guard: the build **fails** if any role/state pair breaks AA in
+either theme, if a role is left unmapped, or if a dark override is a flat hex. A quick **runtime**
+path (redefining `--color-*` in your own `:root`/`.dark`) is documented for cases that do not need
+the guard. See the [`@rogueoak/roots` brand theming guide](packages/roots/README.md#brand-theming)
+and the [`sunset` example](packages/roots/examples/sunset).
+
 ## Distribution
 
 Canopy publishes under the **`@rogueoak`** npm scope as a small set of versioned packages:

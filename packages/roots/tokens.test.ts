@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+// The WCAG math and the canonical role-pair list live in contrast.mjs (spec 0028) so the core
+// tokens and every consumer brand are guarded by the EXACT same code and thresholds.
+import { AA_PAIRS as PAIRS, contrast, parseDecls } from './contrast.mjs';
 
 /**
  * These tests read the BUILT `dist/` outputs (the package must build before it is
@@ -137,37 +140,10 @@ describe('Roots token outputs — composite text roles', () => {
  * resolves from the built `tokens.css`: parse the `.dark { … }` block for each semantic
  * override (`--x: var(--primitive)`) and chase to the primitive's `:root` hex literal.
  * Primitives are theme-agnostic literals declared once in `:root`.
+ *
+ * `contrast`, `parseDecls`, and the `PAIRS` list (`AA_PAIRS`) are imported from contrast.mjs
+ * so this core guard and the brand pipeline (spec 0028) share one definition.
  */
-const srgbToLinear = (c: number) => {
-  const s = c / 255;
-  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-};
-
-const luminance = (hex: string) => {
-  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) throw new Error(`not a 6-digit hex: ${hex}`);
-  const int = parseInt(m[1], 16);
-  const r = (int >> 16) & 0xff;
-  const g = (int >> 8) & 0xff;
-  const b = int & 0xff;
-  return 0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
-};
-
-const contrast = (hex1: string, hex2: string) => {
-  const l1 = luminance(hex1);
-  const l2 = luminance(hex2);
-  const [hi, lo] = l1 >= l2 ? [l1, l2] : [l2, l1];
-  return (hi + 0.05) / (lo + 0.05);
-};
-
-// Parse `--name: value;` declarations out of one CSS rule body.
-const parseDecls = (body: string): Record<string, string> => {
-  const out: Record<string, string> = {};
-  for (const m of body.matchAll(/--([a-z0-9-]+):\s*([^;]+);/gi)) {
-    out[m[1].trim()] = m[2].trim();
-  }
-  return out;
-};
 
 // Split tokens.css into the `:root { … }` block and the `.dark { … }` block.
 const splitThemeBlocks = (css: string) => {
@@ -177,45 +153,6 @@ const splitThemeBlocks = (css: string) => {
   const darkBody = css.slice(darkAt + '.dark {'.length, css.indexOf('}', darkAt));
   return { root: parseDecls(rootBody), dark: parseDecls(darkBody) };
 };
-
-// [foreground role, background role, min ratio]. 4.5 = AA normal; 3.0 = AA large
-// (text-subtle is the documented large-text-only tertiary role; ring is non-text).
-const PAIRS: [string, string, number][] = [
-  ['color-text', 'color-bg', 4.5],
-  ['color-text', 'color-surface', 4.5],
-  ['color-text-muted', 'color-bg', 4.5],
-  ['color-text-muted', 'color-surface', 4.5],
-  ['color-text-subtle', 'color-bg', 3.0],
-  ['color-text-subtle', 'color-surface', 3.0],
-  ['color-primary-foreground', 'color-primary', 4.5],
-  ['color-secondary-foreground', 'color-secondary', 4.5],
-  ['color-accent-foreground', 'color-accent', 4.5],
-  ['color-accent-strong', 'color-bg', 4.5],
-  ['color-muted-foreground', 'color-muted', 4.5],
-  // Raised-surface item highlight (feedback 0006): SelectItem renders `text-text` on the
-  // `muted-raised` fill, so that pair must hit AA in BOTH themes — light text (stone.900) on
-  // stone.100, dark text (stone.50) on stone.700.
-  ['color-text', 'color-muted-raised', 4.5],
-  ['color-success-foreground', 'color-success', 4.5],
-  ['color-warning-foreground', 'color-warning', 4.5],
-  ['color-danger-foreground', 'color-danger', 4.5],
-  ['color-info-foreground', 'color-info', 4.5],
-  ['color-ring', 'color-bg', 3.0],
-  // Interaction-state surfaces (feedback 0003): a component renders its role foreground
-  // on the hover/active fill too, so those pairs must also reach AA — in BOTH themes.
-  // Guarded here so a bad hover/active ramp step (e.g. one too dark for a near-black
-  // foreground) fails the build instead of shipping an illegible pressed state.
-  ['color-primary-foreground', 'color-primary-hover', 4.5],
-  ['color-primary-foreground', 'color-primary-active', 4.5],
-  ['color-secondary-foreground', 'color-secondary-hover', 4.5],
-  ['color-secondary-foreground', 'color-secondary-active', 4.5],
-  ['color-danger-foreground', 'color-danger-hover', 4.5],
-  ['color-danger-foreground', 'color-danger-active', 4.5],
-  ['color-accent-foreground', 'color-accent-hover', 4.5],
-  // `disabled` / `disabled-foreground` are DELIBERATELY excluded: WCAG 2.1 exempts
-  // disabled controls (1.4.3) from the contrast minimum, and the role is intentionally
-  // low-contrast. Its absence here is by design, not an oversight.
-];
 
 describe('Roots semantic colours — WCAG AA contrast (computed from real hexes)', () => {
   it('meets the documented AA thresholds for every role pair on its surface (light)', async () => {

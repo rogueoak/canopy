@@ -20,15 +20,24 @@
     "*.css"
   ],
   "files": [
-    "dist"
+    "dist",
+    "brand.mjs",
+    "cli.mjs",
+    "contrast.mjs",
+    "style-dictionary.config.mjs",
+    "examples"
   ],
+  "bin": {
+    "roots-brand": "./cli.mjs"
+  },
   "exports": {
     ".": {
       "types": "./dist/tokens.d.ts",
       "import": "./dist/tokens.js"
     },
     "./tokens.css": "./dist/tokens.css",
-    "./tailwind-preset.css": "./dist/tailwind-preset.css"
+    "./tailwind-preset.css": "./dist/tailwind-preset.css",
+    "./brand": "./brand.mjs"
   },
   "scripts": {
     "build": "pnpm clean && node build.mjs && tsup",
@@ -36,6 +45,14 @@
     "lint": "eslint .",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "style-dictionary": "^4.3.0"
+  },
+  "peerDependenciesMeta": {
+    "style-dictionary": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "style-dictionary": "^4.3.0",
