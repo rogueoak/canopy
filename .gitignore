@@ -13,3 +13,6 @@ dist/
 storybook-static/
 .turbo/
 *.tsbuildinfo
+*.swp
+
+.playwright-mcp
