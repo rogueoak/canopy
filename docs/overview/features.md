@@ -450,8 +450,9 @@ structural Twig after Card) that shows where the current page sits in a hierarch
   `BreadcrumbEllipsis` are **decorative** (`role="presentation"` + `aria-hidden`) so a screen reader
   announces the crumbs with no separator noise; the separator's default chevron is a hand-rolled
   inline `currentColor` SVG (no icon dependency, the Dialog-close precedent) and is overridable via
-  `children`, and the ellipsis carries an `sr-only` "More" label for a mid-trail truncation the
-  consumer places (Breadcrumb does not auto-collapse). `forwardRef` + native prop spread + `cn()`
+  `children`. The `BreadcrumbEllipsis` is **meaningful, not decorative**: only its dots glyph is
+  `aria-hidden`, while an `sr-only` "More" label stays in the accessibility tree so a mid-trail
+  truncation (the consumer places it - Breadcrumb does not auto-collapse) is announced, not dropped. `forwardRef` + native prop spread + `cn()`
   merge on every part; **no new token, no new dependency, no `dark:`** - both themes automatically.
 
 The **Twigs layer's first four molecules are live**.

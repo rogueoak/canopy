@@ -58,27 +58,33 @@ literal strings** so the v4 scanner emits them.
   Muted (`text-text-muted`) with `hover:text-text` and the shared focus-visible ring.
 - **`BreadcrumbPage`** - the current page (non-interactive). Renders a `<span>` with
   `role="link"`, `aria-disabled="true"`, and **`aria-current="page"`** (the accessibility hook
-  that marks "you are here"), in the un-muted `text-text` with normal weight.
+  that marks "you are here"), in the un-muted `text-text` at `font-medium` (matching the current-page
+  weight convention from `TopNavLink`).
 - **`BreadcrumbSeparator`** - the divider between items. Renders `<li role="presentation"
   aria-hidden="true">` (decorative, skipped by assistive tech) holding a **default chevron**
   (inline `currentColor` SVG, hand-rolled - no icon dependency, matching Dialog's close X /
   Checkbox's tick), overridable by passing `children` (e.g. a `/`).
-- **`BreadcrumbEllipsis`** - the collapsed-trail affordance. Renders a `<span
-  role="presentation" aria-hidden="true">` with an inline horizontal-dots SVG plus an `sr-only`
-  "More" label, for when a long trail is truncated in the middle.
+- **`BreadcrumbEllipsis`** - the collapsed-trail affordance, for when a long trail is truncated in
+  the middle. Renders a `<span>` whose dots SVG is `aria-hidden` but whose wrapper is **not** hidden
+  and carries an `sr-only` "More" label, so the truncation is genuinely announced to assistive tech
+  (it is meaningful, unlike the decorative separator).
 - Stories: a basic 3-4 level trail; a custom `/` separator; a collapsed trail using
   `BreadcrumbEllipsis`; an `asChild` link (styled `<a>` standing in for a router link) - all in
   both themes via the toolbar toggle.
 - Tests: renders the `<nav>` landmark with its label and an `<ol>`; the current page carries
-  `aria-current="page"` and is not a link; separators/ellipsis are `aria-hidden` and out of the
-  accessible name; `BreadcrumbLink asChild` renders the child element carrying the link classes
+  `aria-current="page"` and is not a link; separators are `aria-hidden` and out of the accessible
+  name while the ellipsis label stays reachable; `BreadcrumbLink asChild` renders the child element
+  carrying the link classes
   (no nested anchor); `cn()` merges a caller `className`; each part forwards `ref`.
 
 ### Out
 
 - **Automatic collapsing / responsive truncation** - Breadcrumb does not measure width or decide
   which items to hide; the consumer composes `BreadcrumbEllipsis` where they want the trail cut.
-  An auto-collapsing variant is a later follow-up.
+  An auto-collapsing variant is a later follow-up - and because measuring width + owning which
+  crumbs are hidden is **interaction state**, that variant belongs in a separate stateful wrapper
+  (a Branch), not folded back into this stateless Twig (architect review note, keeping the
+  interaction-class boundary this spec draws intact).
 - **A dropdown/menu behind the ellipsis** (revealing hidden crumbs on click) - that needs a
   Branch-level popover (interaction state + portal); this ships the static ellipsis only.
 - **A data-driven `items` API** (passing an array instead of composing parts) - the compound is

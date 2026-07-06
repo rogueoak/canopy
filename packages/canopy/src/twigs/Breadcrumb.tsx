@@ -113,7 +113,8 @@ export type BreadcrumbPageProps = React.ComponentPropsWithoutRef<'span'>;
  * BreadcrumbPage - the current page (the trail's destination). Renders a non-interactive `<span>`
  * carrying `aria-current="page"` (the "you are here" hook) plus `role="link"` + `aria-disabled`
  * (so it presents as the same kind of element as its sibling links, but disabled). Un-muted
- * `text-text` at normal weight so it reads as the current location.
+ * `text-text` at `font-medium` - both the colour lift off the muted links AND the weight signal the
+ * current location, matching the "current page = medium weight" convention set by `TopNavLink`.
  */
 export const BreadcrumbPage = React.forwardRef<HTMLSpanElement, BreadcrumbPageProps>(
   ({ className, ...props }, ref) => (
@@ -122,7 +123,7 @@ export const BreadcrumbPage = React.forwardRef<HTMLSpanElement, BreadcrumbPagePr
       role="link"
       aria-disabled="true"
       aria-current="page"
-      className={cn('font-normal text-text', className)}
+      className={cn('font-medium text-text', className)}
       {...props}
     />
   ),
@@ -171,15 +172,16 @@ export type BreadcrumbEllipsisProps = React.ComponentPropsWithoutRef<'span'>;
 /**
  * BreadcrumbEllipsis - the collapsed-trail affordance, for when a long trail is truncated in the
  * middle (the consumer places it where they cut the trail; Breadcrumb does not auto-collapse).
- * Renders a decorative `<span role="presentation" aria-hidden="true">` with an inline
- * horizontal-dots SVG plus an `sr-only` "More" label so the truncation is still describable.
+ * The dots SVG is decorative (`aria-hidden`), but the wrapper itself is NOT hidden and carries an
+ * `sr-only` "More" label - so the truncation is genuinely announced to assistive tech (a screen
+ * reader hears "More", signalling there are collapsed crumbs), which the spec's "still describable"
+ * intent requires. (Hiding the whole wrapper would prune the label to nobody - the bug fixed in
+ * feedback 0012.) Unlike `BreadcrumbSeparator`, the ellipsis is meaningful, not decorative.
  */
 export const BreadcrumbEllipsis = React.forwardRef<HTMLSpanElement, BreadcrumbEllipsisProps>(
   ({ className, ...props }, ref) => (
     <span
       ref={ref}
-      role="presentation"
-      aria-hidden="true"
       className={cn('inline-flex h-5 w-5 items-center justify-center', className)}
       {...props}
     >

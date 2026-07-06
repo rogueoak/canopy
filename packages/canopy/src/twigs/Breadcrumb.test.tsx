@@ -89,15 +89,24 @@ describe('Breadcrumb', () => {
     const sep = screen.getByTestId('sep');
     expect(sep).toHaveTextContent('/');
     expect(sep.querySelector('svg')).not.toBeInTheDocument();
+    // The decorative contract must hold on the override path too, so a caller's custom glyph (the
+    // "/") can never leak into the accessible name.
+    expect(sep).toHaveAttribute('role', 'presentation');
+    expect(sep).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('renders the ellipsis as a decorative node with an sr-only label', () => {
+  it('exposes the ellipsis truncation to assistive tech (label is reachable, not aria-hidden)', () => {
     render(<BreadcrumbEllipsis data-testid="ellipsis" />);
     const ellipsis = screen.getByTestId('ellipsis');
-    expect(ellipsis).toHaveAttribute('aria-hidden', 'true');
-    expect(ellipsis).toHaveAttribute('role', 'presentation');
-    // The label survives for anyone reading the DOM even though the node is aria-hidden.
-    expect(within(ellipsis).getByText('More')).toHaveClass('sr-only');
+    // The dots glyph is decorative...
+    expect(ellipsis.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    // ...but the ellipsis itself is NOT hidden from the accessibility tree, so its "More" label
+    // actually reaches a screen reader (the bug fixed in feedback 0012: an aria-hidden wrapper
+    // pruned the sr-only label to nobody).
+    expect(ellipsis).not.toHaveAttribute('aria-hidden');
+    const label = within(ellipsis).getByText('More');
+    expect(label).toHaveClass('sr-only');
+    expect(label.closest('[aria-hidden="true"]')).toBeNull();
   });
 
   it('renders BreadcrumbLink as the child element via asChild (no nested anchor)', () => {

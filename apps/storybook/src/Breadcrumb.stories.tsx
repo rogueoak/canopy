@@ -104,6 +104,42 @@ export const Collapsed: Story = {
   ),
 };
 
+/* -------------------------------------------------------------------- Long trail */
+
+/**
+ * A deep trail in a narrow container, exercising `BreadcrumbList`'s `flex-wrap` + `break-words`:
+ * the crumbs wrap onto multiple lines rather than overflowing, keeping every level reachable.
+ */
+export const LongTrail: Story = {
+  render: () => (
+    <div className="w-64 rounded-md border border-border p-3">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="#">Home</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="#">Documentation</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="#">Components</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="#">Navigation</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    </div>
+  ),
+};
+
 /* ------------------------------------------------------------------- asChild link */
 
 /**
