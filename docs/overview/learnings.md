@@ -453,3 +453,23 @@ value, and test it with a value **distinct from every sibling parameter** - two 
 value in the only fixture hides one being ignored. Validate an artifact **before** you write it, so a
 failed run leaves nothing shippable. And when a new pipeline re-states a guarantee the core already
 guards (AA, dark≠light, coverage), **port the guard** - a parallel surface does not inherit it.
+
+## `aria-hidden` hides the whole subtree - never nest an `sr-only` label inside it
+
+`BreadcrumbEllipsis` (spec 0029) wrapped an `sr-only` "More" label in a `<span aria-hidden="true">`,
+so the label reached **nobody**: `sr-only` hides it from sighted users, and the ancestor
+`aria-hidden` prunes the entire subtree (label included) from the accessibility tree. It looked
+accessible - a real `sr-only` label was right there - but announced nothing, contradicting the spec's
+"still describable" intent. `sr-only` (hide visually, keep for AT) and `aria-hidden` (hide from AT,
+keep visually) are **opposites**; nesting them with the label inside cancels it out. The bug rode in
+because the pattern was copied from `BreadcrumbSeparator` - which is *genuinely* fully decorative -
+without re-asking whether the ellipsis carries meaning it doesn't (it does: "there are collapsed
+crumbs"). The shipped test asserted only `toHaveClass('sr-only')` (scaffolding), so it stayed green
+regardless of reachability - the same failure mode as "test the a11y behaviour, not its scaffolding"
+above. Caught by the engineer + tester personas.
+
+**Apply it:** when an element has a **decorative glyph inside a meaningful element** (an icon in an
+ellipsis, a chevron in a labelled control), put `aria-hidden` on the **glyph only**, never the
+wrapper that carries the label. Never place an `sr-only` node inside an `aria-hidden` ancestor. And
+test the **observable** outcome - the label has no `aria-hidden` ancestor / is exposed in the
+accessibility tree - not that an `sr-only` class exists.

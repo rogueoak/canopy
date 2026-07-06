@@ -46,7 +46,7 @@ Atomic design, renamed by tree anatomy:
 | ------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | Design tokens       | **Roots** 🌱 | primitive + semantic tokens - colour, type, spacing, radii, elevation, motion. Everything draws nourishment from here. |
 | Atoms               | **Seeds**    | the smallest components - Button, Input, Label, Badge (icons ship separately, see below)                               |
-| Molecules           | **Twigs**    | small compositions - FormField, SearchBar, Card                                                                        |
+| Molecules           | **Twigs**    | small compositions - FormField, SearchBar, Card, Breadcrumb                                                            |
 | Organisms           | **Branches** | larger assemblies - NavBar, DataTable, Dialog                                                                          |
 | Templates _(later)_ | **Boughs**   | page scaffolds and layout patterns                                                                                     |
 | The whole system    | **Canopy**   | the published library + the Storybook showcase                                                                         |
@@ -252,8 +252,8 @@ Layout:
 > tokens (light + dark, with interaction states), type, spacing, radii, elevation, and motion.
 > The full **Seeds** atom catalogue is live, built on the shared component **recipe** (`cn()`, cva
 > variants over semantic tokens, Radix `Slot` for `asChild`). The first **Twigs** (molecules) are
-> live too - **FormField**, **SearchBar**, and **Card** - composing those atoms on the
-> `@rogueoak/canopy/twigs` subpath. The **Branches** (organisms) layer is filling in on the new
+> live too - **FormField**, **SearchBar**, **Card**, and **Breadcrumb** - composing those atoms on
+> the `@rogueoak/canopy/twigs` subpath. The **Branches** (organisms) layer is filling in on the new
 > `@rogueoak/canopy/branches` subpath - **Dialog** (a focus-trapping, portalled modal), **TopNav**
 > (a responsive, hand-rolled-disclosure navigation bar), and **SideNav** (a collapsible side rail
 > whose mobile drawer reuses the Radix Dialog primitive) - each composing Seeds and Twigs.
@@ -264,7 +264,7 @@ Built foundation-first, so there's **always working software and working docs** 
 
 - [x] **Roots** - tokens: palette, typography, spacing, radii, elevation, motion; light & dark theming
 - [x] **Seeds** - the atoms; the full first catalogue is live
-- [x] **Twigs** - molecules; the first compositions are live (FormField · SearchBar · Card)
+- [x] **Twigs** - molecules; the first compositions are live (FormField · SearchBar · Card · Breadcrumb)
 - [ ] **Branches** - organisms; the layer is open (**Dialog · TopNav · SideNav** are live; DataTable to come)
 - [x] **Icons** - `@rogueoak/icons`, a curated tree-shakeable set (Lucide + social marks) re-exported from react-icons
 - [ ] **Boughs** - page scaffolds and layout patterns

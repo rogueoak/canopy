@@ -384,6 +384,25 @@ token and no `dark:`** - a Twig is themed by the Seeds it composes.
   + primitive `shadow-sm` (the raised-surface pattern from the portalled Seeds), with `CardTitle`
   using `Slot` (`asChild`) so the visual `text-h3` role rides onto a caller-chosen heading element
   and the document outline stays the caller's to control.
+- **Structural compound, a11y-first (Breadcrumb, spec 0029).** The **second structural** Twig after
+  Card: `Breadcrumb` + `BreadcrumbList` / `BreadcrumbItem` / `BreadcrumbLink` / `BreadcrumbPage` /
+  `BreadcrumbSeparator` / `BreadcrumbEllipsis` - a stateless trail (`<nav aria-label="breadcrumb">` →
+  `<ol>` → `<li>`) with **no context** because there is no cross-part shared state (unlike
+  FormField). It clarifies that the layer split is by **interaction class, not domain**: Breadcrumb
+  renders a `<nav>` landmark like the navigation *Branches* (TopNav/SideNav) yet is a **Twig**,
+  because a Branch owns interaction state and/or a portal and Breadcrumb owns neither - it is pure
+  presentational structure, the Card precedent. Accessibility drives the shape: `BreadcrumbPage`
+  carries `aria-current="page"` (the "you are here" hook) as a non-interactive disabled link
+  (`role="link"` + `aria-disabled`), and every `BreadcrumbSeparator` is decorative
+  (`role="presentation"` + `aria-hidden`) so the reader hears only the crumbs. The
+  `BreadcrumbEllipsis`, by contrast, is **meaningful**: only its dots glyph is `aria-hidden`, while
+  the wrapper stays in the accessibility tree with an `sr-only` "More" label so a truncated trail is
+  announced, not silently dropped (feedback 0012 - an `aria-hidden` wrapper would prune the label to
+  nobody). Router
+  polymorphism is `asChild` (Radix `Slot`) on `BreadcrumbLink`, the `TopNavLink` pattern; the
+  separator/ellipsis glyphs are hand-rolled inline `currentColor` SVGs (no icon dependency, the
+  Dialog-close precedent), the separator's default chevron overridable via `children`. Adds no
+  token and no dependency.
 
 ### The Branches composition recipe (spec 0024)
 
