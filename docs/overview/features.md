@@ -433,7 +433,28 @@ The surface container molecule - a presentational compound on the raised-surface
   compose arbitrary children including other Twigs (a Card framing a FormField + Button). `forwardRef`
   + native prop spread + `cn()` merge on every part. Semantic tokens only - both themes automatically.
 
-The **Twigs layer's first three molecules are live**.
+## Twigs: Breadcrumb (0029)
+
+The trail-of-ancestors navigation molecule - a **stateless, presentational** compound (the second
+structural Twig after Card) that shows where the current page sits in a hierarchy.
+
+- **Breadcrumb** (`@rogueoak/canopy/twigs`) - `Breadcrumb` (root) + `BreadcrumbList` /
+  `BreadcrumbItem` / `BreadcrumbLink` / `BreadcrumbPage` / `BreadcrumbSeparator` /
+  `BreadcrumbEllipsis`. The root is a `<nav aria-label="breadcrumb">` (label overridable) wrapping
+  an `<ol>` of `<li>` crumbs, so the sequence is conveyed and the landmark is discoverable.
+  `BreadcrumbLink` is a muted ancestor link (`text-text-muted` → `hover:text-text`, shared focus
+  ring) rendering `<a>` or, via **`asChild`** (Radix `Slot`), the consumer's router `<Link>` -
+  router-agnostic, the `TopNavLink` pattern. `BreadcrumbPage` marks the current location with
+  **`aria-current="page"`** and is non-interactive (`role="link"` + `aria-disabled`, un-muted
+  `text-text`), presenting as a disabled link beside its siblings. `BreadcrumbSeparator` and
+  `BreadcrumbEllipsis` are **decorative** (`role="presentation"` + `aria-hidden`) so a screen reader
+  announces the crumbs with no separator noise; the separator's default chevron is a hand-rolled
+  inline `currentColor` SVG (no icon dependency, the Dialog-close precedent) and is overridable via
+  `children`, and the ellipsis carries an `sr-only` "More" label for a mid-trail truncation the
+  consumer places (Breadcrumb does not auto-collapse). `forwardRef` + native prop spread + `cn()`
+  merge on every part; **no new token, no new dependency, no `dark:`** - both themes automatically.
+
+The **Twigs layer's first four molecules are live**.
 
 ## Branches (organisms)
 
