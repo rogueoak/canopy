@@ -7,7 +7,7 @@
  *
  * Standard UI glyphs come from Lucide (`react-icons/lu`) - one consistent stroke family. The
  * social/brand marks come from Font Awesome 6 brands (`react-icons/fa6`): Simple Icons (the usual
- * brand source) no longer ships LinkedIn, so sourcing all five from one family keeps them
+ * brand source) no longer ships LinkedIn, so sourcing all of them from one family keeps them
  * visually consistent.
  *
  * Adding an icon is one line here (plus the verified `react-icons` name); the registry, catalog,
@@ -84,4 +84,5 @@ export {
   FaXTwitter as X,
   FaFacebook as Facebook,
   FaInstagram as Instagram,
+  FaThreads as Threads,
 } from 'react-icons/fa6';
