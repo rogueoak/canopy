@@ -583,7 +583,7 @@ text colour wherever they render.
 - **Distribution model: thin curated re-exports.** `src/icons.ts` is the single source of truth -
   one line per icon, `export { LuHouse as Home } from 'react-icons/lu'` - mapping `react-icons`
   glyphs to Canopy-semantic names. Lucide (`lu`) for standard glyphs, Font Awesome 6 brands (`fa6`)
-  for the five social marks (Simple Icons dropped LinkedIn, so all five come from one family).
+  for the six social marks (Simple Icons dropped LinkedIn, so all of them come from one family).
   `react-icons` is a runtime **dependency** (we own the version backing our names), externalized by
   tsup like every other dep; only first-party source is bundled.
 - **Tree-shaking.** Individual named exports + `sideEffects: false` keep single-icon imports lean.
