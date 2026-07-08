@@ -28,7 +28,7 @@ const wrap: React.CSSProperties = {
   minHeight: '100vh',
 };
 
-const SOCIAL = new Set(['Github', 'Linkedin', 'X', 'Facebook', 'Instagram', 'Threads']);
+const SOCIAL = new Set(['Github', 'Linkedin', 'X', 'Facebook', 'Instagram', 'Threads', 'Medium']);
 
 /* ------------------------------------------------------------------ Catalog */
 
