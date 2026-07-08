@@ -1,31 +1,30 @@
 import * as React from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Command as CommandPrimitive } from 'cmdk';
-import { Badge } from './Badge';
+import { Badge } from '../seeds/Badge';
 import { cn } from '../lib/cn';
 
 /**
- * Combobox - the canopy filterable-select Seed (spec 0030), built on
+ * Combobox - the canopy filterable-select Branch (spec 0030), built on
  * `@radix-ui/react-popover` (the portalled, collision-aware popover shell) and `cmdk` (the
  * filterable listbox: search input, keyboard navigation, and the no-results slot) on the 0005
  * component recipe: semantic-token Tailwind utilities (FULL LITERAL strings so Tailwind v4's
  * scanner emits each one), `cn()` class merge, and `forwardRef` on every styled wrapper with a
  * full native prop spread. There is NO `dark:` on the common path - light/dark flips through the
  * token layer (spec 0004), and because the `.dark` class lives on `<html>`, the Radix-portalled
- * `ComboboxContent` (mounted under `<body>`) themes correctly too, exactly like `SelectContent`.
+ * content (mounted under `<body>`) themes correctly too, exactly like `SelectContent`.
  *
- * The family mirrors the shadcn combobox surface area:
- * - `Combobox` - the stateful root. Owns open state, the search text, and the selected value(s).
- *   One `multiple` prop discriminates the value shape (single `string` vs `string[]`) and the
- *   field rendering. Takes an `options` list (`{ label, value, disabled? }[]`) and standard field
- *   props (`value` / `onValueChange`, `placeholder`, `disabled`, `aria-invalid`).
- * - `ComboboxTrigger` - the field button (`Popover.Trigger`), styled for parity with
- *   `SelectTrigger` / `Input` (`border-border` / `bg-surface` / `text-text`, focus-visible ring,
- *   `disabled:*` token pair, `aria-invalid:` danger overrides) with a trailing chevron.
- * - `ComboboxContent` - the portalled `Popover.Content` (`surface-raised` + `border` + `shadow-md`,
- *   matched to `SelectContent`), width-synced to the trigger, housing the cmdk parts.
- * - `ComboboxInput` / `ComboboxList` / `ComboboxItem` / `ComboboxEmpty` - thin canopy-styled
- *   wrappers over the cmdk parts. `ComboboxItem` shows a leading check when selected.
+ * It lives in the Branches tier (not Seeds): it owns interaction state and a portal, and it
+ * composes the `Badge` Seed for its multi-select chips - both of which a Seed may not do (the
+ * tier rule is "twigs/branches import seeds, never the reverse"), exactly like `Dialog`.
+ *
+ * The public surface is a single stateful root, `Combobox`, that owns open state, the search
+ * text, and the selected value(s). One `multiple` prop discriminates the value shape (single
+ * `string` vs `string[]`) and the field rendering. It takes an `options` list
+ * (`{ label, value, disabled? }[]`) and standard field props (`value` / `onValueChange`,
+ * `placeholder`, `disabled`, `aria-invalid`). The styled part wrappers below
+ * (`ComboboxTrigger` / `Content` / `Input` / `List` / `Item` / `Empty`) are module-internal
+ * composition details, not a supported public contract.
  *
  * Single-select reads like `Select` (pick commits and closes) with a type-to-filter input at the
  * top of the list. Multi-select renders the chosen options as removable `Badge` (0008) chips in
@@ -267,8 +266,11 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>((props, ref)
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
 
-  // Controllable selection, normalized internally to a string[] regardless of mode.
-  const isControlled = props.value !== undefined;
+  // Controllable selection, normalized internally to a string[] regardless of mode. Latch
+  // controlledness once on mount so a controlled single-select parent holding `undefined` is
+  // not misread as uncontrolled on later renders (React's controlled/uncontrolled contract).
+  const isControlledRef = React.useRef(props.value !== undefined);
+  const isControlled = isControlledRef.current;
   const [internal, setInternal] = React.useState<string[]>(() => {
     if (multiple) return (props.defaultValue as string[] | undefined) ?? [];
     const dv = props.defaultValue as string | undefined;
@@ -291,7 +293,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>((props, ref)
         (props.onValueChange as ((value: string) => void) | undefined)?.(next[0] ?? '');
       }
     },
-    [isControlled, multiple, props],
+    [isControlled, multiple, props.onValueChange],
   );
 
   const optionByValue = React.useMemo(() => {
@@ -360,8 +362,8 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>((props, ref)
         {options.map((option) => (
           <ComboboxItem
             key={option.value}
-            value={option.label}
-            keywords={[option.value]}
+            value={option.value}
+            keywords={[option.label]}
             disabled={option.disabled}
             selected={selected.includes(option.value)}
             onSelect={() => toggle(option.value)}
@@ -406,7 +408,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>((props, ref)
           aria-invalid={ariaInvalid}
           data-disabled={disabled || undefined}
           className={cn(
-            'flex min-h-10 w-full flex-wrap items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-sm text-text has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-ring-offset aria-invalid:border-danger aria-invalid:ring-danger data-[disabled]:cursor-not-allowed data-[disabled]:bg-disabled data-[disabled]:text-disabled-foreground',
+            'flex min-h-10 w-full flex-wrap items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-sm text-text has-[>button:focus-visible]:ring-2 has-[>button:focus-visible]:ring-ring has-[>button:focus-visible]:ring-offset-2 has-[>button:focus-visible]:ring-offset-ring-offset aria-invalid:border-danger aria-invalid:ring-danger data-[disabled]:cursor-not-allowed data-[disabled]:bg-disabled data-[disabled]:text-disabled-foreground',
             className,
           )}
         >
@@ -424,7 +426,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>((props, ref)
                     event.stopPropagation();
                     removeChip(value);
                   }}
-                  className="ml-0.5 inline-flex h-3.5 w-3.5 items-center justify-center rounded-sm text-muted-foreground outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
+                  className="-mr-0.5 ml-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-ring-offset disabled:pointer-events-none"
                 >
                   <XIcon />
                 </button>
@@ -538,19 +540,8 @@ function XIcon() {
   );
 }
 
-export {
-  Combobox,
-  ComboboxTrigger,
-  ComboboxContent,
-  ComboboxInput,
-  ComboboxList,
-  ComboboxItem,
-  ComboboxEmpty,
-};
-
-export type { ComboboxItemProps };
-export type ComboboxTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Trigger>;
-export type ComboboxContentProps = React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>;
-export type ComboboxInputProps = React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>;
-export type ComboboxListProps = React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>;
-export type ComboboxEmptyProps = React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>;
+// Only the stateful root and its option/prop types are public. The part wrappers above stay
+// module-internal: the root owns the whole composition via `options`, so they are not a
+// supported public contract (architect review, PR #42). `ComboboxOption`, `ComboboxProps`,
+// `ComboboxSingleProps`, and `ComboboxMultipleProps` are exported inline at their declarations.
+export { Combobox };

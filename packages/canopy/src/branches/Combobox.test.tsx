@@ -1,16 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { createRef } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-  type ComboboxOption,
-} from './Combobox';
+import { Combobox, type ComboboxOption } from './Combobox';
 
 // Radix Popover drives open/close on Pointer Events and positions its content with a
 // ResizeObserver; cmdk scrolls the active item into view. jsdom implements none of these, so
@@ -212,6 +204,28 @@ describe('Combobox (multiple)', () => {
     expect(onValueChange).toHaveBeenLastCalledWith(['apple']);
   });
 
+  it('Backspace with a non-empty search does not remove a chip', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <Combobox
+        multiple
+        options={FRUITS}
+        defaultValue={['apple', 'banana']}
+        aria-label="Fruits"
+        onValueChange={onValueChange}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: 'Fruits' }));
+    const input = await screen.findByRole('combobox');
+    await user.type(input, 'gr');
+    // Backspace here edits the search text (only the empty-search branch drops a chip).
+    await user.keyboard('{Backspace}');
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Remove Apple' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove Banana' })).toBeInTheDocument();
+  });
+
   it('does not open when disabled', async () => {
     const user = userEvent.setup();
     render(<Combobox multiple options={FRUITS} aria-label="Fruits" disabled />);
@@ -231,30 +245,130 @@ describe('Combobox (multiple)', () => {
   });
 });
 
-describe('Combobox parts', () => {
-  it('merge a caller className and forward refs on the styled wrappers', () => {
-    const inputRef = createRef<HTMLInputElement>();
-    const listRef = createRef<HTMLDivElement>();
-    const itemRef = createRef<HTMLDivElement>();
-    render(
-      <PopoverPrimitive.Root open>
-        <PopoverPrimitive.Anchor />
-        <ComboboxContent forceMount>
-          <ComboboxInput ref={inputRef} className="text-lg" placeholder="find" />
-          <ComboboxList ref={listRef} className="max-h-40">
-            <ComboboxItem ref={itemRef} value="a" className="font-bold" selected>
-              A
-            </ComboboxItem>
-          </ComboboxList>
-        </ComboboxContent>
-      </PopoverPrimitive.Root>,
+describe('Combobox (keyboard)', () => {
+  it('opens, ArrowDown + Enter commits the active option, Escape closes', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<Combobox options={FRUITS} aria-label="Fruit" onValueChange={onValueChange} />);
+    const trigger = screen.getByRole('button', { name: 'Fruit' });
+
+    await user.click(trigger);
+    const input = await screen.findByRole('combobox');
+    input.focus();
+    // cmdk makes the first item active on open; ArrowDown moves to the second, Enter commits it.
+    await user.keyboard('{ArrowDown}{Enter}');
+    expect(onValueChange).toHaveBeenCalledWith('banana');
+    expect(trigger).toHaveTextContent('Banana');
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
+
+    // Escape closes the popover without committing a new value.
+    await user.click(trigger);
+    expect(await screen.findByRole('listbox')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Combobox (controlled)', () => {
+  it('single: the trigger label is driven by the value prop, not internal state', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(
+      <Combobox
+        options={FRUITS}
+        aria-label="Fruit"
+        placeholder="Pick"
+        value="apple"
+        onValueChange={onValueChange}
+      />,
     );
-    expect(inputRef.current).toBeInstanceOf(HTMLInputElement);
-    expect(inputRef.current).toHaveClass('text-lg');
-    expect(listRef.current).toBeInstanceOf(HTMLDivElement);
-    expect(listRef.current).toHaveClass('max-h-40');
-    expect(itemRef.current).toHaveClass('font-bold');
-    // A selected item renders the leading check glyph.
-    expect(itemRef.current?.querySelector('svg')).not.toBeNull();
+    const trigger = screen.getByRole('button', { name: 'Fruit' });
+    expect(trigger).toHaveTextContent('Apple');
+
+    // Picking a new option fires the callback but does NOT change the display until the parent
+    // updates `value` (controlled contract).
+    await user.click(trigger);
+    await user.click(await screen.findByRole('option', { name: 'Grape' }));
+    expect(onValueChange).toHaveBeenCalledWith('grape');
+    expect(trigger).toHaveTextContent('Apple');
+
+    // Parent updates `value` -> the display follows.
+    rerender(
+      <Combobox
+        options={FRUITS}
+        aria-label="Fruit"
+        placeholder="Pick"
+        value="grape"
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(trigger).toHaveTextContent('Grape');
+  });
+
+  it('single: controlledness is latched when value later becomes undefined', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { rerender } = render(
+      <Combobox
+        options={FRUITS}
+        aria-label="Fruit"
+        placeholder="Pick"
+        value="apple"
+        onValueChange={onValueChange}
+      />,
+    );
+    const trigger = screen.getByRole('button', { name: 'Fruit' });
+    expect(trigger).toHaveTextContent('Apple');
+
+    // Controlled parent clears the selection (value -> undefined). Still controlled: the display
+    // reflects the (now empty) value prop, not any internal state.
+    rerender(
+      <Combobox
+        options={FRUITS}
+        aria-label="Fruit"
+        placeholder="Pick"
+        value={undefined}
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(trigger).toHaveTextContent('Pick');
+
+    // Picking still only fires the callback; the display stays put (would show "Banana" if the
+    // component had wrongly fallen back to uncontrolled internal state).
+    await user.click(trigger);
+    await user.click(await screen.findByRole('option', { name: 'Banana' }));
+    expect(onValueChange).toHaveBeenCalledWith('banana');
+    expect(trigger).toHaveTextContent('Pick');
+  });
+
+  it('multiple: chips are driven by the value prop', () => {
+    const onValueChange = vi.fn();
+    const { rerender } = render(
+      <Combobox
+        multiple
+        options={FRUITS}
+        aria-label="Fruits"
+        value={['apple']}
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Remove Apple' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remove Grape' })).not.toBeInTheDocument();
+
+    rerender(
+      <Combobox
+        multiple
+        options={FRUITS}
+        aria-label="Fruits"
+        value={['apple', 'grape']}
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Remove Grape' })).toBeInTheDocument();
   });
 });

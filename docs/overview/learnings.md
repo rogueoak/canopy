@@ -473,3 +473,35 @@ ellipsis, a chevron in a labelled control), put `aria-hidden` on the **glyph onl
 wrapper that carries the label. Never place an `sr-only` node inside an `aria-hidden` ancestor. And
 test the **observable** outcome - the label has no `aria-hidden` ancestor / is exposed in the
 accessibility tree - not that an `sr-only` class exists.
+
+## A component's tier is its interaction class, not the component it resembles
+
+`Combobox` (spec 0030) was specced and built in the **Seeds** tier next to `Select`, because it
+looks like Select - a field that opens a list. The architect persona caught it as a layer
+violation: it imports the `Badge` Seed (a Seed importing a Seed breaks the one-way "twigs import
+seeds, never the reverse" rule), owns real interaction state, and portals its content. Select is a
+Seed for the opposite reason - Radix owns *all* its state (zero `useState`) and it composes nothing;
+Combobox hand-rolls open/search/selection state, portals, and composes Badge. It is Branch-shaped
+(like `Dialog`, a Branch precisely because it "owns interaction state and/or a portal") and was
+moved to `branches/`. See [`docs/feedback/0013-combobox-tier-placement.md`](../feedback/0013-combobox-tier-placement.md).
+
+**Apply it:** decide a component's tier at **spec time** by its interaction class against the
+`architecture.md` definitions - owns interaction state and/or a portal, or composes another
+Seed/Twig => at least a Twig, and a stateful/portalled one is a Branch - **regardless** of which
+existing component it visually resembles. Surface resemblance (Combobox ~ Select) is not tier
+kinship.
+
+## Interactive components: keyboard operation and controlled mode are first-class tests
+
+Combobox's first suite (spec 0030) covered the mouse happy path well but left two spec-mandated
+paths untested: keyboard navigation (arrow/enter/escape, asserted only via `click`) and
+**controlled** mode (every test uncontrolled, so the `isControlled` branch never ran - though every
+story used a controlled `value`). Both are distinct code branches with distinct failure modes,
+invisible if you only click and only pass `defaultValue`. Caught by the tester persona. See
+[`docs/feedback/0014-interactive-component-test-coverage.md`](../feedback/0014-interactive-component-test-coverage.md).
+
+**Apply it:** for any interactive Seed/Twig/Branch, bake two cases into the test plan up front -
+drive it by **keyboard** in at least one test (not just `click`), and if it supports both controlled
+and uncontrolled use, test **both** (controlled: the display follows the `value` prop, and
+`onValueChange` fires without the display changing until the parent updates). Don't let an
+acceptance item be satisfied by the easiest interaction that superficially passes.

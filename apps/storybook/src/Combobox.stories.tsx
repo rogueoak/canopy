@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { Combobox, Label, type ComboboxOption } from '@rogueoak/canopy/seeds';
+import { Combobox, type ComboboxOption } from '@rogueoak/canopy/branches';
+import { Label } from '@rogueoak/canopy/seeds';
 
 /**
- * Seeds/Combobox - the filterable-select Seed (spec 0030), built on `@radix-ui/react-popover`
+ * Branches/Combobox - the filterable-select Branch (spec 0030), built on `@radix-ui/react-popover`
  * (the portalled popover shell) and `cmdk` (the filterable listbox: search input, keyboard
- * navigation, no-results slot).
+ * navigation, no-results slot). It lives in the Branches tier (like `Dialog`): it owns
+ * interaction state and a portal, and composes the `Badge` Seed for its multi-select chips.
  *
  * Single-select reads like `Select` (pick commits and closes) with a type-to-filter input at the
  * top of the list; multi-select renders the chosen options as removable `Badge` chips in the
@@ -17,7 +19,7 @@ import { Combobox, Label, type ComboboxOption } from '@rogueoak/canopy/seeds';
  * follow-up (spec 0030 Out of scope).
  */
 const meta = {
-  title: 'Seeds/Combobox',
+  title: 'Branches/Combobox',
   component: Combobox,
   parameters: { layout: 'centered' },
 } satisfies Meta<typeof Combobox>;
@@ -100,10 +102,18 @@ export const SingleSelect: Story = {
 
 /* ------------------------------------------------------- MultiSelectWithBadges */
 
+/* A fruit set with one out-of-stock option to show the per-option `data-[disabled]` dimming. */
+const FRUITS_WITH_DISABLED: ComboboxOption[] = FRUITS.map((option) =>
+  option.value === 'blueberry'
+    ? { ...option, label: 'Blueberry (out of stock)', disabled: true }
+    : option,
+);
+
 /**
  * The priority path: multi-select. Picked options render as removable `Badge` chips in the field;
  * the popover stays open across picks, re-picking toggles a value off, and `Backspace` in the
- * empty search input removes the last chip. Filtering is client-side (async is a follow-up).
+ * empty search input removes the last chip. One option is `disabled` to show the dimmed,
+ * non-selectable item state. Filtering is client-side (async is a follow-up).
  */
 export const MultiSelectWithBadges: Story = {
   render: () => {
@@ -115,7 +125,7 @@ export const MultiSelectWithBadges: Story = {
           <Combobox
             multiple
             id="fruits"
-            options={FRUITS}
+            options={FRUITS_WITH_DISABLED}
             value={value}
             onValueChange={setValue}
             placeholder="Add fruit..."
@@ -145,6 +155,45 @@ export const Disabled: Story = {
 export const Invalid: Story = {
   render: () => (
     <Combobox options={FRUITS} placeholder="Pick a fruit" aria-invalid className="w-64" />
+  ),
+};
+
+/* --------------------------------------------------------- MultiSelectDisabled */
+
+/**
+ * Multi-select goes through a different field path (a `div` with its own `data-[disabled]`
+ * tokens, not the single-mode trigger button). Disabled with chips already selected: the field
+ * dims, the chip remove buttons are inert, and it won't open.
+ */
+export const MultiSelectDisabled: Story = {
+  render: () => (
+    <Combobox
+      multiple
+      options={FRUITS}
+      defaultValue={['apple', 'grape']}
+      placeholder="Add fruit..."
+      disabled
+      className="w-72"
+    />
+  ),
+};
+
+/* ---------------------------------------------------------- MultiSelectInvalid */
+
+/**
+ * The multi-select field also carries the `aria-invalid` danger ramp (on its `div` path). Shown
+ * with chips selected so the danger border reads around the whole field.
+ */
+export const MultiSelectInvalid: Story = {
+  render: () => (
+    <Combobox
+      multiple
+      options={FRUITS}
+      defaultValue={['apple', 'grape']}
+      placeholder="Add fruit..."
+      aria-invalid
+      className="w-72"
+    />
   ),
 };
 

@@ -19,11 +19,12 @@ pnpm add react@^19 react-dom@^19
 
 ## Exports
 
-| Subpath                  | What it is                                                                                                                                                          |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@rogueoak/canopy`       | the package root re-export                                                                                                                                          |
-| `@rogueoak/canopy/seeds` | **Seeds** (atoms) - Button, Input, Label, Badge, Checkbox, Switch, Radio Group, Textarea, Select, Combobox, Tooltip, Avatar, Separator, Spinner, Skeleton, Keyboard |
-| `@rogueoak/canopy/twigs` | **Twigs** (molecules) - FormField, SearchBar, Card                                                                                                                  |
+| Subpath                     | What it is                                                                                                                                                |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@rogueoak/canopy`          | the package root re-export                                                                                                                                |
+| `@rogueoak/canopy/seeds`    | **Seeds** (atoms) - Button, Input, Label, Badge, Checkbox, Switch, Radio Group, Textarea, Select, Tooltip, Avatar, Separator, Spinner, Skeleton, Keyboard |
+| `@rogueoak/canopy/twigs`    | **Twigs** (molecules) - FormField, SearchBar, Card                                                                                                        |
+| `@rogueoak/canopy/branches` | **Branches** (organisms) - Dialog, Combobox, TopNav, SideNav                                                                                              |
 
 ```tsx
 import { Button } from '@rogueoak/canopy/seeds';
