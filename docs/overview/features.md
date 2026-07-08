@@ -587,12 +587,12 @@ Releases now **publish to npm**, driven by git tags - a tag _is_ the release.
 
 A curated icon set ships as its own package, **`@rogueoak/icons`**.
 
-- **Curated, semantic re-exports** - a set of ~59 icons re-exported from
+- **Curated, semantic re-exports** - a set of ~60 icons re-exported from
   [`react-icons`](https://react-icons.github.io/react-icons/) under Canopy-semantic names
   (`Home`, `Search`, `Settings`, ..., plus documents/content (`File`, `FileText`, `Newspaper`,
   `Briefcase`, `Tag`), time/place (`Clock`, `MapPin`, `Globe`), and web/dev (`Code`, `Link`, `Rss`,
-  `MessageSquare`)), so the `react-icons` family prefixes (`Lu*`/`Fa*`) never leak. Standard glyphs are **Lucide** (`react-icons/lu`); the six social marks (`Github`,
-  `Linkedin`, `X`, `Facebook`, `Instagram`, `Threads`) are **Font Awesome 6 brands** (`react-icons/fa6`),
+  `MessageSquare`)), so the `react-icons` family prefixes (`Lu*`/`Fa*`) never leak. Standard glyphs are **Lucide** (`react-icons/lu`); the seven social marks (`Github`,
+  `Linkedin`, `X`, `Facebook`, `Instagram`, `Threads`, `Medium`) are **Font Awesome 6 brands** (`react-icons/fa6`),
   because Simple Icons no longer ships LinkedIn. The dismiss glyph is named `Close` so `X` is free
   for the X (Twitter) brand. The set is data-driven from `src/icons.ts`; `iconRegistry` / `iconNames`
   expose it as data, and an exported-names test guards that exports, registry, and catalog can't drift.

@@ -85,4 +85,5 @@ export {
   FaFacebook as Facebook,
   FaInstagram as Instagram,
   FaThreads as Threads,
+  FaMedium as Medium,
 } from 'react-icons/fa6';

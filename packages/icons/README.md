@@ -93,7 +93,7 @@ mark therefore reads heavier than a stroke glyph - expected when mixing a UI ico
 worth knowing if you place them side by side (the Storybook catalog groups them separately for
 this reason).
 
-- **Social:** `Github`, `Linkedin`, `X`, `Facebook`, `Instagram`.
+- **Social:** `Github`, `Linkedin`, `X`, `Facebook`, `Instagram`, `Threads`, `Medium`.
 - **Standard:** navigation and chevrons/arrows, actions (`Plus`, `Minus`, `Trash`, `Edit`, `Copy`,
   `Download`, `Upload`), status (`Info`, `AlertTriangle`, `AlertCircle`, `CheckCircle`, `Loader`),
   and common UI glyphs (`Home`, `Search`, `Settings`, `User`, `Menu`, `Bell`, `Calendar`, `Mail`,

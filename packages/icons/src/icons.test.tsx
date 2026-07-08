@@ -10,7 +10,7 @@ import { Home, Github, X, Close } from './icons';
  * so a green suite means the rendered docs match the exports).
  */
 /** The social/brand marks the set promises by name. */
-const EXPECTED_SOCIAL = ['Github', 'Linkedin', 'X', 'Facebook', 'Instagram', 'Threads'];
+const EXPECTED_SOCIAL = ['Github', 'Linkedin', 'X', 'Facebook', 'Instagram', 'Threads', 'Medium'];
 
 /**
  * A representative slice of the standard set the README/spec promise by name. Not exhaustive -
