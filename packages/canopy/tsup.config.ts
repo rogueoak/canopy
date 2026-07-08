@@ -22,6 +22,7 @@ export default defineConfig({
     '@radix-ui/react-avatar',
     '@radix-ui/react-slot',
     '@radix-ui/react-label',
+    '@radix-ui/react-popover',
     '@radix-ui/react-checkbox',
     '@radix-ui/react-dialog',
     '@radix-ui/react-switch',
@@ -31,6 +32,7 @@ export default defineConfig({
     '@radix-ui/react-tooltip',
     'class-variance-authority',
     'clsx',
+    'cmdk',
     'tailwind-merge',
   ],
 });

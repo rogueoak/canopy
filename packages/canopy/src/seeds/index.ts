@@ -38,6 +38,27 @@ export type {
   SelectLabelProps,
   SelectSeparatorProps,
 } from './Select';
+export {
+  Combobox,
+  ComboboxTrigger,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from './Combobox';
+export type {
+  ComboboxProps,
+  ComboboxSingleProps,
+  ComboboxMultipleProps,
+  ComboboxOption,
+  ComboboxItemProps,
+  ComboboxTriggerProps,
+  ComboboxContentProps,
+  ComboboxInputProps,
+  ComboboxListProps,
+  ComboboxEmptyProps,
+} from './Combobox';
 export { Separator } from './Separator';
 export type { SeparatorProps } from './Separator';
 export { Spinner, spinnerVariants } from './Spinner';
