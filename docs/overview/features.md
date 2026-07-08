@@ -560,6 +560,31 @@ The vertical side-navigation Branch - a collapsible, responsive app-shell rail, 
   `<html>`). Stories: expanded grouped rail with an active item, the collapsed icon-rail (Tooltip
   labels), and the mobile drawer (defaults to a mobile viewport).
 
+## Branches: Combobox (0030)
+
+A **filterable select** - the type-to-filter, multi-pick field that `Select` (single-choice,
+non-filterable) deliberately isn't. A Branch, not a Seed: it owns interaction state
+(open/search/selection), portals its list, and composes the `Badge` Seed for its chips (the tier
+question that review corrected - see learnings).
+
+- **Combobox** (`@rogueoak/canopy/branches`) - one stateful root with a **`multiple`** prop that
+  discriminates the value shape (single `string` vs `string[]`) and the field rendering. Takes an
+  `options` list (`{ label, value, disabled? }[]`), `value`/`onValueChange`, `defaultValue`
+  (controlled or uncontrolled), `placeholder`/`searchPlaceholder`/`emptyMessage`, `disabled`, and
+  `aria-invalid`. The public surface is intentionally small - the root + `ComboboxOption` + the
+  prop-type unions; the internal parts are not exported.
+- **Single-select** reads like Select (pick commits and closes) with a type-to-filter input at the
+  top of the popover. **Multi-select** renders the picks as removable `Badge` chips in the field,
+  keeps the popover open across picks, toggles an option off when re-picked, and drops the last
+  chip on `Backspace` in the empty search input (each chip's remove control is a real labelled
+  button, not a nested one). Client-side filtering over the provided options (async is a follow-up).
+- Built on **`@radix-ui/react-popover`** (the portalled, collision-aware shell) + **`cmdk`** (the
+  filterable listbox, keyboard nav, and no-results slot) on the Branch recipe - semantic tokens,
+  `cn()`, full-literal classes, no `dark:` on the common path; the field mirrors `SelectTrigger`
+  /`Input` token-for-token for parity. Roles come from cmdk (`combobox`/`listbox`/`option`), Radix
+  manages `aria-expanded`, and the list carries `aria-multiselectable` in multiple mode. Stories:
+  single, multi-with-badges, disabled + invalid (both modes), long list, and empty state.
+
 ## npm publishing (0023)
 
 Releases now **publish to npm**, driven by git tags - a tag _is_ the release.
@@ -642,5 +667,6 @@ token concern") is now a real, tested pipeline.
 - **Runtime path** documented too - an app can redefine `--color-*` in its own `:root`/`.dark` for
   quick cases that do not need the build-time guard.
 
-Not yet built: more **Branches** (the layer is open - Dialog · TopNav · SideNav are live; DataTable
-to come) and more Twigs as needed, then **Boughs** (templates), and the native Swift token target.
+Not yet built: more **Branches** (the layer is open - Dialog · TopNav · SideNav · Combobox are live;
+DataTable to come) and more Twigs as needed, then **Boughs** (templates), and the native Swift token
+target.

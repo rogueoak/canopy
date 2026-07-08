@@ -503,6 +503,18 @@ themed by the layers it composes and the tokens already provisioned.
   Branches sharing the recipe rules (`cn()`, full-literal classes, `forwardRef` + native spread, no
   `dark:`, no new token) - they differ only in **interaction class** (non-modal in-flow vs modal
   off-canvas), and each picks the lightest mechanism that class warrants (hand-rolled vs Radix dialog).
+- **Filterable select + first non-Radix primitive (Combobox, spec 0030).** Combobox is a stateful,
+  portalled Branch built on **`@radix-ui/react-popover`** (the portalled shell - the **fourth portalled
+  surface** after Select, Tooltip, and Dialog, so it themes for free) plus **`cmdk`** - the design
+  system's **first behavioural primitive from outside the Radix family**. Both are `dependencies` +
+  tsup `external`, like every Radix dep. cmdk owns the filterable-listbox behaviour (search, keyboard
+  nav, `combobox`/`listbox`/`option` roles, no-results slot) that Radix has no primitive for; it is a
+  **sanctioned** second family, not a drift - the invariant is now "Radix for disclosure/overlay/state
+  machines, plus cmdk for the command/filter listbox," and a third family needs the same explicit
+  justification. Combobox is a Branch (not a Seed beside Select) because it **owns interaction state
+  and a portal and composes the `Badge` Seed** - the tier decided by interaction class, corrected on
+  review (see feedback 0013 / learnings). Its public surface is trimmed to the root + `ComboboxOption`
+  + prop-type unions; the internal parts are not exported.
 
 ## Showcase + theming (Storybook)
 

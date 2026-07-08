@@ -19,6 +19,14 @@ export type {
   DialogDescriptionProps,
 } from './Dialog';
 
+export { Combobox } from './Combobox';
+export type {
+  ComboboxProps,
+  ComboboxSingleProps,
+  ComboboxMultipleProps,
+  ComboboxOption,
+} from './Combobox';
+
 export {
   TopNav,
   TopNavBrand,
