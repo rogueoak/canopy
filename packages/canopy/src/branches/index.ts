@@ -19,6 +19,23 @@ export type {
   DialogDescriptionProps,
 } from './Dialog';
 
+export {
+  ResponsiveDialog,
+  ResponsiveDialogTrigger,
+  ResponsiveDialogClose,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogFooter,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from './ResponsiveDialog';
+export type {
+  ResponsiveDialogProps,
+  ResponsiveDialogTriggerProps,
+  ResponsiveDialogCloseProps,
+  ResponsiveDialogContentProps,
+} from './ResponsiveDialog';
+
 export { Combobox } from './Combobox';
 export type {
   ComboboxProps,

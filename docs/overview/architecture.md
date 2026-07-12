@@ -492,6 +492,20 @@ themed by the layers it composes and the tokens already provisioned.
   exports a **`useSideNavCollapsed()`** hook (`{ collapsed, mobile }`) so an `asChild` item can adapt
   to the icon-rail, and a **`mobile?` prop** to override `useIsMobile()` for SSR/first-paint correctness.
 
+- **Responsive form-switching organism (ResponsiveDialog, 0031).** The third responsive Branch (after
+  SideNav) applies the same "pick one form in JS at `(max-width: 767px)`" recipe to the **Dialog**
+  itself: desktop is a centred modal, mobile is a **bottom sheet** (a phone can't comfortably reach or
+  scroll a `-translate-y-1/2` card). It mirrors the Dialog family one-for-one (`ResponsiveDialog*`), so
+  a consumer swaps `Dialog*` -> `ResponsiveDialog*` with no other change. Only `ResponsiveDialogContent`
+  branches: `!mobile` **delegates to canopy `DialogContent` verbatim** (guaranteeing desktop parity and
+  reusing its overlay + close), `mobile` renders a bottom-anchored `DialogPrimitive.Content` on the same
+  Radix primitive - full-width, `max-h-[85vh]` + scroll, `rounded-t-lg`, a grab-handle bar, the same `X`
+  close. The `matchMedia` pattern SideNav inlined is now the **exported `useMediaQuery(query)` /
+  `useIsMobile()`** hook (package root), shared by both. The slide ships as a new **`bottom-sheet-in`/
+  `-out`** keyframe pair + `--animate-bottom-sheet-*` theme var in the Roots preset (the Y-axis sibling
+  of the drawer slide) - so, like SideNav, it adds **no new token, no new dependency, no `dark:`**, and
+  a `mobile?` prop overrides detection for SSR/tests. Motion is `motion-reduce:animate-none`-gated.
+
 - **TopNav vs SideNav - same recipe, different interaction class.** The two navigation Branches are
   deliberately the two ends of the disclosure spectrum. **TopNav is a non-modal, in-flow disclosure:**
   it hand-rolls its own open/close (a small context + an Esc/outside-click effect), takes **no Radix
