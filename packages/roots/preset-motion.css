@@ -13,7 +13,9 @@
  * portalled overlay + content, which reference these `animate-dialog-*` utilities (gated with
  * `motion-reduce:animate-none`). The partial now ALSO carries the off-canvas drawer slide
  * (`animate-drawer-in` / `-out`), first consumed by SideNav (spec 0026): the mobile drawer slides in
- * from the left edge and back out, gated the same way.
+ * from the left edge and back out, gated the same way. It further carries the bottom-sheet slide
+ * (`animate-bottom-sheet-in` / `-out`), first consumed by ResponsiveDialog (spec 0031): the mobile
+ * dialog form slides up from the bottom edge and back down, gated the same way.
  */
 @keyframes dialog-overlay-in {
   from {
@@ -67,6 +69,22 @@
     transform: translateX(-100%);
   }
 }
+@keyframes bottom-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes bottom-sheet-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
 
 @theme {
   --animate-dialog-overlay-in: dialog-overlay-in var(--duration-slow) var(--ease-decelerate);
@@ -75,4 +93,6 @@
   --animate-dialog-content-out: dialog-content-out var(--duration-base) var(--ease-standard);
   --animate-drawer-in: drawer-in var(--duration-slow) var(--ease-decelerate);
   --animate-drawer-out: drawer-out var(--duration-base) var(--ease-standard);
+  --animate-bottom-sheet-in: bottom-sheet-in var(--duration-slow) var(--ease-decelerate);
+  --animate-bottom-sheet-out: bottom-sheet-out var(--duration-base) var(--ease-standard);
 }
