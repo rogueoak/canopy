@@ -667,6 +667,30 @@ token concern") is now a real, tested pipeline.
 - **Runtime path** documented too - an app can redefine `--color-*` in its own `:root`/`.dark` for
   quick cases that do not need the build-time guard.
 
+## iOS / Swift token export + thoughtstream brand (0032)
+
+A native SwiftUI app consumes Canopy tokens with no re-authoring - the Swift target the architecture
+always anticipated ("just another Style Dictionary platform - no token rewrite").
+
+- **`roots-swift` / `buildSwift()`** (`packages/roots/swift.mjs`, `@rogueoak/roots/swift`, bin
+  `roots-swift`) generates one `Tokens.swift` for a brand from the SAME config `roots-brand` reads.
+  It reuses the core transforms: two throwaway Style Dictionary instances resolve the brand's light
+  and dark semantics to concrete hex (`outputReferences: false`), and one more resolves Canopy's own
+  spacing / radius / type scale.
+- **`Tokens.swift` shape** - three caseless enums (a Swift namespace that can't be instantiated):
+  `CanopyColor` (every semantic role as a `Color(light:dark:)` that adapts to the color scheme via a
+  generated dynamic-`UIColor` initializer), `CanopySpacing` / `CanopyRadius` (`CGFloat` points), and
+  `CanopyFont` (type sizes as points + `Font` helpers, line-height multipliers). rem converts to
+  points at 16pt/rem; a raw px pill (`radius.full`) is kept as-is. Spacing/radius/type come from
+  Canopy core (shared across brands); only colours are brand-specific. Generated on demand (not part
+  of the web `pnpm build`), landing at `dist/<brand>/Tokens.swift`.
+- **thoughtstream brand (River Mist)** (`packages/roots/examples/thoughtstream/`) - the first REAL
+  brand (vs the sunset demo): a calm slate-teal water palette (`slate` primary, `current` secondary,
+  `tide` accent, `mist` neutral, plus cool-tuned status ramps), mapping every Canopy role in light +
+  dark. Builds AA-clean through `buildBrand()` and feeds the Swift export. Tests assert the brand
+  builds AA-clean and the emitter's structure (header, a role's light+dark hex, spacing/radius/font
+  constants, valid Swift).
+
 Not yet built: more **Branches** (the layer is open - Dialog · TopNav · SideNav · Combobox are live;
-DataTable to come) and more Twigs as needed, then **Boughs** (templates), and the native Swift token
-target.
+DataTable to come) and more Twigs as needed, then **Boughs** (templates), and an Xcode/Swift Package
+wrapper around the generated `Tokens.swift`.
