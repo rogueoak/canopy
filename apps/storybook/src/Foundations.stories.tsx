@@ -562,48 +562,313 @@ function Elevation() {
 
 /* ------------------------------------------------------------------- Motion */
 
-const EASES = ['standard', 'emphasized', 'decelerate'];
-const DURATIONS = ['fast', 'base', 'slow'];
+const DURATIONS = ['micro', 'fast', 'base', 'slow', 'slower'] as const;
+const EASES = ['standard', 'emphasized', 'decelerate', 'spring', 'spring-strong'] as const;
+
+// Each shipped `animate-*` preset, mapped to the duration + ease tokens it composes
+// (mirrors packages/roots/preset-motion.css). `spring-strong` has no preset by design.
+// Full literal class strings (NOT template-built) so Tailwind v4's scanner emits each
+// utility - the same rule the Radii/Elevation sections note. The `cls` is applied verbatim
+// on a key-remounted element so clicking Play replays the real Tailwind animation.
+const PRESETS: {
+  name: string;
+  cls: string;
+  duration: string;
+  ease: string;
+  keyframe: string;
+  note?: string;
+}[] = [
+  {
+    name: 'pop-in',
+    cls: 'animate-pop-in',
+    duration: 'base',
+    ease: 'spring',
+    keyframe: 'pop-in',
+  },
+  {
+    name: 'pop-out',
+    cls: 'animate-pop-out',
+    duration: 'fast',
+    ease: 'standard',
+    keyframe: 'pop-out',
+  },
+  {
+    name: 'shake',
+    cls: 'animate-shake motion-reduce:animate-none',
+    duration: 'slow',
+    ease: 'standard',
+    keyframe: 'shake',
+    note: 'reduced-motion gating is MANDATORY - a repeated translate is a vestibular trigger.',
+  },
+  {
+    name: 'fade-in',
+    cls: 'animate-fade-in',
+    duration: 'base',
+    ease: 'standard',
+    keyframe: 'fade-in',
+  },
+  {
+    name: 'fade-out',
+    cls: 'animate-fade-out',
+    duration: 'fast',
+    ease: 'standard',
+    keyframe: 'fade-out',
+  },
+];
+
+const mono: React.CSSProperties = {
+  fontFamily: 'var(--font-mono)',
+  fontSize: 'var(--text-xs)',
+  color: 'var(--color-text-subtle)',
+};
+
+const playBtn: React.CSSProperties = {
+  fontFamily: 'var(--font-sans)',
+  fontSize: 'var(--text-xs)',
+  fontWeight: 600,
+  color: 'var(--color-primary-foreground)',
+  background: 'var(--color-primary)',
+  border: 'none',
+  borderRadius: 'var(--radius-md)',
+  padding: '0.25rem 0.75rem',
+  cursor: 'pointer',
+};
+
+const th: React.CSSProperties = { padding: '6px 16px 6px 0', textAlign: 'left' };
+const td: React.CSSProperties = { padding: '8px 16px 8px 0', verticalAlign: 'middle' };
+
+// Durations - each row's bar travels the track for exactly its own duration. Clicking Play
+// bumps a counter used as the bar's React `key`, remounting it so the CSS transition restarts.
+function DurationRow({ name }: { name: string }) {
+  const [tick, setTick] = useState(0);
+  return (
+    <tr style={{ borderTop: '1px solid var(--color-border)' }}>
+      <td style={{ ...td, ...mono }}>duration-{name}</td>
+      <td style={{ ...td, ...mono }}>{tokenVal(`duration-${name}`)}</td>
+      <td style={td}>
+        <div className="motion-track">
+          <div
+            key={tick}
+            className="motion-bar"
+            style={{ animationDuration: `var(--duration-${name})` }}
+          />
+        </div>
+      </td>
+      <td style={{ ...td, paddingRight: 0 }}>
+        <button type="button" style={playBtn} onClick={() => setTick((t) => t + 1)}>
+          Play
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+// Easings - a dot travels a fixed duration (--duration-slow) using each curve. Hovering the
+// track plays it; clicking Play remounts the dot to replay. The track has generous right
+// padding so the spring curves' OVERSHOOT (past the target, then settle) is visible, not clipped.
+function EaseRow({ name }: { name: string }) {
+  const [tick, setTick] = useState(0);
+  return (
+    <tr style={{ borderTop: '1px solid var(--color-border)' }}>
+      <td style={{ ...td, ...mono }}>ease-{name}</td>
+      <td style={{ ...td, ...mono }}>{tokenVal(`ease-${name}`)}</td>
+      <td style={td}>
+        <div className="ease-track">
+          <div
+            key={tick}
+            className="ease-dot"
+            style={{ animationTimingFunction: `var(--ease-${name})` }}
+          />
+        </div>
+      </td>
+      <td style={{ ...td, paddingRight: 0 }}>
+        <button type="button" style={playBtn} onClick={() => setTick((t) => t + 1)}>
+          Play
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+// A preset player - clicking Play remounts the sample with the literal `animate-*` class so
+// the ACTUAL Tailwind utility runs. `keyframe` picks the resting state so the "out" presets
+// (which end hidden) start visible and visibly animate away; the remount brings them back.
+function PresetPlayer({
+  cls,
+  keyframe,
+}: {
+  cls: string;
+  keyframe: string;
+}) {
+  const [tick, setTick] = useState(0);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div className="preset-stage">
+        <span key={tick} className={tick > 0 ? `preset-badge ${cls}` : 'preset-badge'}>
+          {keyframe}
+        </span>
+      </div>
+      <button type="button" style={playBtn} onClick={() => setTick((t) => t + 1)}>
+        Play
+      </button>
+    </div>
+  );
+}
 
 function Motion() {
   return (
     <div style={wrap}>
-      <h2 style={h2}>Motion - durations &amp; easing</h2>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 0 }}>
-        Hover a bar to play its easing/duration token.
+      <h2 style={h2}>Motion - durations, easing &amp; presets</h2>
+      <p
+        style={{
+          fontSize: 'var(--text-sm)',
+          color: 'var(--color-text-muted)',
+          marginTop: 0,
+          maxWidth: 680,
+        }}
+      >
+        All motion composes the <code>--duration-*</code> and <code>--ease-*</code> tokens - the
+        durations and curves below, and the shipped <code>animate-*</code> presets, all read their
+        values from Roots. Consumers gate presets with <code>motion-reduce:animate-none</code>.
       </p>
       <style>{`
-        .motion-row { display:flex; align-items:center; gap:1rem; margin-bottom:0.75rem; }
-        .motion-track { flex:1; max-width:420px; height:36px; background:var(--color-muted);
-          border-radius:var(--radius-md); position:relative; overflow:hidden; }
-        .motion-dot { position:absolute; top:6px; left:6px; width:24px; height:24px;
+        @keyframes motion-travel {
+          from { transform: translateX(0); }
+          to { transform: translateX(336px); }
+        }
+        .motion-track { width:360px; height:24px; background:var(--color-muted);
+          border-radius:var(--radius-full); position:relative; overflow:hidden; }
+        .motion-bar { position:absolute; top:3px; left:3px; width:18px; height:18px;
           border-radius:var(--radius-full); background:var(--color-primary);
-          transition-property:transform; }
-        .motion-track:hover .motion-dot { transform:translateX(360px); }
+          transform:translateX(336px);
+          animation-name:motion-travel; animation-timing-function:var(--ease-standard);
+          animation-fill-mode:forwards; }
+
+        /* The dot animates across using the row's easing var. A remount (key bump) restarts
+           the animation; hovering the track also replays it. Right padding leaves room for
+           the spring curves to OVERSHOOT past the target before settling, without clipping. */
+        @keyframes ease-travel {
+          from { transform: translateX(0); }
+          to { transform: translateX(280px); }
+        }
+        .ease-track { width:360px; height:24px; background:var(--color-muted);
+          border-radius:var(--radius-full); position:relative; overflow:hidden; }
+        .ease-dot { position:absolute; top:3px; left:3px; width:18px; height:18px;
+          border-radius:var(--radius-full); background:var(--color-primary);
+          transform:translateX(280px);
+          animation-name:ease-travel; animation-duration:var(--duration-slow);
+          animation-fill-mode:forwards; }
+        .ease-track:hover .ease-dot { animation-name:ease-travel; }
+
+        .preset-stage { width:112px; height:56px; display:flex; align-items:center;
+          justify-content:center; background:var(--color-muted); border-radius:var(--radius-md); }
+        .preset-badge { display:inline-block; padding:0.25rem 0.625rem;
+          background:var(--color-primary); color:var(--color-primary-foreground);
+          border-radius:var(--radius-full); font-size:var(--text-xs); font-weight:600; }
       `}</style>
-      {EASES.map((e, i) => (
-        <div className="motion-row" key={e}>
-          <code
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-xs)',
-              width: 220,
-              color: 'var(--color-text-subtle)',
-            }}
-          >
-            ease-{e} · duration-{DURATIONS[i]} ({tokenVal(`duration-${DURATIONS[i]}`)})
-          </code>
-          <div className="motion-track">
-            <div
-              className="motion-dot"
-              style={{
-                transitionTimingFunction: `var(--ease-${e})`,
-                transitionDuration: `var(--duration-${DURATIONS[i]})`,
-              }}
-            />
-          </div>
-        </div>
-      ))}
+
+      <h2 style={{ ...h2, marginTop: '2rem' }}>Durations</h2>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 0 }}>
+        Each bar travels the track for exactly its token duration. Click Play to replay.
+      </p>
+      <table style={{ borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+        <thead>
+          <tr>
+            <th style={th}>Token</th>
+            <th style={th}>Value</th>
+            <th style={th}>Track</th>
+            <th style={{ ...th, paddingRight: 0 }} />
+          </tr>
+        </thead>
+        <tbody>
+          {DURATIONS.map((d) => (
+            <DurationRow key={d} name={d} />
+          ))}
+        </tbody>
+      </table>
+
+      <h2 style={{ ...h2, marginTop: '2.5rem' }}>Easings</h2>
+      <p
+        style={{
+          fontSize: 'var(--text-sm)',
+          color: 'var(--color-text-muted)',
+          marginTop: 0,
+          maxWidth: 680,
+        }}
+      >
+        A dot crosses using each curve over <code>--duration-slow</code>. Hover the track to play,
+        or click Play. The <code>spring</code> and <code>spring-strong</code> curves overshoot the
+        target and settle back.
+      </p>
+      <table style={{ borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+        <thead>
+          <tr>
+            <th style={th}>Token</th>
+            <th style={th}>Value</th>
+            <th style={th}>Track</th>
+            <th style={{ ...th, paddingRight: 0 }} />
+          </tr>
+        </thead>
+        <tbody>
+          {EASES.map((e) => (
+            <EaseRow key={e} name={e} />
+          ))}
+        </tbody>
+      </table>
+
+      <h2 style={{ ...h2, marginTop: '2.5rem' }}>Presets (animate-* utilities)</h2>
+      <p
+        style={{
+          fontSize: 'var(--text-sm)',
+          color: 'var(--color-text-muted)',
+          marginTop: 0,
+          maxWidth: 680,
+        }}
+      >
+        Each preset runs the real Tailwind utility on a sample; Play remounts it to replay. The
+        composition line is derived from the tokens, so it can&apos;t drift. Gate every preset with{' '}
+        <code>motion-reduce:animate-none</code>.
+      </p>
+      <table style={{ borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
+        <thead>
+          <tr>
+            <th style={th}>Preset</th>
+            <th style={th}>Sample</th>
+            <th style={th}>Composition</th>
+          </tr>
+        </thead>
+        <tbody>
+          {PRESETS.map((p) => (
+            <tr key={p.name} style={{ borderTop: '1px solid var(--color-border)' }}>
+              <td style={{ ...td, ...mono }}>animate-{p.name}</td>
+              <td style={td}>
+                <PresetPlayer cls={p.cls} keyframe={p.keyframe} />
+              </td>
+              <td style={{ ...td, paddingRight: 0 }}>
+                <code style={mono}>
+                  animate-{p.name} = {p.keyframe} . duration-{p.duration} . ease-{p.ease}
+                </code>
+                <div style={{ fontSize: 10, color: 'var(--color-text-subtle)', marginTop: 2 }}>
+                  {tokenVal(`duration-${p.duration}`)} · {tokenVal(`ease-${p.ease}`)}
+                </div>
+                {p.note && (
+                  <div
+                    style={{
+                      fontSize: 'var(--text-xs)',
+                      color: 'var(--color-danger)',
+                      fontWeight: 600,
+                      marginTop: 4,
+                      maxWidth: 320,
+                    }}
+                  >
+                    {p.note}
+                  </div>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
