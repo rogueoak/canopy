@@ -21,7 +21,7 @@ from the preset every consumer imports, and honours `motion-reduce`.
 
 - **Two new easing tokens** in `tokens/motion.json` (adapted from transitions.dev's bounce pair):
   - `ease.spring` = `cubic-bezier(0.34, 1.36, 0.64, 1)` - gentle overshoot for playful entrances.
-  - `ease.spring-strong` = `cubic-bezier(0.34, 3.85, 0.64, 1)` - pronounced bounce, celebratory
+  - `ease.spring-strong` = `cubic-bezier(0.34, 2.2, 0.64, 1)` - pronounced bounce, celebratory
     accents, use sparingly.
 - **Two new duration tokens** extending the scale at both ends (existing `fast/base/slow`
   unchanged, so no collision and no consumer breakage):
@@ -103,7 +103,7 @@ motion stays token-driven, not hardcoded. Assert the four new tokens appear in `
 
 - [ ] `motion.json` defines `duration.micro` (80ms), `duration.slower` (480ms), `ease.spring`
       (`cubic-bezier(0.34, 1.36, 0.64, 1)`), `ease.spring-strong`
-      (`cubic-bezier(0.34, 3.85, 0.64, 1)`) with `$description`s; existing tokens unchanged.
+      (`cubic-bezier(0.34, 2.2, 0.64, 1)`) with `$description`s; existing tokens unchanged.
 - [ ] `pnpm build` emits the four new tokens into `dist/tokens.css`, `dist/tokens.ts`, and
       `dist/tailwind-preset.css` (`@theme inline`).
 - [ ] `preset-motion.css` adds `@keyframes` for pop-in/out, shake, fade-in/out and `--animate-*`

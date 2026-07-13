@@ -48,7 +48,7 @@
       "$description": "Gentle overshoot for playful entrances (badges, popovers)."
     },
     "spring-strong": {
-      "$value": "cubic-bezier(0.34, 3.85, 0.64, 1)",
+      "$value": "cubic-bezier(0.34, 2.2, 0.64, 1)",
       "$type": "cubicBezier",
       "$description": "Pronounced bounce; celebratory accents, use sparingly."
     }

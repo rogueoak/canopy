@@ -143,7 +143,7 @@ describe('Roots motion outputs - expressive tokens (0033)', () => {
     expect(css).toContain('--duration-micro: 80ms');
     expect(css).toContain('--duration-slower: 480ms');
     expect(css).toContain('--ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1)');
-    expect(css).toContain('--ease-spring-strong: cubic-bezier(0.34, 3.85, 0.64, 1)');
+    expect(css).toContain('--ease-spring-strong: cubic-bezier(0.34, 2.2, 0.64, 1)');
   });
 
   it('typed TS export exposes the new motion tokens with their literal values', async () => {
@@ -151,7 +151,7 @@ describe('Roots motion outputs - expressive tokens (0033)', () => {
     expect(tokens['duration-micro']).toBe('80ms');
     expect(tokens['duration-slower']).toBe('480ms');
     expect(tokens['ease-spring']).toBe('cubic-bezier(0.34, 1.36, 0.64, 1)');
-    expect(tokens['ease-spring-strong']).toBe('cubic-bezier(0.34, 3.85, 0.64, 1)');
+    expect(tokens['ease-spring-strong']).toBe('cubic-bezier(0.34, 2.2, 0.64, 1)');
   });
 });
 
