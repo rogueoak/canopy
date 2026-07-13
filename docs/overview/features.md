@@ -50,7 +50,10 @@ theme only; the dark remap + runtime switching are 0004.
   `text-h2` applies font-size + line-height + font-weight + letter-spacing in one class.
   Components style against these, not raw scale + weight + leading.
 - **Spacing / radii / elevation / motion** - `space.0…32` (4px base); `radius.none…full`;
-  `shadow.sm…xl` (soft, warm); `duration.fast/base/slow` + `ease.standard/emphasized/decelerate`.
+  `shadow.sm…xl` (soft, warm); `duration.micro/fast/base/slow/slower` +
+  `ease.standard/emphasized/decelerate/spring/spring-strong`. The Roots preset also ships
+  token-composed `animate-*` presets - `pop-in/out` (spring), `shake` (error states),
+  `fade-in/out` - alongside the overlay/drawer/bottom-sheet motion (spec 0033).
 - **Self-hosted fonts** - Figtree + Geist Mono via `@fontsource-variable/*`, imported in
   Storybook's global CSS. Roots ships only the family tokens; consumers install @fontsource.
 - **Tailwind v4 utilities** - token names flatten onto `@theme` namespaces so utilities

@@ -85,7 +85,10 @@ The system is **two-tier**, so theming is a remap of one layer and never touches
 
 Alongside colour: **typography** (Figtree sans + Geist Mono, type scale `text-xs…6xl`, weights,
 leading, tracking), **spacing** (4px base), **radii**, **elevation** (`shadow-*`), and **motion**
-(durations + easings). Token names flatten onto Tailwind v4 `@theme` namespaces so utilities
+(durations `micro…slower`, easings incl. `ease-spring`, and ready-made `animate-*` presets -
+`pop-in/out`, `shake`, `fade-in/out` - each composing the tokens and gated by consumers with
+`motion-reduce:animate-none`; gating is **mandatory** for `shake`, a vestibular trigger). Token
+names flatten onto Tailwind v4 `@theme` namespaces so utilities
 generate directly: `color-*`→`bg-*`/`text-*`, `radius-md`→`rounded-md`, `text-lg`→`text-lg`,
 `font-sans`→`font-sans`, `shadow-md`→`shadow-md`, and spacing utilities (`p-4`, `gap-2`) derive
 from a single `--spacing` base.

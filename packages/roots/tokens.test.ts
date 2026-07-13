@@ -72,6 +72,11 @@ describe('Roots token outputs - Tailwind v4 namespaces', () => {
     expect(preset).toContain('--shadow-md: var(--shadow-md)');
     expect(preset).toContain('--font-sans: var(--font-sans)');
     expect(preset).toContain('--ease-standard: var(--ease-standard)');
+    // Expressive motion tokens (0033) reach the @theme inline block too.
+    expect(preset).toContain('--duration-micro: var(--duration-micro)');
+    expect(preset).toContain('--duration-slower: var(--duration-slower)');
+    expect(preset).toContain('--ease-spring: var(--ease-spring)');
+    expect(preset).toContain('--ease-spring-strong: var(--ease-spring-strong)');
     // Typography sub-namespaces (drive leading-*/tracking-*/font-* utilities).
     expect(preset).toContain('--leading-snug: var(--leading-snug)');
     expect(preset).toContain('--tracking-tight: var(--tracking-tight)');
@@ -97,6 +102,56 @@ describe('Roots token outputs - Tailwind v4 namespaces', () => {
     expect(preset).toContain('--animate-drawer-in:');
     const drawerIn = /--animate-drawer-in:\s*([^;]+);/.exec(preset)?.[1] ?? '';
     expect(drawerIn).toContain('var(--duration-slow)');
+
+    // The same partial now carries the generic expressive presets (0033) - pop/shake/fade.
+    // Assert BOTH halves of each pair ship as keyframes and that every animate value composes
+    // the motion tokens (never hardcoded ms/easing) - the -out halves deliberately settle
+    // (--ease-standard) rather than spring, exactly the intent a test should pin.
+    for (const kf of ['pop-in', 'pop-out', 'shake', 'fade-in', 'fade-out']) {
+      expect(preset).toContain(`@keyframes ${kf}`);
+    }
+    const animate = (name: string) =>
+      new RegExp(`--animate-${name}:\\s*([^;]+);`).exec(preset)?.[1] ?? '';
+    // pop-in springs; pop-out settles.
+    expect(animate('pop-in')).toContain('var(--duration-base)');
+    expect(animate('pop-in')).toContain('var(--ease-spring)');
+    expect(animate('pop-out')).toContain('var(--duration-fast)');
+    expect(animate('pop-out')).toContain('var(--ease-standard)');
+    // shake reads as feedback, not a spring.
+    expect(animate('shake')).toContain('var(--duration-slow)');
+    expect(animate('shake')).toContain('var(--ease-standard)');
+    // fade-in / fade-out - assert composition, not mere presence.
+    expect(animate('fade-in')).toContain('var(--duration-base)');
+    expect(animate('fade-in')).toContain('var(--ease-standard)');
+    expect(animate('fade-out')).toContain('var(--duration-fast)');
+    expect(animate('fade-out')).toContain('var(--ease-standard)');
+
+    // The fold is idempotent (feedback 0003): build.mjs re-reads the fresh Style-Dictionary
+    // preset before appending, so keyframes/--animate-* appear EXACTLY once. A regression to the
+    // old append-in-place bug would double them while every toContain above still passed - so
+    // pin the count, which is the property spec 0033's acceptance calls out.
+    const occurrences = (needle: string) => preset.split(needle).length - 1;
+    expect(occurrences('@keyframes pop-in')).toBe(1);
+    expect(occurrences('--animate-pop-in:')).toBe(1);
+    expect(occurrences('@keyframes dialog-overlay-in')).toBe(1);
+  });
+});
+
+describe('Roots motion outputs - expressive tokens (0033)', () => {
+  it('tokens.css declares the new spring easings and micro/slower durations', () => {
+    const css = read('tokens.css');
+    expect(css).toContain('--duration-micro: 80ms');
+    expect(css).toContain('--duration-slower: 480ms');
+    expect(css).toContain('--ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1)');
+    expect(css).toContain('--ease-spring-strong: cubic-bezier(0.34, 2.2, 0.64, 1)');
+  });
+
+  it('typed TS export exposes the new motion tokens with their literal values', async () => {
+    const { tokens } = await import('./dist/tokens.js');
+    expect(tokens['duration-micro']).toBe('80ms');
+    expect(tokens['duration-slower']).toBe('480ms');
+    expect(tokens['ease-spring']).toBe('cubic-bezier(0.34, 1.36, 0.64, 1)');
+    expect(tokens['ease-spring-strong']).toBe('cubic-bezier(0.34, 2.2, 0.64, 1)');
   });
 });
 

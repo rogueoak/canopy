@@ -34,9 +34,11 @@ the README; Canopy is the whole system.
    type-safe access. tsup then compiles it in place to `tokens.js` + `tokens.d.ts`.
 3. `tailwind-preset.css` - a Tailwind v4 `@theme inline { … }` block (custom SD format
    `tailwind/preset-v4`) so utilities like `bg-primary` resolve. CSS-first Tailwind v4 means
-   tokens live in CSS, not a JS config object. It **also ships the design system's overlay-motion**
- - `@keyframes` + a `@theme` block of `--animate-dialog-*` vars (composing the `--duration-*` /
-   `--ease-*` motion tokens) that generate `animate-dialog-*` utilities - folded in from the
+   tokens live in CSS, not a JS config object. It **also ships the design system's keyframed motion**
+ - `@keyframes` + a `@theme` block of `--animate-*` vars (composing the `--duration-*` /
+   `--ease-*` motion tokens) that generate `animate-*` utilities - both the overlay/drawer/sheet
+   motion (`animate-dialog-*`, `-drawer-*`, `-bottom-sheet-*`) and the generic expressive presets
+   (`animate-pop-*`, `-shake`, `-fade-*`, spec 0033) - folded in from the
    hand-authored `preset-motion.css` partial by `build.mjs` (an idempotent single write, like the
    `tokens.css` fold). Keyframes / `@theme --animate-*` are theme declarations, not utilities, so
    `@source` could never emit them; shipping them from the preset every consumer imports is what
@@ -60,7 +62,7 @@ DTCG sources under `packages/roots/tokens/`, split by concern:
 | `space.json` | `space.0…32` (4px base) |
 | `radius.json` | `radius.none…full` |
 | `shadow.json` | `shadow.sm…xl` |
-| `motion.json` | `duration.fast/base/slow`, `ease.standard/emphasized/decelerate` |
+| `motion.json` | `duration.micro/fast/base/slow/slower`, `ease.standard/emphasized/decelerate/spring/spring-strong` |
 
 ### Tailwind v4 namespace mapping
 

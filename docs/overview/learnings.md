@@ -505,3 +505,19 @@ drive it by **keyboard** in at least one test (not just `click`), and if it supp
 and uncontrolled use, test **both** (controlled: the display follows the `value` prop, and
 `onValueChange` fires without the display changing until the parent updates). Don't let an
 acceptance item be satisfied by the easiest interaction that superficially passes.
+
+## Test every shipped variant and every acceptance property, not a representative sample
+
+Spec 0033 shipped five `animate-*` presets but first tested only the `-in` halves, and listed
+"the fold stays idempotent" in Acceptance with no test enforcing it - a dropped `-out` preset or a
+regressed double-append would both have stayed green, because a `toContain` assertion passes on the
+correct AND the doubled/partial output. Caught by the tester + engineer personas. See
+[`docs/feedback/0015-assert-every-shipped-variant-and-acceptance-property.md`](../feedback/0015-assert-every-shipped-variant-and-acceptance-property.md).
+
+**Apply it:** when a change ships a set of variants (preset pairs, token families), assert **every**
+member with a per-variant loop, not a hand-picked one - and check composition/value, not mere
+presence. When an acceptance item names a property (idempotency, single-occurrence, ordering),
+encode the test that **fails** if it regresses (e.g. an occurrence-count guard), because a
+presence check can't see a duplicate. This recurs with
+[keyboard/controlled coverage (0014)](../feedback/0014-interactive-component-test-coverage.md): the
+shared root is testing the happy representative instead of the whole contract.
