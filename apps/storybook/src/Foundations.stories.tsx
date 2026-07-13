@@ -575,7 +575,7 @@ const PRESETS: {
   cls: string;
   duration: string;
   ease: string;
-  keyframe: string;
+  anim: string;
   note?: string;
 }[] = [
   {
@@ -583,36 +583,36 @@ const PRESETS: {
     cls: 'animate-pop-in',
     duration: 'base',
     ease: 'spring',
-    keyframe: 'pop-in',
+    anim: 'pop-in',
   },
   {
     name: 'pop-out',
     cls: 'animate-pop-out',
     duration: 'fast',
     ease: 'standard',
-    keyframe: 'pop-out',
+    anim: 'pop-out',
   },
   {
     name: 'shake',
     cls: 'animate-shake motion-reduce:animate-none',
     duration: 'slow',
     ease: 'standard',
-    keyframe: 'shake',
-    note: 'reduced-motion gating is MANDATORY - a repeated translate is a vestibular trigger.',
+    anim: 'shake',
+    note: 'A repeated translate is a vestibular trigger, so gating this preset behind prefers-reduced-motion is mandatory - not optional polish.',
   },
   {
     name: 'fade-in',
     cls: 'animate-fade-in',
     duration: 'base',
     ease: 'standard',
-    keyframe: 'fade-in',
+    anim: 'fade-in',
   },
   {
     name: 'fade-out',
     cls: 'animate-fade-out',
     duration: 'fast',
     ease: 'standard',
-    keyframe: 'fade-out',
+    anim: 'fade-out',
   },
 ];
 
@@ -663,17 +663,32 @@ function DurationRow({ name }: { name: string }) {
   );
 }
 
-// Easings - a dot travels a fixed duration (--duration-slow) using each curve. Hovering the
-// track plays it; clicking Play remounts the dot to replay. The track has generous right
-// padding so the spring curves' OVERSHOOT (past the target, then settle) is visible, not clipped.
+// Easings - a dot travels a fixed duration (--duration-slow) using each curve. Clicking the
+// track (or the Play button) bumps a counter used as the dot's React `key`, remounting it so
+// the CSS animation restarts. The track is sized so the spring curves' OVERSHOOT (past the
+// target, then settle back) stays fully inside it - see the geometry note in the CSS below.
 function EaseRow({ name }: { name: string }) {
   const [tick, setTick] = useState(0);
+  const replay = () => setTick((t) => t + 1);
   return (
     <tr style={{ borderTop: '1px solid var(--color-border)' }}>
       <td style={{ ...td, ...mono }}>ease-{name}</td>
       <td style={{ ...td, ...mono }}>{tokenVal(`ease-${name}`)}</td>
       <td style={td}>
-        <div className="ease-track">
+        <div
+          className="ease-track"
+          role="button"
+          tabIndex={0}
+          title={`Replay ease-${name}`}
+          aria-label={`Replay ease-${name}`}
+          onClick={replay}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              replay();
+            }
+          }}
+        >
           <div
             key={tick}
             className="ease-dot"
@@ -682,7 +697,7 @@ function EaseRow({ name }: { name: string }) {
         </div>
       </td>
       <td style={{ ...td, paddingRight: 0 }}>
-        <button type="button" style={playBtn} onClick={() => setTick((t) => t + 1)}>
+        <button type="button" style={playBtn} onClick={replay}>
           Play
         </button>
       </td>
@@ -691,21 +706,21 @@ function EaseRow({ name }: { name: string }) {
 }
 
 // A preset player - clicking Play remounts the sample with the literal `animate-*` class so
-// the ACTUAL Tailwind utility runs. `keyframe` picks the resting state so the "out" presets
-// (which end hidden) start visible and visibly animate away; the remount brings them back.
+// the ACTUAL Tailwind utility runs. `animationName` is the preset's label, also used as the
+// badge text; the remount (key bump) restarts the "out" presets so they visibly animate away.
 function PresetPlayer({
   cls,
-  keyframe,
+  animationName,
 }: {
   cls: string;
-  keyframe: string;
+  animationName: string;
 }) {
   const [tick, setTick] = useState(0);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
       <div className="preset-stage">
         <span key={tick} className={tick > 0 ? `preset-badge ${cls}` : 'preset-badge'}>
-          {keyframe}
+          {animationName}
         </span>
       </div>
       <button type="button" style={playBtn} onClick={() => setTick((t) => t + 1)}>
@@ -744,21 +759,26 @@ function Motion() {
           animation-name:motion-travel; animation-timing-function:var(--ease-standard);
           animation-fill-mode:forwards; }
 
-        /* The dot animates across using the row's easing var. A remount (key bump) restarts
-           the animation; hovering the track also replays it. Right padding leaves room for
-           the spring curves to OVERSHOOT past the target before settling, without clipping. */
+        /* The dot animates across using the row's easing var; a remount (key bump, via the
+           Play button or a click on the track itself) restarts it. The track is 480px but the
+           dot only travels 280px, leaving room for the spring curves to OVERSHOOT past the
+           target before settling. ease-spring-strong (cubic-bezier(.34,2.2,.64,1)) peaks at
+           roughly 1.45x the travel, so the dot's far edge reaches
+           3(left) + 1.45*280(=406) + 18(dot) = 427px - about 53px clear of the 480px track. */
         @keyframes ease-travel {
           from { transform: translateX(0); }
           to { transform: translateX(280px); }
         }
-        .ease-track { width:360px; height:24px; background:var(--color-muted);
-          border-radius:var(--radius-full); position:relative; overflow:hidden; }
+        .ease-track { width:480px; height:24px; background:var(--color-muted);
+          border-radius:var(--radius-full); position:relative; overflow:hidden;
+          cursor:pointer; }
+        .ease-track:focus-visible { outline:2px solid var(--color-ring);
+          outline-offset:2px; }
         .ease-dot { position:absolute; top:3px; left:3px; width:18px; height:18px;
           border-radius:var(--radius-full); background:var(--color-primary);
           transform:translateX(280px);
           animation-name:ease-travel; animation-duration:var(--duration-slow);
           animation-fill-mode:forwards; }
-        .ease-track:hover .ease-dot { animation-name:ease-travel; }
 
         .preset-stage { width:112px; height:56px; display:flex; align-items:center;
           justify-content:center; background:var(--color-muted); border-radius:var(--radius-md); }
@@ -796,9 +816,9 @@ function Motion() {
           maxWidth: 680,
         }}
       >
-        A dot crosses using each curve over <code>--duration-slow</code>. Hover the track to play,
-        or click Play. The <code>spring</code> and <code>spring-strong</code> curves overshoot the
-        target and settle back.
+        A dot crosses using each curve over <code>--duration-slow</code>. Click the track or the
+        Play button to replay. The <code>spring</code> and <code>spring-strong</code> curves
+        overshoot the target and settle back.
       </p>
       <table style={{ borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
         <thead>
@@ -842,11 +862,11 @@ function Motion() {
             <tr key={p.name} style={{ borderTop: '1px solid var(--color-border)' }}>
               <td style={{ ...td, ...mono }}>animate-{p.name}</td>
               <td style={td}>
-                <PresetPlayer cls={p.cls} keyframe={p.keyframe} />
+                <PresetPlayer cls={p.cls} animationName={p.anim} />
               </td>
               <td style={{ ...td, paddingRight: 0 }}>
                 <code style={mono}>
-                  animate-{p.name} = {p.keyframe} . duration-{p.duration} . ease-{p.ease}
+                  animate-{p.name} = {p.anim} . duration-{p.duration} . ease-{p.ease}
                 </code>
                 <div style={{ fontSize: 10, color: 'var(--color-text-subtle)', marginTop: 2 }}>
                   {tokenVal(`duration-${p.duration}`)} · {tokenVal(`ease-${p.ease}`)}
@@ -854,13 +874,25 @@ function Motion() {
                 {p.note && (
                   <div
                     style={{
-                      fontSize: 'var(--text-xs)',
-                      color: 'var(--color-danger)',
-                      fontWeight: 600,
-                      marginTop: 4,
-                      maxWidth: 320,
+                      fontSize: 'var(--text-sm)',
+                      color: 'var(--color-text)',
+                      background: 'color-mix(in srgb, var(--color-warning) 12%, var(--color-surface))',
+                      borderLeft: '3px solid var(--color-warning)',
+                      borderRadius: 'var(--radius-sm)',
+                      padding: '0.5rem 0.75rem',
+                      marginTop: 8,
+                      maxWidth: 340,
                     }}
                   >
+                    <strong
+                      style={{
+                        display: 'block',
+                        color: 'var(--color-warning)',
+                        marginBottom: 2,
+                      }}
+                    >
+                      Reduced motion required
+                    </strong>
                     {p.note}
                   </div>
                 )}
