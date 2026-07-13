@@ -104,17 +104,36 @@ describe('Roots token outputs - Tailwind v4 namespaces', () => {
     expect(drawerIn).toContain('var(--duration-slow)');
 
     // The same partial now carries the generic expressive presets (0033) - pop/shake/fade.
-    // Assert their keyframes ship and each animate value composes the motion tokens.
-    expect(preset).toContain('@keyframes pop-in');
-    expect(preset).toContain('@keyframes shake');
-    expect(preset).toContain('@keyframes fade-in');
-    expect(preset).toContain('--animate-pop-in:');
-    const popIn = /--animate-pop-in:\s*([^;]+);/.exec(preset)?.[1] ?? '';
-    expect(popIn).toContain('var(--duration-base)');
-    expect(popIn).toContain('var(--ease-spring)');
-    const shake = /--animate-shake:\s*([^;]+);/.exec(preset)?.[1] ?? '';
-    expect(shake).toContain('var(--ease-standard)');
-    expect(preset).toContain('--animate-fade-in:');
+    // Assert BOTH halves of each pair ship as keyframes and that every animate value composes
+    // the motion tokens (never hardcoded ms/easing) - the -out halves deliberately settle
+    // (--ease-standard) rather than spring, exactly the intent a test should pin.
+    for (const kf of ['pop-in', 'pop-out', 'shake', 'fade-in', 'fade-out']) {
+      expect(preset).toContain(`@keyframes ${kf}`);
+    }
+    const animate = (name: string) =>
+      new RegExp(`--animate-${name}:\\s*([^;]+);`).exec(preset)?.[1] ?? '';
+    // pop-in springs; pop-out settles.
+    expect(animate('pop-in')).toContain('var(--duration-base)');
+    expect(animate('pop-in')).toContain('var(--ease-spring)');
+    expect(animate('pop-out')).toContain('var(--duration-fast)');
+    expect(animate('pop-out')).toContain('var(--ease-standard)');
+    // shake reads as feedback, not a spring.
+    expect(animate('shake')).toContain('var(--duration-slow)');
+    expect(animate('shake')).toContain('var(--ease-standard)');
+    // fade-in / fade-out - assert composition, not mere presence.
+    expect(animate('fade-in')).toContain('var(--duration-base)');
+    expect(animate('fade-in')).toContain('var(--ease-standard)');
+    expect(animate('fade-out')).toContain('var(--duration-fast)');
+    expect(animate('fade-out')).toContain('var(--ease-standard)');
+
+    // The fold is idempotent (feedback 0003): build.mjs re-reads the fresh Style-Dictionary
+    // preset before appending, so keyframes/--animate-* appear EXACTLY once. A regression to the
+    // old append-in-place bug would double them while every toContain above still passed - so
+    // pin the count, which is the property spec 0033's acceptance calls out.
+    const occurrences = (needle: string) => preset.split(needle).length - 1;
+    expect(occurrences('@keyframes pop-in')).toBe(1);
+    expect(occurrences('--animate-pop-in:')).toBe(1);
+    expect(occurrences('@keyframes dialog-overlay-in')).toBe(1);
   });
 });
 
