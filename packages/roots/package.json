@@ -23,12 +23,16 @@
     "dist",
     "brand.mjs",
     "cli.mjs",
+    "cli-swift.mjs",
+    "swift.mjs",
     "contrast.mjs",
     "style-dictionary.config.mjs",
+    "tokens",
     "examples"
   ],
   "bin": {
-    "roots-brand": "./cli.mjs"
+    "roots-brand": "./cli.mjs",
+    "roots-swift": "./cli-swift.mjs"
   },
   "exports": {
     ".": {
@@ -37,7 +41,8 @@
     },
     "./tokens.css": "./dist/tokens.css",
     "./tailwind-preset.css": "./dist/tailwind-preset.css",
-    "./brand": "./brand.mjs"
+    "./brand": "./brand.mjs",
+    "./swift": "./swift.mjs"
   },
   "scripts": {
     "build": "pnpm clean && node build.mjs && tsup",

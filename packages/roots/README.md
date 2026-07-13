@@ -109,8 +109,9 @@ inherits its Canopy default until you choose to map it. (Its default pairs are a
 by Canopy's own build.)
 
 A runnable example brand lives in [`examples/sunset/`](./examples/sunset) - copy it as a starting
-point. `style-dictionary` is an OPTIONAL peer dependency, needed only if you run the brand pipeline;
-the token exports do not require it.
+point. A real brand, [`examples/thoughtstream/`](./examples/thoughtstream) (River Mist, a
+slate-teal water palette), also drives the iOS/Swift export below. `style-dictionary` is an OPTIONAL
+peer dependency, needed only if you run the brand pipeline; the token exports do not require it.
 
 ### Runtime path (quick cases)
 
@@ -132,6 +133,57 @@ vars in its own CSS after importing `tokens.css` - Canopy reads them at runtime:
 
 Prefer the build-time pipeline when you want the AA guarantee - including for a partial brand, whose
 overrides are still checked against the Canopy defaults they inherit.
+
+## iOS / Swift export
+
+A native SwiftUI app can consume Canopy tokens with no re-authoring: `roots-swift` generates one
+`Tokens.swift` for a brand. It takes the SAME brand config `roots-brand` reads:
+
+```bash
+npx roots-swift examples/thoughtstream/brand.config.json
+# -> writes dist/thoughtstream/Tokens.swift (39 semantic colors, light + dark)
+```
+
+Or from code:
+
+```js
+import { buildSwift } from '@rogueoak/roots/swift';
+
+await buildSwift({
+  name: 'thoughtstream',
+  primitives: 'examples/thoughtstream/primitive.json',
+  semantic: 'examples/thoughtstream/semantic.json',
+  semanticDark: 'examples/thoughtstream/semantic.dark.json',
+  outFile: 'dist/thoughtstream/Tokens.swift',
+});
+```
+
+`Tokens.swift` holds three things, each in a caseless enum (a Swift namespace that cannot be
+instantiated, so it does not pollute `Color.` / `Font.` completion):
+
+- `CanopyColor` - every semantic role resolved to a light AND dark hex, emitted as a
+  `Color(light:dark:)` that adapts to the color scheme. A generated `Color(light:dark:)`
+  initializer (backed by a dynamic `UIColor { traits in ... }` provider on platforms with UIKit)
+  makes the switch happen at runtime.
+- `CanopySpacing` / `CanopyRadius` - Canopy's OWN spacing and radius scales as `CGFloat` points.
+- `CanopyFont` - Canopy's type sizes as `CGFloat` points + `Font` helpers, and line-height
+  multipliers.
+
+```swift
+Text("Thought Stream")
+    .font(CanopyFont.sizeX2xlFont())
+    .foregroundStyle(CanopyColor.text)
+    .padding(CanopySpacing.x4)                 // 16pt
+    .background(CanopyColor.surface)
+    .clipShape(RoundedRectangle(cornerRadius: CanopyRadius.md))  // 8pt
+```
+
+Notes: dimensions convert **rem -> points at 16pt/rem** (1rem = 16px = 16pt); a raw `px` value
+(`radius.full`'s 9999pt pill) is emitted as-is. Spacing / radius / type come from Canopy's core
+tokens, not the brand, so every brand shares one scale; only colours are brand-specific. The Swift
+file is generated **on demand** (it is not part of the web `pnpm build`) and lands at
+`dist/<brand>/Tokens.swift` unless you pass `--out`. `style-dictionary` (the optional peer dep) is
+required to run this, like the brand pipeline.
 
 ## Fonts
 
