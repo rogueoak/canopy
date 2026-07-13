@@ -15,7 +15,12 @@
  * (`animate-drawer-in` / `-out`), first consumed by SideNav (spec 0026): the mobile drawer slides in
  * from the left edge and back out, gated the same way. It further carries the bottom-sheet slide
  * (`animate-bottom-sheet-in` / `-out`), first consumed by ResponsiveDialog (spec 0031): the mobile
- * dialog form slides up from the bottom edge and back down, gated the same way.
+ * dialog form slides up from the bottom edge and back down, gated the same way. The partial now
+ * ALSO carries generic expressive presets, not tied to one component: `animate-pop-in` / `-out`
+ * (spring scale + fade for badges, popovers, menus), `animate-shake` (a short horizontal shake for
+ * error / invalid states), and `animate-fade-in` / `-out` (pure opacity for toasts and content
+ * reveal). Each composes the `--duration-*` / `--ease-*` tokens and is gated by consumers with
+ * `motion-reduce:animate-none`, the same as the motion above.
  */
 @keyframes dialog-overlay-in {
   from {
@@ -85,6 +90,56 @@
     transform: translateY(100%);
   }
 }
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes pop-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
 
 @theme {
   --animate-dialog-overlay-in: dialog-overlay-in var(--duration-slow) var(--ease-decelerate);
@@ -95,4 +150,9 @@
   --animate-drawer-out: drawer-out var(--duration-base) var(--ease-standard);
   --animate-bottom-sheet-in: bottom-sheet-in var(--duration-slow) var(--ease-decelerate);
   --animate-bottom-sheet-out: bottom-sheet-out var(--duration-base) var(--ease-standard);
+  --animate-pop-in: pop-in var(--duration-base) var(--ease-spring);
+  --animate-pop-out: pop-out var(--duration-fast) var(--ease-standard);
+  --animate-shake: shake var(--duration-slow) var(--ease-standard);
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-standard);
+  --animate-fade-out: fade-out var(--duration-fast) var(--ease-standard);
 }

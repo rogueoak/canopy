@@ -60,7 +60,7 @@ DTCG sources under `packages/roots/tokens/`, split by concern:
 | `space.json` | `space.0…32` (4px base) |
 | `radius.json` | `radius.none…full` |
 | `shadow.json` | `shadow.sm…xl` |
-| `motion.json` | `duration.fast/base/slow`, `ease.standard/emphasized/decelerate` |
+| `motion.json` | `duration.micro/fast/base/slow/slower`, `ease.standard/emphasized/decelerate/spring/spring-strong` |
 
 ### Tailwind v4 namespace mapping
 

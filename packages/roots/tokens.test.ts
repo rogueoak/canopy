@@ -72,6 +72,11 @@ describe('Roots token outputs - Tailwind v4 namespaces', () => {
     expect(preset).toContain('--shadow-md: var(--shadow-md)');
     expect(preset).toContain('--font-sans: var(--font-sans)');
     expect(preset).toContain('--ease-standard: var(--ease-standard)');
+    // Expressive motion tokens (0033) reach the @theme inline block too.
+    expect(preset).toContain('--duration-micro: var(--duration-micro)');
+    expect(preset).toContain('--duration-slower: var(--duration-slower)');
+    expect(preset).toContain('--ease-spring: var(--ease-spring)');
+    expect(preset).toContain('--ease-spring-strong: var(--ease-spring-strong)');
     // Typography sub-namespaces (drive leading-*/tracking-*/font-* utilities).
     expect(preset).toContain('--leading-snug: var(--leading-snug)');
     expect(preset).toContain('--tracking-tight: var(--tracking-tight)');
@@ -97,6 +102,37 @@ describe('Roots token outputs - Tailwind v4 namespaces', () => {
     expect(preset).toContain('--animate-drawer-in:');
     const drawerIn = /--animate-drawer-in:\s*([^;]+);/.exec(preset)?.[1] ?? '';
     expect(drawerIn).toContain('var(--duration-slow)');
+
+    // The same partial now carries the generic expressive presets (0033) - pop/shake/fade.
+    // Assert their keyframes ship and each animate value composes the motion tokens.
+    expect(preset).toContain('@keyframes pop-in');
+    expect(preset).toContain('@keyframes shake');
+    expect(preset).toContain('@keyframes fade-in');
+    expect(preset).toContain('--animate-pop-in:');
+    const popIn = /--animate-pop-in:\s*([^;]+);/.exec(preset)?.[1] ?? '';
+    expect(popIn).toContain('var(--duration-base)');
+    expect(popIn).toContain('var(--ease-spring)');
+    const shake = /--animate-shake:\s*([^;]+);/.exec(preset)?.[1] ?? '';
+    expect(shake).toContain('var(--ease-standard)');
+    expect(preset).toContain('--animate-fade-in:');
+  });
+});
+
+describe('Roots motion outputs - expressive tokens (0033)', () => {
+  it('tokens.css declares the new spring easings and micro/slower durations', () => {
+    const css = read('tokens.css');
+    expect(css).toContain('--duration-micro: 80ms');
+    expect(css).toContain('--duration-slower: 480ms');
+    expect(css).toContain('--ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1)');
+    expect(css).toContain('--ease-spring-strong: cubic-bezier(0.34, 3.85, 0.64, 1)');
+  });
+
+  it('typed TS export exposes the new motion tokens with their literal values', async () => {
+    const { tokens } = await import('./dist/tokens.js');
+    expect(tokens['duration-micro']).toBe('80ms');
+    expect(tokens['duration-slower']).toBe('480ms');
+    expect(tokens['ease-spring']).toBe('cubic-bezier(0.34, 1.36, 0.64, 1)');
+    expect(tokens['ease-spring-strong']).toBe('cubic-bezier(0.34, 3.85, 0.64, 1)');
   });
 });
 
