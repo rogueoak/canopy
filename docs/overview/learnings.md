@@ -522,6 +522,31 @@ presence check can't see a duplicate. This recurs with
 [keyboard/controlled coverage (0014)](../feedback/0014-interactive-component-test-coverage.md): the
 shared root is testing the happy representative instead of the whole contract.
 
+## A shipped component must not bake in a consumer's transport or analytics - inject them
+
+`SubscribeForm` (spec 0035) consolidated two app copies whose only real divergence was
+**app-specific coupling**: each imported PostHog directly, hard-coded a `/v1/subscribe` `fetch`, and
+carried its own event names + copy. A design-system component can't own any of that - a different
+consumer has a different endpoint, a different (or no) analytics SDK, and different wording. The fix
+is **injection**: Canopy owns the UI, the `submit/success/error` state machine, the optional-Name
+reveal, the honeypot, and the a11y wiring, while the consumer passes `onSubscribe(values) =>
+Promise<void>` (the network I/O) and an optional `onEvent(phase, props)` (analytics). To preserve the
+fidelity the apps had when they owned the `fetch`, the contract carries the failure detail *back out*:
+`onSubscribe` rejects, and Canopy shows the rejected error's `.message` and forwards its `.reason` to
+`onEvent('failed', ...)` - so `http_500` / `network` reasons and per-app messages survive without
+Canopy knowing any HTTP. Copy is defaulted props (`title`/`successMessage`/...), so each app
+reproduces its exact wording. The component also stayed **icon-free** (a hand-rolled `currentColor`
+check SVG, the Dialog-close precedent) to keep Canopy's no-`@rogueoak/icons`-dependency invariant.
+
+**Apply it:** when a component would otherwise `import` a specific analytics SDK, `fetch` a specific
+endpoint, or hard-code one consumer's copy, **invert it** - take an async `on*` handler for the I/O
+and an optional event callback for analytics, and pass failure detail back out (reject with a
+`.message` + a machine `.reason`) rather than resolving a status the component has to interpret. The
+design system ships behaviour, state, and a11y; the app ships transport, analytics, and words. And
+what moves into the shared component is the *duplicated UI*, not the app-specific server core - here
+the Constant Contact `subscribe.ts` (secrets-adjacent, per-app list handling) deliberately stayed in
+each app.
+
 ## Verify motion in flight, not at rest
 
 The Storybook motion page (0034) shipped a first pass where the easing track clipped

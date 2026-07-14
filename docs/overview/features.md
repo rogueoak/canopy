@@ -591,6 +591,34 @@ question that review corrected - see learnings).
   manages `aria-expanded`, and the list carries `aria-multiselectable` in multiple mode. Stories:
   single, multi-with-badges, disabled + invalid (both modes), long list, and empty state.
 
+## Branches: SubscribeForm (0035)
+
+An email-capture Branch - a themed subscribe box - and the first **transport-agnostic by
+injection** component: Canopy owns the UI/state/a11y, the consumer injects the network + analytics.
+Consolidates two near-identical app copies (matthewmaynes + rogueoak) into one shipped component.
+
+- **SubscribeForm** (`@rogueoak/canopy/branches`) - a `<section>` with a box heading (optional), an
+  email `Input` (required) and an **optional Name** `Input` that stays collapsed until the email is
+  focused then animates open (horizontal grow at `sm+`, vertical below, `motion-reduce`-safe, out of
+  the tab order + a11y tree while collapsed; `alwaysShowName` starts it revealed). It owns a
+  `Status` state machine (`idle | submitting | success | error`): on submit it collects
+  `{ email, name, company }` (the last is the honeypot), calls `onSubscribe(values)`, and reflects
+  the result - a resolve renders a success `Card` (a confirmation badge with an inline
+  `currentColor` check SVG + a copy slot), a reject renders an inline `role="alert"` with the
+  rejected error's `.message`. Composes the `Card` / `FormField` Twigs and `Button` / `Input` Seeds.
+- **Injected transport + analytics.** `onSubscribe(values) => Promise<void>` (required) does the
+  network I/O - Canopy has no `fetch`, no endpoint, no PostHog. An optional `onEvent(phase, props)`
+  reports analytics phases (`submitted` before the call, then `succeeded` / `failed`), each with
+  `{ source, has_name }` (PII-free - a boolean, never the name) and, on failure, a `reason` read
+  from the rejected error's `.reason`. So a consumer keeps its own event names, gating, and the
+  `http_4xx` / `network` fidelity it had when it owned the fetch, while Canopy stays coupling-free.
+- **Copy as props.** `title` / `description` (heading), `successBadge` / `successMessage`,
+  `submitLabel` / `submittingLabel` - all defaulted - let each app reproduce its exact wording. The
+  inputs inherit the `Input` Seed's iOS anti-zoom `text-base md:text-sm` (16px mobile, feedback
+  0017), so SubscribeForm adds no per-field font override. **Icon-free** (hand-rolled check
+  SVG, no `@rogueoak/icons` dependency); semantic tokens only, both themes automatically. Stories:
+  playground (resolving submit), always-show-name, no-heading, and an error state.
+
 ## npm publishing (0023)
 
 Releases now **publish to npm**, driven by git tags - a tag _is_ the release.
@@ -697,6 +725,6 @@ always anticipated ("just another Style Dictionary platform - no token rewrite")
   builds AA-clean and the emitter's structure (header, a role's light+dark hex, spacing/radius/font
   constants, valid Swift).
 
-Not yet built: more **Branches** (the layer is open - Dialog · TopNav · SideNav · Combobox are live;
-DataTable to come) and more Twigs as needed, then **Boughs** (templates), and an Xcode/Swift Package
-wrapper around the generated `Tokens.swift`.
+Not yet built: more **Branches** (the layer is open - Dialog · TopNav · SideNav · Combobox ·
+SubscribeForm are live; DataTable to come) and more Twigs as needed, then **Boughs** (templates), and
+an Xcode/Swift Package wrapper around the generated `Tokens.swift`.

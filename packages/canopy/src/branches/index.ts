@@ -44,6 +44,14 @@ export type {
   ComboboxOption,
 } from './Combobox';
 
+export { SubscribeForm } from './SubscribeForm';
+export type {
+  SubscribeFormProps,
+  SubscribeValues,
+  SubscribeEventPhase,
+  SubscribeError,
+} from './SubscribeForm';
+
 export {
   TopNav,
   TopNavBrand,
