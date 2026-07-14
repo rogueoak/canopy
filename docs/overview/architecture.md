@@ -558,6 +558,19 @@ themed by the layers it composes and the tokens already provisioned.
   and a portal and composes the `Badge` Seed** - the tier decided by interaction class, corrected on
   review (see feedback 0013 / learnings). Its public surface is trimmed to the root + `ComboboxOption`
   + prop-type unions; the internal parts are not exported.
+- **Transport-agnostic-by-injection Branch (SubscribeForm, spec 0035).** The first Branch that does
+  **I/O by injection**: an email-capture box that owns the UI, a `submit/success/error` state machine,
+  the progressive optional-Name reveal, the honeypot, and the a11y wiring - but does **no** network
+  I/O and imports **no** analytics SDK. The consumer passes `onSubscribe(values) => Promise<void>`
+  (the submit; resolve = success, reject = failure, whose `.message` is shown and `.reason` fed to
+  analytics) and an optional `onEvent(phase, props)` (analytics phases `submitted`/`succeeded`/
+  `failed`, PII-free props). This keeps the design-system component free of any consumer coupling
+  (no PostHog, no Constant Contact, no hard-coded endpoint) - the pattern to reach for whenever a
+  shipped component would otherwise bake in a transport or analytics dependency (see learnings). It
+  is a Branch (owns interaction state, composes the `Card` / `FormField` Twigs + `Button` / `Input`
+  Seeds), stays **icon-free** (a hand-rolled `currentColor` check SVG, the Dialog-close precedent, so
+  Canopy keeps its no-`@rogueoak/icons`-dependency invariant), adds no token and no `dark:`, and
+  takes all copy as defaulted props so a consumer reproduces its exact wording.
 
 ## Showcase + theming (Storybook)
 

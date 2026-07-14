@@ -258,8 +258,10 @@ Layout:
 > live too - **FormField**, **SearchBar**, **Card**, and **Breadcrumb** - composing those atoms on
 > the `@rogueoak/canopy/twigs` subpath. The **Branches** (organisms) layer is filling in on the new
 > `@rogueoak/canopy/branches` subpath - **Dialog** (a focus-trapping, portalled modal), **TopNav**
-> (a responsive, hand-rolled-disclosure navigation bar), and **SideNav** (a collapsible side rail
-> whose mobile drawer reuses the Radix Dialog primitive) - each composing Seeds and Twigs.
+> (a responsive, hand-rolled-disclosure navigation bar), **SideNav** (a collapsible side rail
+> whose mobile drawer reuses the Radix Dialog primitive), **Combobox** (a filterable multi-select),
+> and **SubscribeForm** (a transport-agnostic email-capture box you wire to your own submit +
+> analytics), each composing Seeds and Twigs.
 
 ## Roadmap
 
@@ -268,7 +270,7 @@ Built foundation-first, so there's **always working software and working docs** 
 - [x] **Roots** - tokens: palette, typography, spacing, radii, elevation, motion; light & dark theming
 - [x] **Seeds** - the atoms; the full first catalogue is live
 - [x] **Twigs** - molecules; the first compositions are live (FormField · SearchBar · Card · Breadcrumb)
-- [ ] **Branches** - organisms; the layer is open (**Dialog · TopNav · SideNav** are live; DataTable to come)
+- [ ] **Branches** - organisms; the layer is open (**Dialog · TopNav · SideNav · Combobox · SubscribeForm** are live; DataTable to come)
 - [x] **Icons** - `@rogueoak/icons`, a curated tree-shakeable set (Lucide + social marks) re-exported from react-icons
 - [ ] **Boughs** - page scaffolds and layout patterns
 
