@@ -708,13 +708,7 @@ function EaseRow({ name }: { name: string }) {
 // A preset player - clicking Play remounts the sample with the literal `animate-*` class so
 // the ACTUAL Tailwind utility runs. `animationName` is the preset's label, also used as the
 // badge text; the remount (key bump) restarts the "out" presets so they visibly animate away.
-function PresetPlayer({
-  cls,
-  animationName,
-}: {
-  cls: string;
-  animationName: string;
-}) {
+function PresetPlayer({ cls, animationName }: { cls: string; animationName: string }) {
   const [tick, setTick] = useState(0);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -876,7 +870,8 @@ function Motion() {
                     style={{
                       fontSize: 'var(--text-sm)',
                       color: 'var(--color-text)',
-                      background: 'color-mix(in srgb, var(--color-warning) 12%, var(--color-surface))',
+                      background:
+                        'color-mix(in srgb, var(--color-warning) 12%, var(--color-surface))',
                       borderLeft: '3px solid var(--color-warning)',
                       borderRadius: 'var(--radius-sm)',
                       padding: '0.5rem 0.75rem',

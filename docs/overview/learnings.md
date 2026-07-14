@@ -535,3 +535,16 @@ or a mid-flight glitch. For any spring/overshoot demo, size the stage for the **
 `travel x max-bezier-y`, add clearance) and prove the extreme is in-bounds by frame-sampling the
 live animation or freezing at the computed peak. Never ship a motion affordance you have not
 watched fire (a CSS `:hover` re-declaring an identical `animation-name` restarts nothing).
+
+## Form controls must default to >=16px on mobile (iOS auto-zoom)
+
+iOS Safari auto-zooms the page when a focused `<input>`/`<textarea>`/`<select>` has a computed
+font-size below 16px. `Input`, `Textarea`, and the `Select` trigger all shipped `text-sm` (14px), so
+every consumer hit the zoom on phones - surfaced downstream on rogueoak.com, then fixed at the source
+(feedback 0017), not per-app.
+
+**Apply it:** a focusable form control's mobile font-size must be >=16px. Default the field controls
+to `text-base md:text-sm` (16px on phones, 14px from `md` up) rather than a bare `text-sm`; a
+design-system default is a stronger guarantee than asking each consumer to override. This is a
+platform rule, not an aesthetic choice - verify the computed size, and remember `md` (width) is the
+right proxy since iOS zoom is a small-viewport phone behavior.

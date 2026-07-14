@@ -19,7 +19,10 @@ export const inputVariants = cva(
   // not text-subtle: subtle is AA-Large-only and placeholder is small text - review 0006); the
   // focus-visible ring (a11y); the disabled token pair (not opacity); and the aria-invalid
   // danger overrides for border + ring.
-  'flex w-full rounded-md border border-border bg-surface px-3 text-sm text-text placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger',
+  // Font size is `text-base md:text-sm`: 16px on mobile, 14px from md up. iOS Safari auto-zooms
+  // the page when a focused field is below 16px, so the base font must be >=16px on phones; the
+  // md breakpoint restores the denser 14px on larger (non-zooming) viewports (feedback 0017).
+  'flex w-full rounded-md border border-border bg-surface px-3 text-base md:text-sm text-text placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger',
   {
     variants: {
       size: {

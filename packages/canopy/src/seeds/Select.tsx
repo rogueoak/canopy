@@ -50,8 +50,11 @@ const SelectTrigger = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
+    // Trigger font is `text-base md:text-sm` (16px mobile, 14px from md up): iOS Safari auto-zooms
+    // a focused control under 16px, so the trigger matches Input/Textarea (feedback 0017). The
+    // dropdown items below stay text-sm - they are not focusable text fields, so they never zoom.
     className={cn(
-      'flex h-10 w-full items-center justify-between rounded-md border border-border bg-surface px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger data-[placeholder]:text-text-muted [&>span]:line-clamp-1',
+      'flex h-10 w-full items-center justify-between rounded-md border border-border bg-surface px-3 text-base md:text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger data-[placeholder]:text-text-muted [&>span]:line-clamp-1',
       className,
     )}
     {...props}

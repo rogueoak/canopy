@@ -20,6 +20,15 @@ describe('Input', () => {
     expect(input).toHaveClass('border', 'border-border', 'bg-surface', 'text-text', 'rounded-md');
   });
 
+  it('renders at 16px on mobile and 14px from md up (iOS anti-zoom, feedback 0017)', () => {
+    render(<Input aria-label="Field" />);
+    const input = screen.getByRole('textbox');
+    // text-base (16px) is the mobile default so iOS Safari does not auto-zoom on focus;
+    // md:text-sm restores the denser 14px on larger, non-zooming viewports.
+    expect(input).toHaveClass('text-base', 'md:text-sm');
+    expect(input).not.toHaveClass('text-sm');
+  });
+
   it('typing updates the value', async () => {
     const user = userEvent.setup();
     render(<Input aria-label="Field" />);
