@@ -521,3 +521,17 @@ encode the test that **fails** if it regresses (e.g. an occurrence-count guard),
 presence check can't see a duplicate. This recurs with
 [keyboard/controlled coverage (0014)](../feedback/0014-interactive-component-test-coverage.md): the
 shared root is testing the happy representative instead of the whole contract.
+
+## Verify motion in flight, not at rest
+
+The Storybook motion page (0034) shipped a first pass where the easing track clipped
+`spring-strong`'s overshoot and a "hover to play" affordance was a dead CSS no-op - both passed a
+build and a full-page screenshot, because a settled screenshot captures the REST state and the
+overshoot had already returned in-bounds by capture time. Caught by review. See
+[`docs/feedback/0016-verify-motion-in-flight-not-at-rest.md`](../feedback/0016-verify-motion-in-flight-not-at-rest.md).
+
+**Apply it:** a static screenshot proves layout, not animation - it cannot see clipping, overshoot,
+or a mid-flight glitch. For any spring/overshoot demo, size the stage for the **peak** (compute
+`travel x max-bezier-y`, add clearance) and prove the extreme is in-bounds by frame-sampling the
+live animation or freezing at the computed peak. Never ship a motion affordance you have not
+watched fire (a CSS `:hover` re-declaring an identical `animation-name` restarts nothing).

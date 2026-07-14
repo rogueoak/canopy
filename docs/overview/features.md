@@ -61,7 +61,10 @@ theme only; the dark remap + runtime switching are 0004.
   (`p-4` = 1rem) derive from a single `--spacing: 0.25rem` base.
 - **Foundations stories** - Storybook `Foundations` section renders ramps + semantic swatches,
   the Figtree specimen + type scale + weights + leading, spacing, radii, elevation, motion, and
-  a WCAG AA contrast table. The visual lock surface.
+  a WCAG AA contrast table. The visual lock surface. **Motion** documents the durations and
+  easings tables (literal values from `tokens`, with replayable bars and overshooting spring
+  tracks) plus interactive pop / shake / fade preset players that run the real `animate-*`
+  utilities and show each preset's token composition; `shake` is gated `motion-reduce:animate-none`.
 - **Contrast** - all primary text roles meet WCAG AA (≥ 4.5:1) on their intended surfaces;
   `text-subtle` (tertiary) meets AA-large (≥ 3:1), documented as for large/non-essential text.
   Guarded by an **executable contrast test** (`tokens.test.ts`) that resolves each role to its
