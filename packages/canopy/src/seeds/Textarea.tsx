@@ -16,8 +16,11 @@ import { cn } from '../lib/cn';
  * multi-line, and `resize-y` so a reader can drag the field taller (height otherwise follows
  * the native `rows` prop).
  */
+// Font size is `text-base md:text-sm` (16px mobile, 14px from md up): iOS Safari auto-zooms a
+// focused field under 16px, so phones get 16px and larger viewports keep the denser 14px
+// (feedback 0017), matching Input.
 const textareaBase =
-  'flex w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger min-h-20 resize-y';
+  'flex w-full rounded-md border border-border bg-surface px-3 py-2 text-base md:text-sm text-text placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger min-h-20 resize-y';
 
 /**
  * TextareaProps - the native `<textarea>` attributes, verbatim. Textarea adds no bespoke props

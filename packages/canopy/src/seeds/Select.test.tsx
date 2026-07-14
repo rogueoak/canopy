@@ -55,6 +55,14 @@ describe('Select', () => {
     expect(trigger).toHaveClass('border-border', 'bg-surface', 'text-text', 'rounded-md', 'h-10');
   });
 
+  it('the trigger renders at 16px on mobile and 14px from md up (iOS anti-zoom, feedback 0017)', () => {
+    render(<Basic />);
+    const trigger = screen.getByRole('combobox');
+    // Input-parity: 16px on phones so iOS does not auto-zoom the focused trigger, 14px from md up.
+    expect(trigger).toHaveClass('text-base', 'md:text-sm');
+    expect(trigger).not.toHaveClass('text-sm');
+  });
+
   it('opens the listbox and shows the options on click', async () => {
     const user = userEvent.setup();
     render(<Basic />);

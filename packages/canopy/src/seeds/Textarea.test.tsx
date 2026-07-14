@@ -25,6 +25,13 @@ describe('Textarea', () => {
     );
   });
 
+  it('renders at 16px on mobile and 14px from md up (iOS anti-zoom, feedback 0017)', () => {
+    render(<Textarea aria-label="Field" />);
+    const textarea = screen.getByRole('textbox');
+    expect(textarea).toHaveClass('text-base', 'md:text-sm');
+    expect(textarea).not.toHaveClass('text-sm');
+  });
+
   it('typing updates the value', async () => {
     const user = userEvent.setup();
     render(<Textarea aria-label="Field" />);
