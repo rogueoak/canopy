@@ -37,11 +37,11 @@ export const Label = React.forwardRef<React.ComponentRef<typeof LabelPrimitive.R
       {...props}
     >
       {children}
-      {required ? (
+      {required && (
         <span aria-hidden="true" className="text-danger">
           {' *'}
         </span>
-      ) : null}
+      )}
     </LabelPrimitive.Root>
   ),
 );
