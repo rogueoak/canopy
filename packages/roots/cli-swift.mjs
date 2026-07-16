@@ -7,7 +7,7 @@
  *
  * Reuses the SAME brand config `roots-brand` reads:
  *   {
- *     "name": "thoughtstream",
+ *     "name": "sunset",
  *     "primitives": "primitive.json",          // string or string[]
  *     "semantic": "semantic.json",             // light role mapping
  *     "semanticDark": "semantic.dark.json"     // dark role mapping

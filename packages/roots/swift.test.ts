@@ -9,10 +9,10 @@ import { buildSwift, renderSwift } from './swift.mjs';
 /**
  * The iOS/Swift export (spec 0032): a brand's DTCG files -> one `Tokens.swift` with every semantic
  * colour as a light+dark `Color`, plus Canopy's core spacing / radius / type scale as CGFloat/Font.
- * Uses the thoughtstream brand as the fixture (the real brand this feature ships for).
+ * Uses the sunset brand example as the fixture.
  */
 const here = dirname(fileURLToPath(import.meta.url));
-const brand = (f: string) => resolve(here, 'examples/thoughtstream', f);
+const brand = (f: string) => resolve(here, 'examples/sunset', f);
 
 let outDir: string;
 let swift: string;
@@ -20,7 +20,7 @@ let swift: string;
 beforeAll(async () => {
   outDir = mkdtempSync(join(tmpdir(), 'canopy-swift-'));
   const res = await buildSwift({
-    name: 'thoughtstream',
+    name: 'sunset',
     primitives: brand('primitive.json'),
     semantic: brand('semantic.json'),
     semanticDark: brand('semantic.dark.json'),
@@ -47,8 +47,8 @@ describe('Swift emitter - generated Tokens.swift', () => {
 
   it('emits every semantic colour under CanopyColor as a light + dark hex', () => {
     expect(swift).toContain('public enum CanopyColor {');
-    // primary is the documented anchor: slate.600 light / slate.300 dark.
-    expect(swift).toContain('public static let primary = Color(light: 0x42666F, dark: 0x8FB6BB)');
+    // primary is the sunset anchor: ember.600 light / ember.400 dark.
+    expect(swift).toContain('public static let primary = Color(light: 0x8F4D22, dark: 0xD88A57)');
     // A role must never emit a bare single hex - every CanopyColor member is light+dark.
     const colorBlock = swift.slice(
       swift.indexOf('enum CanopyColor'),
@@ -87,7 +87,7 @@ describe('Swift emitter - generated Tokens.swift', () => {
     const dir = mkdtempSync(join(tmpdir(), 'canopy-swift-out-'));
     try {
       const res = await buildSwift({
-        name: 'thoughtstream',
+        name: 'sunset',
         primitives: brand('primitive.json'),
         semantic: brand('semantic.json'),
         semanticDark: brand('semantic.dark.json'),

@@ -109,9 +109,8 @@ inherits its Canopy default until you choose to map it. (Its default pairs are a
 by Canopy's own build.)
 
 A runnable example brand lives in [`examples/sunset/`](./examples/sunset) - copy it as a starting
-point. A real brand, [`examples/thoughtstream/`](./examples/thoughtstream) (River Mist, a
-slate-teal water palette), also drives the iOS/Swift export below. `style-dictionary` is an OPTIONAL
-peer dependency, needed only if you run the brand pipeline; the token exports do not require it.
+point; it also drives the iOS/Swift export below. `style-dictionary` is an OPTIONAL peer
+dependency, needed only if you run the brand pipeline; the token exports do not require it.
 
 ### Runtime path (quick cases)
 
@@ -140,8 +139,8 @@ A native SwiftUI app can consume Canopy tokens with no re-authoring: `roots-swif
 `Tokens.swift` for a brand. It takes the SAME brand config `roots-brand` reads:
 
 ```bash
-npx roots-swift examples/thoughtstream/brand.config.json
-# -> writes dist/thoughtstream/Tokens.swift (39 semantic colors, light + dark)
+npx roots-swift examples/sunset/brand.config.json
+# -> writes dist/sunset/Tokens.swift (39 semantic colors, light + dark)
 ```
 
 Or from code:
@@ -150,11 +149,11 @@ Or from code:
 import { buildSwift } from '@rogueoak/roots/swift';
 
 await buildSwift({
-  name: 'thoughtstream',
-  primitives: 'examples/thoughtstream/primitive.json',
-  semantic: 'examples/thoughtstream/semantic.json',
-  semanticDark: 'examples/thoughtstream/semantic.dark.json',
-  outFile: 'dist/thoughtstream/Tokens.swift',
+  name: 'sunset',
+  primitives: 'examples/sunset/primitive.json',
+  semantic: 'examples/sunset/semantic.json',
+  semanticDark: 'examples/sunset/semantic.dark.json',
+  outFile: 'dist/sunset/Tokens.swift',
 });
 ```
 

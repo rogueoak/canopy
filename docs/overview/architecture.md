@@ -229,7 +229,7 @@ exists to dodge a role/ramp name collision).
 `style-dictionary` is an OPTIONAL `peerDependency`: the token exports (`.`, `./tokens.css`,
 `./tailwind-preset.css`) never touch it; only the build-time brand pipeline does, so a consumer pays
 for it only if they use it. The pipeline source files (`brand.mjs`, `cli.mjs`, `contrast.mjs`,
-`style-dictionary.config.mjs`) and the `examples/sunset/` + `examples/thoughtstream/` brands ship in
+`style-dictionary.config.mjs`) and the `examples/sunset/` brand ship in
 the package `files`. A quick **runtime** path (an app redefining `--color-*` in its own
 `:root`/`.dark`) is documented for cases that don't need the guard.
 

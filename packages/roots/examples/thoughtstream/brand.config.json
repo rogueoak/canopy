@@ -1,8 +1,0 @@
-{
-  "name": "thoughtstream",
-  "primitives": "primitive.json",
-  "semantic": "semantic.json",
-  "semanticDark": "semantic.dark.json",
-  "outFile": "thoughtstream.css",
-  "scope": null
-}
