@@ -11,7 +11,7 @@ import { cn } from '../lib/cn';
  */
 export const buttonVariants = cva(
   // Base - shared by every variant/size.
-  'inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:pointer-events-none disabled:bg-disabled disabled:text-disabled-foreground',
+  'inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:pointer-events-none disabled:bg-disabled disabled:text-disabled-foreground',
   {
     variants: {
       variant: {
