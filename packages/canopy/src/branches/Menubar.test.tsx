@@ -7,6 +7,7 @@ import {
   MenubarCheckboxItem,
   MenubarContent,
   MenubarItem,
+  MenubarLabel,
   MenubarMenu,
   MenubarRadioGroup,
   MenubarRadioItem,
@@ -151,9 +152,7 @@ describe('Menubar', () => {
         <MenubarMenu>
           <MenubarTrigger>View</MenubarTrigger>
           <MenubarContent>
-            <MenubarCheckboxItem defaultChecked={false} onCheckedChange={onCheckedChange}>
-              Show Toolbar
-            </MenubarCheckboxItem>
+            <MenubarCheckboxItem onCheckedChange={onCheckedChange}>Show Toolbar</MenubarCheckboxItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>,
@@ -163,9 +162,12 @@ describe('Menubar', () => {
     const item = screen.getByRole('menuitemcheckbox', { name: 'Show Toolbar' });
     expect(item).toHaveAttribute('aria-checked', 'false');
 
-    // Focus the item (ArrowDown from the pointer-opened content) then toggle it with Enter. With
-    // no controlled `checked`, Radix owns the state; the observable proof it toggled is the
-    // reported next value (true) - the uncontrolled item flips itself on select.
+    // Focus the item (ArrowDown from the pointer-opened content) then toggle it with Enter. Radix's
+    // menu CheckboxItem has NO uncontrolled checked-state (no `defaultChecked`; the prop does not
+    // exist) - when `checked` is not supplied it never self-flips aria-checked, and selecting closes
+    // + unmounts the content. So the only observable proof of the toggle on the uncontrolled path is
+    // the reported next value (true); the DOM aria-checked outcome is covered by the controlled test
+    // below, where the caller owns state and the item stays consistent.
     await user.keyboard('{ArrowDown}');
     await waitFor(() => expect(document.activeElement).toBe(item));
     await user.keyboard('{Enter}');
@@ -317,6 +319,39 @@ describe('Menubar', () => {
       expect(screen.getByRole('menuitem', { name: 'Email link' })).toBeInTheDocument(),
     );
     expect(screen.getByRole('menuitem', { name: 'Copy link' })).toBeInTheDocument();
+  });
+
+  it('renders a MenubarLabel, an inset item, and a right-aligned MenubarShortcut', async () => {
+    const user = userEvent.setup();
+    render(
+      <Menubar>
+        <MenubarMenu>
+          <MenubarTrigger>File</MenubarTrigger>
+          <MenubarContent>
+            <MenubarLabel>Actions</MenubarLabel>
+            <MenubarItem inset>Rename</MenubarItem>
+            <MenubarItem>
+              Save <MenubarShortcut>Ctrl+S</MenubarShortcut>
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>,
+    );
+
+    await user.click(screen.getByRole('menuitem', { name: 'File' }));
+
+    // The non-interactive group heading renders its text (not a menuitem).
+    const label = screen.getByText('Actions');
+    expect(label).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Actions' })).not.toBeInTheDocument();
+
+    // The inset item reserves the leading indicator gutter (pl-8) so it aligns with toggle rows.
+    expect(screen.getByRole('menuitem', { name: 'Rename' })).toHaveClass('pl-8');
+
+    // MenubarShortcut exists to push a muted key hint to the trailing edge: its whole reason to be
+    // is ml-auto. Assert that directly so the one custom (non-Radix) part ships proven.
+    const shortcut = screen.getByText('Ctrl+S');
+    expect(shortcut).toHaveClass('ml-auto', 'text-caption', 'text-text-subtle');
   });
 
   it('merges a caller className over the default on Menubar (cn)', () => {
