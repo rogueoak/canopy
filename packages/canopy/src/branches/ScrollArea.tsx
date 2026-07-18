@@ -58,7 +58,9 @@ ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;
  * `vertical` (default) renders a thin vertical track (`h-full w-2.5`, `border-l`); `horizontal`
  * renders a thin horizontal track (`h-2.5 flex-col`, `border-t`). Both use `touch-none select-none`
  * with a small padding so the `flex-1 rounded-full bg-border` thumb sits as a slim rounded bar
- * flush to the edge. Forwards `ref` to the scrollbar, spreads native props.
+ * flush to the edge. The thumb deepens to `bg-border-strong` on hover/active (with
+ * `transition-colors`) so the draggable bar reads as interactive. Forwards `ref` to the scrollbar,
+ * spreads native props.
  */
 const ScrollBar = React.forwardRef<
   React.ComponentRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,
@@ -69,7 +71,7 @@ const ScrollBar = React.forwardRef<
     orientation={orientation}
     forceMount={forceMount}
     className={cn(
-      'flex touch-none select-none transition-colors',
+      'flex touch-none select-none',
       orientation === 'vertical' && 'h-full w-2.5 border-l border-l-transparent p-px',
       orientation === 'horizontal' && 'h-2.5 flex-col border-t border-t-transparent p-px',
       className,
@@ -78,7 +80,7 @@ const ScrollBar = React.forwardRef<
   >
     <ScrollAreaPrimitive.ScrollAreaThumb
       forceMount={forceMount}
-      className="relative flex-1 rounded-full bg-border"
+      className="relative flex-1 rounded-full bg-border transition-colors hover:bg-border-strong active:bg-border-strong"
     />
   </ScrollAreaPrimitive.ScrollAreaScrollbar>
 ));

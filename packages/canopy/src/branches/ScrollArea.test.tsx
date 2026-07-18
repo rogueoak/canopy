@@ -45,6 +45,22 @@ describe('ScrollArea', () => {
     expect(viewport).toContainElement(screen.getByTestId('child'));
   });
 
+  it('ships a vertical ScrollBar (and the thumb) by default from the root', () => {
+    // A bare ScrollArea with no injected ScrollBar must still render the default vertical bar
+    // baked into the root - the headline ergonomics of the component. type="always" force-shows
+    // the bar in jsdom (no layout/overflow math needed).
+    render(
+      <ScrollArea data-testid="root" type="always">
+        <p>Scrollable content</p>
+      </ScrollArea>,
+    );
+    const bar = screen
+      .getByTestId('root')
+      .querySelector('[data-orientation="vertical"]');
+    expect(bar).not.toBeNull();
+    expect(bar).toHaveClass('h-full', 'w-2.5', 'touch-none', 'select-none');
+  });
+
   it('applies the base relative overflow-hidden classes on the root', () => {
     render(<ScrollArea data-testid="root">content</ScrollArea>);
     expect(screen.getByTestId('root')).toHaveClass('relative', 'overflow-hidden');
