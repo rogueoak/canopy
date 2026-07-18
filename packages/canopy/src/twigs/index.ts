@@ -31,6 +31,23 @@ export type {
   EmptyDescriptionProps,
   EmptyContentProps,
 } from './Empty';
+export {
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+  ItemActions,
+  itemVariants,
+} from './Item';
+export type {
+  ItemProps,
+  ItemMediaProps,
+  ItemContentProps,
+  ItemTitleProps,
+  ItemDescriptionProps,
+  ItemActionsProps,
+} from './Item';
 
 export { SearchBar } from './SearchBar';
 export type { SearchBarProps } from './SearchBar';
