@@ -404,3 +404,26 @@ export type {
   DrawerDescriptionProps,
   DrawerOverlayProps,
 } from './Drawer';
+
+export {
+  Sheet,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetOverlay,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from './Sheet';
+export type {
+  SheetProps,
+  SheetTriggerProps,
+  SheetCloseProps,
+  SheetContentProps,
+  SheetOverlayProps,
+  SheetHeaderProps,
+  SheetFooterProps,
+  SheetTitleProps,
+  SheetDescriptionProps,
+} from './Sheet';
