@@ -101,8 +101,31 @@ describe('DropdownMenu', () => {
     const trigger = screen.getByRole('button', { name: 'Open menu' });
     await user.click(trigger);
 
-    // First ArrowDown highlights the first enabled item (Edit); the disabled Archive is skipped.
+    // First ArrowDown highlights the first enabled item (Edit).
     await user.keyboard('{ArrowDown}');
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveAttribute(
+        'data-highlighted',
+        '',
+      ),
+    );
+
+    // Second ArrowDown skips the disabled Archive and lands on Delete (keyboard nav skips
+    // disabled items, per spec 0054). The Delete item's accessible name includes its trailing
+    // shortcut hint, so match on the leading label.
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() =>
+      expect(screen.getByRole('menuitem', { name: /Delete/ })).toHaveAttribute(
+        'data-highlighted',
+        '',
+      ),
+    );
+    expect(screen.getByRole('menuitem', { name: 'Archive' })).not.toHaveAttribute(
+      'data-highlighted',
+    );
+
+    // ArrowUp returns to Edit, the first enabled item, to activate it.
+    await user.keyboard('{ArrowUp}');
     await waitFor(() =>
       expect(screen.getByRole('menuitem', { name: 'Edit' })).toHaveAttribute(
         'data-highlighted',
