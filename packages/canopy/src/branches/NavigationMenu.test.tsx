@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
 import { createRef } from 'react';
@@ -100,7 +100,9 @@ describe('NavigationMenu', () => {
     expect(products).toHaveAttribute('aria-expanded', 'true');
 
     await user.keyboard('{Escape}');
-    expect(products).toHaveAttribute('aria-expanded', 'false');
+    // Radix closes asynchronously (state + animation): wait for the close to be observable rather
+    // than reading aria-expanded synchronously, which flaked under the full suite.
+    await waitFor(() => expect(products).toHaveAttribute('aria-expanded', 'false'));
     expect(products).toHaveFocus();
   });
 

@@ -250,7 +250,12 @@ export const TopNavLink = React.forwardRef<HTMLAnchorElement, TopNavLinkProps>(
           asChild={asChild}
           onClick={handleClick}
           className={cn(
-            'rounded-md px-3 py-2 text-body-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+            // Neutralize the NavigationMenuLink visual base so a flat TopNavLink renders like the
+            // pre-refactor bare `<a>`: `inline` overrides its `block`, `select-text` its
+            // `select-none`, and `hover:bg-transparent` its `hover:bg-muted-raised` (a raised-surface
+            // token that never belonged on the flat `bg-surface` bar). cn/tailwind-merge lets these
+            // win over the inherited base, keeping the flat-link appearance unchanged.
+            'inline select-text rounded-md px-3 py-2 text-body-sm transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
             active ? 'font-medium text-text' : 'text-text-muted hover:text-text',
             className,
           )}

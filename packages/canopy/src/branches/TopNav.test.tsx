@@ -264,6 +264,43 @@ describe('TopNav + NavigationMenu (0069 refactor)', () => {
     );
   });
 
+  it('keeps flat links visually identical: no leaked NavigationMenuLink base (block / raised hover)', () => {
+    render(<Basic />);
+    const link = screen.getByRole('link', { name: 'Settings' });
+    // The NavigationMenuLink visual base is neutralized on the TopNav path, so a flat link renders
+    // like the pre-refactor bare `<a>`: it must NOT paint a raised-surface hover fill, and stays
+    // inline (not `block`) and selectable (not `select-none`).
+    expect(link).not.toHaveClass('hover:bg-muted-raised');
+    expect(link).not.toHaveClass('block');
+    expect(link).not.toHaveClass('select-none');
+    expect(link).toHaveClass('inline', 'text-text-muted');
+  });
+
+  it('exposes the links as a list of items (the composed NavigationMenuList structure)', () => {
+    // The refactor routes flat links through NavigationMenuList/Item, so the accessible tree now
+    // exposes a list of listitems. This assertion pins that intended structure as a decision.
+    render(<Basic />);
+    expect(screen.getByRole('list')).toBeInTheDocument();
+    const items = screen.getAllByRole('listitem');
+    expect(items.length).toBeGreaterThanOrEqual(2);
+    expect(items[0]).toContainElement(screen.getByRole('link', { name: 'Dashboard' }));
+  });
+
+  it('preserves flat-link tab order and adds Radix arrow traversal between links', async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+    const dashboard = screen.getByRole('link', { name: 'Dashboard' });
+    const settings = screen.getByRole('link', { name: 'Settings' });
+
+    // Tab still reaches the first flat link in document order (unchanged from the bare-<a> model).
+    dashboard.focus();
+    expect(dashboard).toHaveFocus();
+    // Radix installs roving arrow traversal between the links in the list - a conscious interaction
+    // gain from composing NavigationMenu, pinned here so a future Radix change is caught.
+    await user.keyboard('{ArrowRight}');
+    expect(settings).toHaveFocus();
+  });
+
   it('lets a consumer add a NavigationMenu dropdown into the links area', async () => {
     const user = userEvent.setup();
     render(
