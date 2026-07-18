@@ -50,6 +50,7 @@ export default defineConfig({
     'embla-carousel-react',
     'input-otp',
     'recharts',
+    'react-resizable-panels',
     'tailwind-merge',
   ],
 });
