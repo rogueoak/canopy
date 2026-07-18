@@ -29,6 +29,7 @@ export default defineConfig({
     '@radix-ui/react-checkbox',
     '@radix-ui/react-dialog',
     '@radix-ui/react-switch',
+    '@radix-ui/react-tabs',
     '@radix-ui/react-toggle',
     '@radix-ui/react-toggle-group',
     '@radix-ui/react-radio-group',
