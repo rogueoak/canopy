@@ -142,3 +142,5 @@ export type {
   TableCellProps,
   TableCaptionProps,
 } from './Table';
+export { ScrollArea, ScrollBar } from './ScrollArea';
+export type { ScrollAreaProps, ScrollBarProps } from './ScrollArea';
