@@ -192,6 +192,41 @@ describe('Pagination', () => {
     expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 
+  it('forwards asChild onto the caller child for Previous/Next (chevron stays a sibling)', () => {
+    render(
+      <>
+        <PaginationPrevious asChild>
+          <a href="/prev" data-testid="prev-link">
+            Older
+          </a>
+        </PaginationPrevious>
+        <PaginationNext asChild>
+          <a href="/next" data-testid="next-link">
+            Newer
+          </a>
+        </PaginationNext>
+      </>,
+    );
+    // The Slot forwards onto the single caller <a> (no double-child throw) - it is a real link
+    // carrying the link classes, the visible label, and the decorative chevron as a sibling.
+    const prev = screen.getByTestId('prev-link');
+    expect(prev.tagName).toBe('A');
+    expect(prev).toHaveAttribute('href', '/prev');
+    expect(prev).toHaveClass('bg-transparent');
+    expect(prev).toHaveTextContent('Older');
+    expect(prev.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    expect(prev.querySelector('a')).toBeNull();
+
+    const next = screen.getByTestId('next-link');
+    expect(next.tagName).toBe('A');
+    expect(next).toHaveAttribute('href', '/next');
+    expect(next).toHaveTextContent('Newer');
+    expect(next.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+
+    // No wrapping anchor was introduced: exactly the two caller links exist.
+    expect(screen.getAllByRole('link')).toHaveLength(2);
+  });
+
   it('fires the caller click handler on a link', () => {
     const onClick = vi.fn();
     render(

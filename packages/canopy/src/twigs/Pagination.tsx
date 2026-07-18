@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
+import { Slot, Slottable } from '@radix-ui/react-slot';
 import { type VariantProps } from 'class-variance-authority';
 import { buttonVariants } from '../seeds/Button';
 import { cn } from '../lib/cn';
@@ -123,6 +123,10 @@ export type PaginationPreviousProps = PaginationLinkProps;
  * inactive (never the current page) and uses the wider `md` size to fit the label. At the first
  * page the caller renders it with `aria-disabled="true"` and no `href`/handler (the disabled-end
  * idiom - native `disabled` does not apply to an `<a>`).
+ *
+ * The injected chevron sits beside a `Slottable` label: with `asChild` the underlying `Slot`
+ * forwards onto the caller's single child (a router `<Link>`) while the decorative chevron renders
+ * as a sibling, so `asChild` works here exactly as it does on `PaginationLink`.
  */
 export const PaginationPrevious = React.forwardRef<HTMLAnchorElement, PaginationPreviousProps>(
   ({ className, 'aria-label': ariaLabel = 'Go to previous page', children, ...props }, ref) => (
@@ -147,7 +151,7 @@ export const PaginationPrevious = React.forwardRef<HTMLAnchorElement, Pagination
       >
         <path d="m15 18-6-6 6-6" />
       </svg>
-      {children ?? <span>Previous</span>}
+      <Slottable>{children ?? <span>Previous</span>}</Slottable>
     </PaginationLink>
   ),
 );
@@ -159,6 +163,10 @@ export type PaginationNextProps = PaginationLinkProps;
  * PaginationNext - a `PaginationLink` pre-wired with a "Next" label + trailing chevron and a default
  * `aria-label` "Go to next page". Inactive, `md` size. At the last page the caller renders it with
  * `aria-disabled="true"` and no `href`/handler (the disabled-end idiom).
+ *
+ * The injected chevron sits beside a `Slottable` label: with `asChild` the underlying `Slot`
+ * forwards onto the caller's single child while the decorative chevron renders as a sibling, so
+ * `asChild` works here exactly as it does on `PaginationLink`.
  */
 export const PaginationNext = React.forwardRef<HTMLAnchorElement, PaginationNextProps>(
   ({ className, 'aria-label': ariaLabel = 'Go to next page', children, ...props }, ref) => (
@@ -169,7 +177,7 @@ export const PaginationNext = React.forwardRef<HTMLAnchorElement, PaginationNext
       className={cn('gap-1 pr-2.5', className)}
       {...props}
     >
-      {children ?? <span>Next</span>}
+      <Slottable>{children ?? <span>Next</span>}</Slottable>
       <svg
         width="16"
         height="16"
