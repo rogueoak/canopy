@@ -34,7 +34,9 @@ export type InputOTPProps = React.ComponentPropsWithoutRef<typeof OTPInput> & {
  * NUMERIC (`REGEXP_ONLY_DIGITS`) - the common OTP case, which also drives the right mobile keyboard
  * - and a caller passes an alphanumeric regex source to widen it. Value is controlled (`value` /
  * `onChange`) or uncontrolled, and `onComplete` fires when every slot is filled. When `disabled`,
- * the row dims and drops pointer events via the shared disabled cursor token.
+ * the container flags `group` + the not-allowed cursor so each slot can dim to the shared field
+ * disabled tokens (`bg-disabled` / `text-disabled-foreground`) via `group-has-[:disabled]:`,
+ * matching a disabled `Input` rather than the toggle-control opacity wash.
  */
 export const InputOTP = React.forwardRef<
   React.ComponentRef<typeof OTPInput>,
@@ -44,7 +46,7 @@ export const InputOTP = React.forwardRef<
     ref={ref}
     pattern={pattern}
     containerClassName={cn(
-      'flex items-center gap-2 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50',
+      'group flex items-center gap-2 has-[:disabled]:cursor-not-allowed',
       containerClassName,
     )}
     className={cn('disabled:cursor-not-allowed', className)}
@@ -76,7 +78,10 @@ export interface InputOTPSlotProps extends React.ComponentPropsWithoutRef<'div'>
  * (`char` / `isActive` / `hasFakeCaret`) from the root's `OTPInputContext` and renders the typed
  * character; when the slot is active it shows a focus RING (the field focus tokens) plus a blinking
  * fake CARET (a thin bar animated with `animate-pulse`, gated behind `motion-reduce:animate-none`
- * so reduced-motion users get a steady bar - no new keyframe).
+ * so reduced-motion users get a steady bar - no new keyframe). The glyph is sized `text-base
+ * md:text-sm` to track the field type ramp `Input` / `Textarea` / `Select` use, and when the
+ * root input is disabled the box dims to the shared field disabled tokens
+ * (`bg-disabled` / `text-disabled-foreground`) via `group-has-[:disabled]:`, for Input parity.
  *
  * OWN LOGIC / boundary guard: the package's `slots` array is exactly `maxLength` long, so an
  * `index` outside `[0, maxLength)` has no entry - reading `slots[index]` there is `undefined` and
@@ -98,11 +103,12 @@ export const InputOTPSlot = React.forwardRef<HTMLDivElement, InputOTPSlotProps>(
     return (
       <div
         ref={ref}
-        data-active={isActive ? '' : undefined}
+        data-active={isActive ? 'true' : undefined}
         aria-invalid={props['aria-invalid']}
         className={cn(
-          'relative flex h-10 w-10 items-center justify-center border-y border-r border-border bg-surface text-body text-text',
+          'relative flex h-10 w-10 items-center justify-center border-y border-r border-border bg-surface text-base md:text-sm text-text',
           'first:rounded-l-md first:border-l last:rounded-r-md',
+          'group-has-[:disabled]:bg-disabled group-has-[:disabled]:text-disabled-foreground',
           'aria-invalid:border-danger',
           'data-[active=true]:z-10 data-[active=true]:ring-2 data-[active=true]:ring-ring data-[active=true]:ring-offset-2 data-[active=true]:ring-offset-ring-offset',
           'data-[active=true]:aria-invalid:ring-danger',

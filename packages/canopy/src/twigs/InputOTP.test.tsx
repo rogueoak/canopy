@@ -253,9 +253,37 @@ describe('InputOTP', () => {
     const input = screen.getByRole('textbox');
     await user.click(input);
     await user.keyboard('1');
-    // After one keystroke the second slot (index 1) is the active target.
+    // After one keystroke the second slot (index 1) is the active target. Assert the exact
+    // value the `data-[active=true]:` ring/z-index selectors match - not just attribute presence -
+    // so a regression that emits an empty-string (unmatched) attribute fails here.
     const slots = container.querySelectorAll('[class*="first:rounded-l-md"]');
-    expect(slots[1]).toHaveAttribute('data-active');
+    expect(slots[1]).toHaveAttribute('data-active', 'true');
+  });
+
+  it('arrow keys move the active slot', async () => {
+    const user = userEvent.setup();
+    const { container } = renderOTP({ maxLength: 6 });
+    const input = screen.getByRole('textbox');
+    await user.click(input);
+    await user.keyboard('123');
+    const slots = container.querySelectorAll('[class*="first:rounded-l-md"]');
+    const activeIndex = () =>
+      Array.from(slots).findIndex((s) => s.getAttribute('data-active') === 'true');
+
+    // After typing three digits the active slot sits at the trailing edge (index 3).
+    expect(activeIndex()).toBe(3);
+
+    // ArrowLeft moves the active slot back one box (the caret drives the active affordance).
+    await user.keyboard('{ArrowLeft}');
+    expect(activeIndex()).toBe(2);
+    // Exactly one slot is ever active at a time.
+    expect(
+      Array.from(slots).filter((s) => s.getAttribute('data-active') === 'true'),
+    ).toHaveLength(1);
+
+    // ArrowRight moves the active slot back toward the end.
+    await user.keyboard('{ArrowRight}');
+    expect(activeIndex()).toBe(3);
   });
 
   it('renders an out-of-range slot as an inert empty box (boundary guard)', async () => {
