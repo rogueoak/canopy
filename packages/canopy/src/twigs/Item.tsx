@@ -27,7 +27,7 @@ import { cn } from '../lib/cn';
  * - `ItemMedia` - the leading icon/avatar column; `shrink-0` so it does not shrink when tight.
  * - `ItemContent` - the flexible middle column; `min-w-0 flex-1` so its text can truncate.
  * - `ItemTitle` - the primary line; `<div>` by default, `asChild` promotes it to a real heading.
- * - `ItemDescription` - the secondary line; `truncate` so a long description clips to one line.
+ * - `ItemDescription` - the secondary line; clips to one line by default, overridable to wrap.
  * - `ItemActions` - the trailing cluster; `ml-auto shrink-0` pinned to the trailing edge.
  *
  * Accessibility is composed by the caller: `Item` carries no ARIA role by default (a plain row of
@@ -35,9 +35,10 @@ import { cn } from '../lib/cn';
  * promotes the title to a heading, and a surrounding `<ul>`/`role="list"` gives the list structure.
  */
 export const itemVariants = cva(
-  // Base - shared by every variant. The clickable-row hover/focus lives here so it applies whenever
-  // `asChild` renders an interactive element; on a plain `<div>` there is nothing to hover/focus.
-  'flex items-center gap-3 rounded-lg p-3 text-text transition-colors hover:bg-muted-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset',
+  // Base - shared by every variant. Layout + surface only; the clickable-row hover/focus affordance
+  // is NOT here, because CSS `:hover` fires on a plain presentational `<div>` too and would falsely
+  // signal clickability. It is appended in `Item` only on the `asChild` (interactive) path.
+  'flex items-center gap-3 rounded-lg p-3 text-text transition-colors',
   {
     variants: {
       variant: {
@@ -51,6 +52,13 @@ export const itemVariants = cva(
     },
   },
 );
+
+// The clickable-row affordance - a `bg-muted-raised` hover highlight and the focus-visible ring.
+// Gated to the `asChild` (interactive `<a>`/`<button>`) path so a plain presentational `default`/
+// `outline` row does NOT highlight on mouse-over as if it were clickable (spec 0042: this affordance
+// belongs to the clickable row only).
+const itemInteractiveClasses =
+  'hover:bg-muted-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset';
 
 export interface ItemProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof itemVariants> {
@@ -73,7 +81,13 @@ export interface ItemProps
 export const Item = React.forwardRef<HTMLDivElement, ItemProps>(
   ({ className, variant, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'div';
-    return <Comp ref={ref} className={cn(itemVariants({ variant }), className)} {...props} />;
+    return (
+      <Comp
+        ref={ref}
+        className={cn(itemVariants({ variant }), asChild && itemInteractiveClasses, className)}
+        {...props}
+      />
+    );
   },
 );
 Item.displayName = 'Item';
@@ -137,12 +151,22 @@ export type ItemDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
 /**
  * ItemDescription - the secondary line. Muted supporting text (`text-body-sm text-text-muted`)
- * with `truncate` so a long description clips to one line by default; the caller can override the
- * clipping via `className` (e.g. `whitespace-normal`) when a wrapping description is wanted.
+ * that clips to one line by default. The clip is spelled out as its constituent utilities
+ * (`overflow-hidden text-ellipsis whitespace-nowrap`) rather than the single `truncate` shorthand
+ * so that a caller CAN actually override it via `className` and get a wrapping description: because
+ * tailwind-merge treats `truncate` as one atomic group, a sibling `whitespace-normal` cannot undo
+ * it, whereas the spelled-out form lets `whitespace-normal overflow-visible` win the relevant axes.
  */
 export const ItemDescription = React.forwardRef<HTMLParagraphElement, ItemDescriptionProps>(
   ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn('truncate text-body-sm text-text-muted', className)} {...props} />
+    <p
+      ref={ref}
+      className={cn(
+        'overflow-hidden text-ellipsis whitespace-nowrap text-body-sm text-text-muted',
+        className,
+      )}
+      {...props}
+    />
   ),
 );
 ItemDescription.displayName = 'ItemDescription';

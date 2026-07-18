@@ -79,6 +79,28 @@ describe('Item', () => {
     expect(row).not.toHaveClass('border', 'bg-transparent');
   });
 
+  it('does NOT carry the clickable-row hover/focus affordance on a plain non-asChild row', () => {
+    render(
+      <Item data-testid="row">
+        <ItemTitle>Presentational</ItemTitle>
+      </Item>,
+    );
+    const row = screen.getByTestId('row');
+    // A presentational `<div>` row must not signal clickability: CSS `:hover` fires on a `<div>`
+    // too, so the hover highlight (and focus-visible ring) belong to the asChild path only.
+    expect(row).not.toHaveClass('hover:bg-muted-raised');
+    expect(row).not.toHaveClass('focus-visible:ring-2');
+  });
+
+  it('does NOT carry the hover affordance on a non-asChild outline row either', () => {
+    render(
+      <Item data-testid="row" variant="outline">
+        <ItemTitle>Static outline</ItemTitle>
+      </Item>,
+    );
+    expect(screen.getByTestId('row')).not.toHaveClass('hover:bg-muted-raised');
+  });
+
   it('renders the whole row as an <a> via asChild, forwarding href and gaining the hover/focus affordance', () => {
     render(
       <Item asChild>
@@ -147,20 +169,32 @@ describe('Item', () => {
     expect(screen.getByText('Not a heading').tagName).toBe('DIV');
   });
 
-  it('truncates ItemDescription to one line by default, overridable via className (caller wins)', () => {
+  it('clips ItemDescription to one line by default, and lets a caller actually override to wrap', () => {
     render(
       <>
         <ItemDescription data-testid="clipped">Default clip</ItemDescription>
-        <ItemDescription data-testid="wrapping" className="whitespace-normal text-body">
+        <ItemDescription
+          data-testid="wrapping"
+          className="overflow-visible whitespace-normal text-body"
+        >
           Overridden
         </ItemDescription>
       </>,
     );
-    expect(screen.getByTestId('clipped')).toHaveClass('truncate', 'text-body-sm', 'text-text-muted');
+    // Default: the clip is spelled out (not the atomic `truncate`) so a caller can undo it.
+    const clipped = screen.getByTestId('clipped');
+    expect(clipped).toHaveClass(
+      'overflow-hidden',
+      'text-ellipsis',
+      'whitespace-nowrap',
+      'text-body-sm',
+      'text-text-muted',
+    );
+    // Override: the caller's `whitespace-normal overflow-visible` win the clip axes via cn(), so the
+    // description genuinely wraps - the documented escape hatch produces the user-facing outcome.
     const wrapping = screen.getByTestId('wrapping');
-    // cn() de-dupes the conflicting typography size: the caller's `text-body` wins over `text-body-sm`.
-    expect(wrapping).toHaveClass('text-body', 'whitespace-normal');
-    expect(wrapping).not.toHaveClass('text-body-sm');
+    expect(wrapping).toHaveClass('whitespace-normal', 'overflow-visible', 'text-body');
+    expect(wrapping).not.toHaveClass('whitespace-nowrap', 'overflow-hidden', 'text-body-sm');
   });
 
   it('keeps ItemMedia and ItemActions from shrinking, and flexes ItemContent', () => {
