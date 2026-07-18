@@ -59,10 +59,19 @@ describe('Calendar', () => {
 
   it('range mode reports a { from, to } span with the in-between highlighted', async () => {
     const user = userEvent.setup();
+    const onSelect = vi.fn();
     const Demo = () => {
       const [range, setRange] = useState<DateRange>();
       return (
-        <Calendar mode="range" defaultMonth={JUNE_2024} selected={range} onSelect={setRange} />
+        <Calendar
+          mode="range"
+          defaultMonth={JUNE_2024}
+          selected={range}
+          onSelect={(r) => {
+            onSelect(r);
+            setRange(r);
+          }}
+        />
       );
     };
     render(<Demo />);
@@ -72,6 +81,11 @@ describe('Calendar', () => {
     expect(dayCell(14)).toHaveAttribute('aria-selected', 'true');
     // An in-between day is part of the selected range (the highlighted middle span).
     expect(dayCell(12)).toHaveAttribute('aria-selected', 'true');
+    // The reported value is a `{ from, to }` object (not a Date[] or a swapped pair): the last
+    // onSelect call closes the span from day 10 to day 14.
+    const [reported] = onSelect.mock.lastCall as [DateRange];
+    expect(reported.from?.getDate()).toBe(10);
+    expect(reported.to?.getDate()).toBe(14);
   });
 
   it('multiple mode toggles days in the set', async () => {

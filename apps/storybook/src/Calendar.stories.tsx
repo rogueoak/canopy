@@ -33,11 +33,12 @@ const DEFAULT_MONTH = new Date(2024, 5, 1);
 /* --------------------------------------------------------------- Playground */
 
 /**
- * The default single-month grid in single-select mode. Pick a day; today shows the ring marker
- * and outside days are muted.
+ * The default single-month grid in single-select mode, opened on the current month so the
+ * today ring marker is in view. Pick a day; today shows the ring marker and outside days are
+ * muted. (The other stories pin a fixed month for a stable catalog; Playground stays on today.)
  */
 export const Playground: Story = {
-  args: { mode: 'single', defaultMonth: DEFAULT_MONTH },
+  args: { mode: 'single' },
 };
 
 /* ------------------------------------------------------------------- Single */
