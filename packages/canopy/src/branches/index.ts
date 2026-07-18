@@ -310,3 +310,10 @@ export type {
   ResizablePanelProps,
   ResizableHandleProps,
 } from './Resizable';
+
+export { DatePicker, DatePickerTrigger, DatePickerContent } from './DatePicker';
+export type {
+  DatePickerProps,
+  DatePickerSingleProps,
+  DatePickerRangeProps,
+} from './DatePicker';
