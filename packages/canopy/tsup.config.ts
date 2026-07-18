@@ -30,6 +30,7 @@ export default defineConfig({
     '@radix-ui/react-dialog',
     '@radix-ui/react-switch',
     '@radix-ui/react-toggle',
+    '@radix-ui/react-toggle-group',
     '@radix-ui/react-radio-group',
     '@radix-ui/react-select',
     '@radix-ui/react-separator',
