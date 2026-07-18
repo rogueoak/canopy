@@ -82,18 +82,20 @@ export type ResizableHandleProps = React.ComponentPropsWithoutRef<typeof PanelRe
 /**
  * ResizableHandle - the draggable divider between two panels. Wraps `PanelResizeHandle`, which
  * supplies `role="separator"`, `tabIndex=0` (keyboard focus + arrow-key resize), the `aria-valuenow`
- * / `aria-valuemin` / `aria-valuemax` sizing values, and `data-panel-group-direction`. Styled with
- * border tokens: a `bg-border` divider line (a 1px width in a horizontal group, a 1px height in a
- * vertical one), a widened invisible hit target via the `after:` pseudo-element, the standard
- * focus-ring tokens on keyboard focus, and literal `data-[panel-group-direction=vertical]:` variants
- * that flip its dimensions and rotate the grip for a vertical group. Pass `withHandle` for the
- * visible grip and `aria-label` to name the handle.
+ * / `aria-valuemin` / `aria-valuemax` sizing values, `data-panel-group-direction`, and
+ * `data-resize-handle-state` (`inactive` / `hover` / `drag`). Styled with border tokens: a
+ * `bg-border` idle divider line (a 1px width in a horizontal group, a 1px height in a vertical one)
+ * that deepens to `bg-border-strong` on hover and `bg-primary` while dragging via literal
+ * `data-[resize-handle-state=...]:` variants, a widened invisible hit target via the `after:`
+ * pseudo-element, the standard focus-ring tokens on keyboard focus, and literal
+ * `data-[panel-group-direction=vertical]:` variants that flip its dimensions and rotate the grip for
+ * a vertical group. Pass `withHandle` for the visible grip and `aria-label` to name the handle.
  */
 export function ResizableHandle({ className, withHandle = false, ...props }: ResizableHandleProps) {
   return (
     <PanelResizeHandle
       className={cn(
-        'relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0 [&[data-panel-group-direction=vertical]>div]:rotate-90',
+        'relative flex w-px items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset data-[resize-handle-state=hover]:bg-border-strong data-[resize-handle-state=drag]:bg-primary data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0 [&[data-panel-group-direction=vertical]>div]:rotate-90',
         className,
       )}
       {...props}
