@@ -2,6 +2,12 @@ import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cn } from '../lib/cn';
 import { Button } from '../seeds';
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from './NavigationMenu';
 
 /**
  * TopNav - the second canopy Branch (organism, spec 0025), and the first **non-portalled,
@@ -160,23 +166,40 @@ export type TopNavLinksProps = React.HTMLAttributes<HTMLDivElement>;
  * It carries `id={panelId}` so `TopNavMenuButton`'s `aria-controls` resolves to it. The `md:*`
  * literals override the mobile `hidden`/panel styling at the breakpoint; all classes are full
  * literals so Tailwind's scanner emits them.
+ *
+ * Internally it composes `NavigationMenu` (0069): the panel element is a `NavigationMenu` rendered
+ * `asChild` onto the styled `<div>` (so it stays a single `<div>`, NOT a second `<nav>` landmark -
+ * the parent `TopNav` owns the one `navigation` role), and its `<ul>` list is a `NavigationMenuList`.
+ * This lets a consumer drop a `NavigationMenuItem` + `NavigationMenuTrigger`/`NavigationMenuContent`
+ * dropdown into the links area where a mega-menu adds value, while a flat row of `TopNavLink`s keeps
+ * working verbatim. TopNav's public API (exports, prop shapes, the `aria-current` active idiom, and
+ * the mobile disclosure collapse) is unchanged.
  */
 export const TopNavLinks = React.forwardRef<HTMLDivElement, TopNavLinksProps>(
-  ({ className, ...props }, ref) => {
+  ({ className, children, ...props }, ref) => {
     const { open, panelId } = useTopNavContext('TopNavLinks');
     return (
-      <div
-        ref={ref}
-        id={panelId}
-        className={cn(
-          'md:static md:flex md:flex-row md:items-center md:gap-1 md:border-0 md:bg-transparent md:p-0 md:shadow-none',
-          open
-            ? 'absolute left-0 right-0 top-full z-40 flex flex-col gap-1 border-b border-border bg-surface p-2 shadow-md'
-            : 'hidden',
-          className,
-        )}
-        {...props}
-      />
+      <NavigationMenu
+        asChild
+        // The viewport is only needed when a consumer adds dropdown content; suppress the
+        // auto-rendered one on the default flat-link path so it never adds stray markup.
+        // (Radix mounts the viewport DOM lazily, only while content is active.)
+      >
+        <div
+          ref={ref}
+          id={panelId}
+          className={cn(
+            'md:static md:flex md:flex-row md:items-center md:gap-1 md:border-0 md:bg-transparent md:p-0 md:shadow-none',
+            open
+              ? 'absolute left-0 right-0 top-full z-40 flex flex-col gap-1 border-b border-border bg-surface p-2 shadow-md'
+              : 'hidden',
+            className,
+          )}
+          {...props}
+        >
+          <NavigationMenuList className="contents md:contents">{children}</NavigationMenuList>
+        </div>
+      </NavigationMenu>
     );
   },
 );
@@ -198,11 +221,17 @@ export interface TopNavLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorEl
  * lockstep; idle links are muted with a hover lift. `asChild` wraps a router `<Link>` (default
  * element `<a>`). Clicking closes the mobile panel, so a tap navigates AND dismisses. Carries the
  * shared focus-visible ring.
+ *
+ * It composes NavigationMenu (0069) internally: each link is a `NavigationMenuItem` wrapping a
+ * `NavigationMenuLink`, so a flat `TopNavLink` participates in the same roving-focus list as any
+ * dropdown a consumer adds alongside it. The public surface is unchanged - the resolved element is
+ * still the `<a>` (or the `asChild` child), the `active` -> `aria-current="page"` idiom holds, and
+ * a click still dismisses the mobile panel. The TopNav-specific classes are passed through so the
+ * link renders identically (the flat classes win via `cn` over the NavigationMenuLink base).
  */
 export const TopNavLink = React.forwardRef<HTMLAnchorElement, TopNavLinkProps>(
   ({ className, active = false, asChild = false, onClick, ...props }, ref) => {
     const { close } = useTopNavContext('TopNavLink');
-    const Comp = asChild ? Slot : 'a';
 
     const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
       onClick?.(event);
@@ -214,17 +243,29 @@ export const TopNavLink = React.forwardRef<HTMLAnchorElement, TopNavLinkProps>(
     };
 
     return (
-      <Comp
-        ref={ref}
-        aria-current={active ? 'page' : undefined}
-        onClick={handleClick}
-        className={cn(
-          'rounded-md px-3 py-2 text-body-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
-          active ? 'font-medium text-text' : 'text-text-muted hover:text-text',
-          className,
-        )}
-        {...props}
-      />
+      <NavigationMenuItem className="contents">
+        <NavigationMenuLink
+          ref={ref}
+          active={active}
+          asChild={asChild}
+          onClick={handleClick}
+          className={cn(
+            // Neutralize the NavigationMenuLink visual base so a flat TopNavLink renders like the
+            // pre-refactor bare `<a>`: `inline` overrides its `block`, `select-text` its
+            // `select-none`, and `hover:bg-transparent` its `hover:bg-muted-raised` (a raised-surface
+            // token that never belonged on the flat `bg-surface` bar). cn/tailwind-merge lets these
+            // win over the inherited base, keeping the flat-link appearance unchanged.
+            'inline select-text rounded-md px-3 py-2 text-body-sm transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+            active ? 'font-medium text-text' : 'text-text-muted hover:text-text',
+            className,
+          )}
+          // TopNavLink's public prop type is `AnchorHTMLAttributes` (React's `onSelect`), while
+          // NavigationMenuLink types `onSelect` as Radix's native `(e: Event) => void`. Both land
+          // on the same underlying `<a>`, so the spread is behaviour-safe; cast to reconcile the
+          // one incompatible handler signature without narrowing TopNavLink's anchor surface.
+          {...(props as Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'onSelect'>)}
+        />
+      </NavigationMenuItem>
     );
   },
 );

@@ -10,6 +10,12 @@ import {
   TopNavLinks,
   TopNavMenuButton,
 } from './TopNav';
+import {
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuTrigger,
+} from './NavigationMenu';
 
 function Basic({
   ariaLabel,
@@ -227,5 +233,98 @@ describe('TopNav', () => {
     // The ref resolves to the element the caller styles (the nav bar), not the wrapper header.
     expect(ref.current).toBe(screen.getByRole('navigation'));
     expect(ref.current).toHaveClass('h-14', 'bg-surface');
+  });
+});
+
+// Regression coverage for the 0069 refactor: TopNavLinks now composes NavigationMenu internally.
+// These assert the refactor is API-preserving - exactly ONE navigation landmark (no second <nav>
+// from the composed NavigationMenu), the mobile disclosure collapse still governs the panel id,
+// and a consumer can now add a NavigationMenu dropdown into the links area.
+describe('TopNav + NavigationMenu (0069 refactor)', () => {
+  it('exposes exactly one navigation landmark (the composed NavigationMenu is not a second <nav>)', () => {
+    render(<Basic />);
+    // getByRole (singular) throws on multiple matches, so this proves the inner NavigationMenu
+    // renders `asChild` onto the panel <div> rather than adding its own <nav>.
+    const nav = screen.getByRole('navigation');
+    expect(nav).toHaveAttribute('aria-label', 'Main');
+  });
+
+  it('keeps the mobile disclosure collapse: the panel id still toggles hidden with aria-expanded', async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+    const button = screen.getByRole('button', { name: 'Open menu' });
+    const panel = document.getElementById(button.getAttribute('aria-controls')!)!;
+
+    expect(panel).toHaveClass('hidden');
+    await user.click(button);
+    expect(panel).not.toHaveClass('hidden');
+    expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
+
+  it('keeps flat links visually identical: no leaked NavigationMenuLink base (block / raised hover)', () => {
+    render(<Basic />);
+    const link = screen.getByRole('link', { name: 'Settings' });
+    // The NavigationMenuLink visual base is neutralized on the TopNav path, so a flat link renders
+    // like the pre-refactor bare `<a>`: it must NOT paint a raised-surface hover fill, and stays
+    // inline (not `block`) and selectable (not `select-none`).
+    expect(link).not.toHaveClass('hover:bg-muted-raised');
+    expect(link).not.toHaveClass('block');
+    expect(link).not.toHaveClass('select-none');
+    expect(link).toHaveClass('inline', 'text-text-muted');
+  });
+
+  it('exposes the links as a list of items (the composed NavigationMenuList structure)', () => {
+    // The refactor routes flat links through NavigationMenuList/Item, so the accessible tree now
+    // exposes a list of listitems. This assertion pins that intended structure as a decision.
+    render(<Basic />);
+    expect(screen.getByRole('list')).toBeInTheDocument();
+    const items = screen.getAllByRole('listitem');
+    expect(items.length).toBeGreaterThanOrEqual(2);
+    expect(items[0]).toContainElement(screen.getByRole('link', { name: 'Dashboard' }));
+  });
+
+  it('preserves flat-link tab order and adds Radix arrow traversal between links', async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+    const dashboard = screen.getByRole('link', { name: 'Dashboard' });
+    const settings = screen.getByRole('link', { name: 'Settings' });
+
+    // Tab still reaches the first flat link in document order (unchanged from the bare-<a> model).
+    dashboard.focus();
+    expect(dashboard).toHaveFocus();
+    // Radix installs roving arrow traversal between the links in the list - a conscious interaction
+    // gain from composing NavigationMenu, pinned here so a future Radix change is caught.
+    await user.keyboard('{ArrowRight}');
+    expect(settings).toHaveFocus();
+  });
+
+  it('lets a consumer add a NavigationMenu dropdown into the links area', async () => {
+    const user = userEvent.setup();
+    render(
+      <TopNav>
+        <TopNavBrand>Acme</TopNavBrand>
+        <TopNavLinks>
+          <TopNavLink href="#home">Home</TopNavLink>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Products</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuLink href="#analytics">Analytics</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </TopNavLinks>
+      </TopNav>,
+    );
+
+    // The flat TopNavLink and the dropdown trigger coexist in the same list.
+    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
+    const trigger = screen.getByRole('button', { name: /Products/ });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(await screen.findByRole('link', { name: 'Analytics' })).toBeInTheDocument();
   });
 });
