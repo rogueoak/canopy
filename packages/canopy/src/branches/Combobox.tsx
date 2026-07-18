@@ -1,8 +1,14 @@
 import * as React from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
-import { Command as CommandPrimitive } from 'cmdk';
 import { Badge } from '../seeds/Badge';
 import { cn } from '../lib/cn';
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandItem,
+} from './Command';
 
 /**
  * Combobox - the canopy filterable-select Branch (spec 0030), built on
@@ -15,16 +21,19 @@ import { cn } from '../lib/cn';
  * content (mounted under `<body>`) themes correctly too, exactly like `SelectContent`.
  *
  * It lives in the Branches tier (not Seeds): it owns interaction state and a portal, and it
- * composes the `Badge` Seed for its multi-select chips - both of which a Seed may not do (the
- * tier rule is "twigs/branches import seeds, never the reverse"), exactly like `Dialog`.
+ * composes the `Badge` Seed for its multi-select chips and the shared `Command` parts (spec 0066)
+ * for the filterable list - all of which a Seed may not do (the tier rule is "branches import
+ * seeds, never the reverse"), exactly like `Dialog`.
  *
  * The public surface is a single stateful root, `Combobox`, that owns open state, the search
  * text, and the selected value(s). One `multiple` prop discriminates the value shape (single
  * `string` vs `string[]`) and the field rendering. It takes an `options` list
  * (`{ label, value, disabled? }[]`) and standard field props (`value` / `onValueChange`,
- * `placeholder`, `disabled`, `aria-invalid`). The styled part wrappers below
- * (`ComboboxTrigger` / `Content` / `Input` / `List` / `Item` / `Empty`) are module-internal
- * composition details, not a supported public contract.
+ * `placeholder`, `disabled`, `aria-invalid`). Since spec 0066 the filterable listbox is the
+ * shared `Command` family (`Command` / `CommandInput` / `CommandList` / `CommandEmpty` /
+ * `CommandItem`), styled once and reused here; only the Popover shell, the selection state, the
+ * chips, and the `ComboboxItem` check gutter remain module-internal composition details, not a
+ * supported public contract.
  *
  * Single-select reads like `Select` (pick commits and closes) with a type-to-filter input at the
  * top of the list. Multi-select renders the chosen options as removable `Badge` (0008) chips in
@@ -84,99 +93,42 @@ const ComboboxContent = React.forwardRef<
       )}
       {...props}
     >
-      {/* Selection is owned by the root; cmdk only drives filtering + active-item highlight. */}
-      <CommandPrimitive className="flex h-full w-full flex-col overflow-hidden">
-        {children}
-      </CommandPrimitive>
+      {/*
+       * Selection is owned by the root; the shared `Command` (spec 0066) drives only filtering +
+       * active-item highlight. `Command` already renders the `flex h-full w-full flex-col
+       * overflow-hidden` list container on a `bg-surface-raised` card; the enclosing
+       * `PopoverPrimitive.Content` above owns the raised card, border, and shadow, so `Command`
+       * reads as the inner list here. `bg-transparent` lets the Popover surface show through.
+       */}
+      <Command className="bg-transparent">{children}</Command>
     </PopoverPrimitive.Content>
   </PopoverPrimitive.Portal>
 ));
 ComboboxContent.displayName = 'ComboboxContent';
 
 /**
- * ComboboxInput - the type-to-filter search box (`Command.Input`) pinned to the top of the
- * popover, with a leading magnifier glyph and a hairline `border-border` underline. It carries
- * cmdk's `role="combobox"` + `aria-expanded` and drives client-side filtering of the list.
+ * ComboboxItem - a selectable option, the shared `CommandItem` (spec 0066, `role="option"`) with
+ * the Combobox check gutter. Highlight (keyboard or hover, via cmdk's `data-selected` active
+ * state) uses the raised-surface `muted-raised` fill; `data-disabled` dims and drops pointer
+ * events - all inherited from `CommandItem`. A leading check sits in the left gutter (`pl-8`) when
+ * the option is part of the current selection (`selected`); `w-full pl-8 pr-2` overrides
+ * `CommandItem`'s default `gap-2 px-2` for the gutter layout (caller className wins via `cn()`).
  */
-const ComboboxInput = React.forwardRef<
-  React.ComponentRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b border-border px-3">
-    <SearchIcon />
-    <CommandPrimitive.Input
-      ref={ref}
-      className={cn(
-        'flex h-10 w-full rounded-md bg-transparent py-3 text-sm text-text outline-none placeholder:text-text-muted disabled:cursor-not-allowed disabled:opacity-50',
-        className,
-      )}
-      {...props}
-    />
-  </div>
-));
-ComboboxInput.displayName = 'ComboboxInput';
-
-/**
- * ComboboxList - the scrollable listbox region (`Command.List`, `role="listbox"`). In multiple
- * mode the root sets `aria-multiselectable` so assistive tech announces the toggle semantics.
- */
-const ComboboxList = React.forwardRef<
-  React.ComponentRef<typeof CommandPrimitive.List>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
->(({ className, ...props }, ref) => (
-  <CommandPrimitive.List
-    ref={ref}
-    className={cn('max-h-72 overflow-y-auto overflow-x-hidden p-1', className)}
-    {...props}
-  />
-));
-ComboboxList.displayName = 'ComboboxList';
-
-/**
- * ComboboxEmpty - the friendly no-results slot (`Command.Empty`), shown only when the current
- * filter matches nothing. Muted, centred text on the same raised surface.
- */
-const ComboboxEmpty = React.forwardRef<
-  React.ComponentRef<typeof CommandPrimitive.Empty>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
->(({ className, ...props }, ref) => (
-  <CommandPrimitive.Empty
-    ref={ref}
-    className={cn('py-6 text-center text-sm text-text-muted', className)}
-    {...props}
-  />
-));
-ComboboxEmpty.displayName = 'ComboboxEmpty';
-
-/**
- * ComboboxItem - a selectable option (`Command.Item`, `role="option"`). Highlight (keyboard or
- * hover, via cmdk's `data-selected` active state) uses the raised-surface `muted-raised` fill
- * (feedback 0006), which lifts toward the foreground on the `surface-raised` popover in BOTH
- * themes; `data-disabled` dims with opacity and drops pointer events. A leading check sits in the
- * left gutter (`pl-8`) when the option is part of the current selection (`selected`).
- */
-interface ComboboxItemProps extends React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item> {
+interface ComboboxItemProps extends React.ComponentPropsWithoutRef<typeof CommandItem> {
   /** Whether the option is part of the current selection - renders the leading check. */
   selected?: boolean;
 }
 
 const ComboboxItem = React.forwardRef<
-  React.ComponentRef<typeof CommandPrimitive.Item>,
+  React.ComponentRef<typeof CommandItem>,
   ComboboxItemProps
 >(({ className, children, selected = false, ...props }, ref) => (
-  <CommandPrimitive.Item
-    ref={ref}
-    className={cn(
-      'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-text outline-none data-[selected=true]:bg-muted-raised data-[selected=true]:text-text data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50',
-      className,
-    )}
-    {...props}
-  >
+  <CommandItem ref={ref} className={cn('w-full gap-0 py-1.5 pl-8 pr-2', className)} {...props}>
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       {selected ? <CheckIcon /> : null}
     </span>
     {children}
-  </CommandPrimitive.Item>
+  </CommandItem>
 ));
 ComboboxItem.displayName = 'ComboboxItem';
 
@@ -351,14 +303,14 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>((props, ref)
 
   const list = (
     <ComboboxContent>
-      <ComboboxInput
+      <CommandInput
         placeholder={searchPlaceholder}
         value={search}
         onValueChange={setSearch}
         onKeyDown={handleInputKeyDown}
       />
-      <ComboboxList aria-multiselectable={multiple || undefined}>
-        <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
+      <CommandList aria-multiselectable={multiple || undefined}>
+        <CommandEmpty>{emptyMessage}</CommandEmpty>
         {options.map((option) => (
           <ComboboxItem
             key={option.value}
@@ -371,7 +323,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>((props, ref)
             {option.label}
           </ComboboxItem>
         ))}
-      </ComboboxList>
+      </CommandList>
     </ComboboxContent>
   );
 
@@ -496,26 +448,6 @@ function CheckIcon() {
       className="h-4 w-4"
     >
       <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="mr-2 h-4 w-4 shrink-0 opacity-50"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
     </svg>
   );
 }
