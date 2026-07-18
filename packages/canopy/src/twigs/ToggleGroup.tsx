@@ -28,7 +28,10 @@ export type ToggleGroupProps = React.ComponentPropsWithoutRef<typeof ToggleGroup
  * items), and the grouping ARIA (radiogroup semantics for single, group for multiple).
  *
  * The root shares `variant` / `size` to items through {@link ToggleGroupContext} and paints the
- * joined segmented row (`inline-flex`, outer corners rounded via the item join classes). Styled with
+ * joined segmented row (`inline-flex`, outer corners rounded via the item join classes). `isolate`
+ * on the root opens a local stacking context so the item `hover:z-10` / `focus-visible:z-10` /
+ * `data-[state=on]:z-10` lifts resolve within the bar and never raise a segment above unrelated page
+ * chrome (mirrors the `ButtonGroup` idiom). Styled with
  * the 0005 recipe: FULL LITERAL semantic-token utilities, `cn()` merge (caller `className` wins),
  * `forwardRef` + a full native prop spread. No `dark:` on the common path - light/dark flips through
  * the token layer (spec 0004).
@@ -39,7 +42,7 @@ export const ToggleGroup = React.forwardRef<
 >(({ className, variant, size, children, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
-    className={cn('inline-flex items-center', className)}
+    className={cn('inline-flex items-center isolate', className)}
     {...props}
   >
     <ToggleGroupContext.Provider value={{ variant, size }}>{children}</ToggleGroupContext.Provider>
