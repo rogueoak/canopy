@@ -90,7 +90,7 @@ describe('Toggle', () => {
       'bg-transparent',
       'hover:bg-muted',
       'data-[state=on]:bg-accent',
-      'data-[state=on]:text-text',
+      'data-[state=on]:text-accent-foreground',
     );
   });
 
@@ -102,17 +102,17 @@ describe('Toggle', () => {
       'border-border',
       'bg-surface',
       'data-[state=on]:bg-muted',
-      'data-[state=on]:text-text',
+      'data-[state=on]:border-border-strong',
     );
   });
 
-  it('renders each size with its own height token', () => {
+  it('renders each size with its own height + type-scale token (lg steps up like Button)', () => {
     const { rerender } = render(<Toggle size="sm" aria-label="Bold" />);
-    expect(screen.getByRole('button')).toHaveClass('h-8');
+    expect(screen.getByRole('button')).toHaveClass('h-8', 'text-sm');
     rerender(<Toggle size="md" aria-label="Bold" />);
-    expect(screen.getByRole('button')).toHaveClass('h-10');
+    expect(screen.getByRole('button')).toHaveClass('h-10', 'text-sm');
     rerender(<Toggle size="lg" aria-label="Bold" />);
-    expect(screen.getByRole('button')).toHaveClass('h-12');
+    expect(screen.getByRole('button')).toHaveClass('h-12', 'text-base');
   });
 
   it('includes the focus-visible ring (a11y)', () => {

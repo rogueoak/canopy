@@ -10,25 +10,27 @@ import { cn } from '../lib/cn';
  * `dark:` here: light/dark flips automatically through the token layer (spec 0004).
  *
  * The on state is driven by Radix's `data-state="on"` attribute: `default` fills with the
- * accent surface (`bg-accent`) so a pressed toolbar button reads clearly as active, while
- * `outline` uses the quieter neutral fill (`bg-muted`) so a bordered segment does not shout.
+ * accent surface (`bg-accent`, paired with its guaranteed-contrast `text-accent-foreground`)
+ * so a pressed toolbar button reads clearly as active, while `outline` uses the quieter neutral
+ * fill (`bg-muted`) plus a stronger border (`border-border-strong`) so the pressed state stays
+ * distinct from a plain `hover:bg-muted` and the segment does not shout.
  * Exported so ToggleGroup (0049) can reuse the exact same class recipe on its items.
  */
 export const toggleVariants = cva(
   // Base - shared by every variant/size.
-  'inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
         default:
-          'bg-transparent text-text hover:bg-muted data-[state=on]:bg-accent data-[state=on]:text-text',
+          'bg-transparent text-text hover:bg-muted data-[state=on]:bg-accent data-[state=on]:text-accent-foreground',
         outline:
-          'border border-border bg-surface text-text hover:bg-muted data-[state=on]:bg-muted data-[state=on]:text-text',
+          'border border-border bg-surface text-text hover:bg-muted data-[state=on]:bg-muted data-[state=on]:border-border-strong',
       },
       size: {
-        sm: 'h-8 min-w-8 px-2',
-        md: 'h-10 min-w-10 px-3',
-        lg: 'h-12 min-w-12 px-4',
+        sm: 'h-8 min-w-8 px-2 text-sm',
+        md: 'h-10 min-w-10 px-3 text-sm',
+        lg: 'h-12 min-w-12 px-4 text-base',
       },
     },
     defaultVariants: {
