@@ -89,6 +89,29 @@ describe('ChartContainer', () => {
     expect(css).toContain('--color-b: var(--color-info);');
   });
 
+  it('wraps the ramp past its 5th step so a 6th un-colored series cycles back to the start', () => {
+    stubLayout();
+    const config = {
+      a: { label: 'A' },
+      b: { label: 'B' },
+      c: { label: 'C' },
+      d: { label: 'D' },
+      e: { label: 'E' },
+      f: { label: 'F' },
+    } satisfies ChartConfig;
+    const { container } = render(
+      <ChartContainer config={config}>
+        <BarChart data={DATA}>
+          <Bar dataKey="desktop" />
+        </BarChart>
+      </ChartContainer>,
+    );
+    const css = container.querySelector('style')?.innerHTML ?? '';
+    // Index 5 (the 6th key) wraps to index 0 - the ramp's first step - rather than dropping to unset.
+    expect(css).toContain('--color-e: var(--color-danger);');
+    expect(css).toContain('--color-f: var(--color-primary);');
+  });
+
   it('emits a .dark override block when a config entry uses a theme map', () => {
     stubLayout();
     const config = {
@@ -182,10 +205,33 @@ describe('ChartTooltipContent', () => {
 
   it('renders the configured labels and values for a payload', () => {
     renderInChart(<ChartTooltipContent active payload={payload} label="Jan" />);
+    // The shared label heading renders at the top of the tooltip card.
+    expect(screen.getByText('Jan')).toBeInTheDocument();
     expect(screen.getByText('Desktop')).toBeInTheDocument();
     expect(screen.getByText('Mobile')).toBeInTheDocument();
     expect(screen.getByText('120')).toBeInTheDocument();
     expect(screen.getByText('80')).toBeInTheDocument();
+  });
+
+  it('runs the label through labelFormatter when provided', () => {
+    renderInChart(
+      <ChartTooltipContent
+        active
+        payload={payload}
+        label="Jan"
+        labelFormatter={(value) => `Month: ${value as string}`}
+      />,
+    );
+    expect(screen.getByText('Month: Jan')).toBeInTheDocument();
+    // The raw label is replaced by the formatted heading.
+    expect(screen.queryByText('Jan')).toBeNull();
+  });
+
+  it('omits the label heading when hideLabel is set', () => {
+    renderInChart(<ChartTooltipContent active payload={payload} label="Jan" hideLabel />);
+    expect(screen.queryByText('Jan')).toBeNull();
+    // The series rows still render.
+    expect(screen.getByText('Desktop')).toBeInTheDocument();
   });
 
   it('renders a color swatch per series driven by --color-<key>', () => {

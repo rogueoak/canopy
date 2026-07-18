@@ -26,19 +26,31 @@ import { cn } from '../lib/cn';
  * - `useChart()` - the context hook; throws a clear error outside a `ChartContainer`.
  *
  * Theming is entirely token-driven: there is NO `dark:` on the common path. The default series
- * ramp (`--chart-1..--chart-5`) resolves to existing semantic runtime tokens (`--color-primary`,
- * `--color-info`, `--color-success`, `--color-warning`, `--color-danger`), which the token layer
- * (spec 0004) already flips under `.dark`. Because the ramp is defined once on the container and
- * `.dark` lives on `<html>` (an ancestor), the whole chart re-themes with zero per-component code.
- * A config entry can override its color with any token-backed value (or a `theme` map for distinct
- * light / dark values), still with no `dark:` in source.
+ * ramp resolves to existing semantic runtime tokens (`--color-primary`, `--color-info`,
+ * `--color-success`, `--color-warning`, `--color-danger`), which the token layer (spec 0004)
+ * already flips under `.dark`. Because the ramp is defined once on the container and `.dark` lives
+ * on `<html>` (an ancestor), the whole chart re-themes with zero per-component code. A config entry
+ * can override its color with any token-backed value (or a `theme` map for distinct light / dark
+ * values), still with no `dark:` in source.
+ *
+ * RAMP DECISION (deliberate v1 divergence from spec 0062, recorded per Architect + Designer
+ * review). Spec 0062 called for a NEW `--chart-1..--chart-5` categorical token ramp in the Roots
+ * token layer. v1 instead ALIASES five existing semantic role tokens, on purpose: it ships the
+ * component without a cross-package Roots token change, and still themes light/dark for free with
+ * no `dark:`. The accepted trade-off is that these are intent colors (danger red / warning amber
+ * read as meaningful, and primary/success are both greens), so multi-series contrast and
+ * meaning-neutrality are weaker than a dedicated categorical ramp would give. Follow-up: add a
+ * meaning-neutral `--chart-1..--chart-5` ramp to the Roots preset and repoint `CHART_RAMP` at it -
+ * a token-layer task tracked for a later pass, kept out of this additive component PR so the Roots
+ * package and its generated CSS are not touched here. Callers who need distinguishable categorical
+ * hues today can pass explicit `color`/`theme` per series.
  */
 
 /**
  * ChartConfig - maps each series key to its presentation. `label` is the human name shown in the
  * tooltip / legend; `icon` renders a leading glyph in the legend; `color` (or a `theme` map for
  * distinct light / dark values) supplies the token-backed color that becomes the `--color-<key>`
- * variable. Omit `color`/`theme` to fall back to the `--chart-N` ramp by declaration order.
+ * variable. Omit `color`/`theme` to fall back to the default series ramp by declaration order.
  */
 export type ChartConfig = {
   [key: string]: {
@@ -59,7 +71,9 @@ const THEMES = { light: '', dark: '.dark' } as const;
 // The default 5-color series ramp. Each step resolves to an EXISTING semantic runtime token that
 // the token layer already re-themes under `.dark`, so the ramp is theme-aware for free and needs
 // no new token nor any `dark:` utility. A config entry that supplies its own `color`/`theme`
-// overrides its step; entries without one take the ramp in declaration order (`--chart-1` first).
+// overrides its step; entries without one take the ramp in declaration order. See the file header
+// RAMP DECISION note: aliasing intent tokens is a deliberate v1 choice, with a dedicated
+// meaning-neutral `--chart-1..--chart-5` ramp tracked as a token-layer follow-up.
 const CHART_RAMP = [
   'var(--color-primary)',
   'var(--color-info)',
@@ -134,7 +148,7 @@ ChartContainer.displayName = 'ChartContainer';
 /**
  * ChartStyle - emits the scoped `--color-<key>` CSS variables for the container, one rule per
  * theme. It reads the `ChartConfig`, resolving each key's color from its `color`, its `theme` map,
- * or the default `--chart-N` ramp (by declaration order), and scopes the variables to
+ * or the default series ramp (by declaration order), and scopes the variables to
  * `[data-chart=<id>]` so sibling charts do not collide. Every value is a token-backed `var(--...)`
  * or caller-supplied token string - never a raw hex.
  */
@@ -289,7 +303,7 @@ export const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltip
               >
                 {!hideIndicator ? (
                   <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
                     style={{ backgroundColor: indicatorColor }}
                   />
                 ) : null}
@@ -369,7 +383,7 @@ export const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendCo
                 <Icon />
               ) : !hideIcon ? (
                 <span
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
+                  className="h-2 w-2 shrink-0 rounded-sm"
                   style={{ backgroundColor: (item.color as string) || `var(--color-${itemConfig?.key ?? key})` }}
                 />
               ) : null}
