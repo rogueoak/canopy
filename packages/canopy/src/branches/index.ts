@@ -102,6 +102,24 @@ export type {
 } from './ContextMenu';
 export { HoverCard, HoverCardTrigger, HoverCardContent } from './HoverCard';
 export type { HoverCardProps, HoverCardTriggerProps, HoverCardContentProps } from './HoverCard';
+export {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+  useCarousel,
+} from './Carousel';
+export type {
+  CarouselProps,
+  CarouselContentProps,
+  CarouselItemProps,
+  CarouselControlProps,
+  CarouselApi,
+  CarouselOptions,
+  CarouselPlugin,
+  CarouselOrientation,
+} from './Carousel';
 
 export { Combobox } from './Combobox';
 export type {
