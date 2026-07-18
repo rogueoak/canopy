@@ -381,3 +381,26 @@ export type {
   NavigationMenuIndicatorProps,
   NavigationMenuViewportProps,
 } from './NavigationMenu';
+
+export {
+  Drawer,
+  DrawerTrigger,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerFooter,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerOverlay,
+} from './Drawer';
+export type {
+  DrawerProps,
+  DrawerTriggerProps,
+  DrawerCloseProps,
+  DrawerContentProps,
+  DrawerHeaderProps,
+  DrawerFooterProps,
+  DrawerTitleProps,
+  DrawerDescriptionProps,
+  DrawerOverlayProps,
+} from './Drawer';
