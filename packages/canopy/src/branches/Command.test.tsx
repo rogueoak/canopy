@@ -182,7 +182,7 @@ describe('Command (inline)', () => {
     );
     const item = screen.getByRole('option', { name: 'Apple' });
     expect(item).toHaveClass('data-[selected=true]:bg-muted-raised');
-    expect(item.className).not.toContain('data-[selected=true]:bg-muted ');
+    expect(item.className.split(' ')).not.toContain('data-[selected=true]:bg-muted');
   });
 
   it('forwards refs to the root, input, list, and item', () => {

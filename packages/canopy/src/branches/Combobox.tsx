@@ -123,7 +123,7 @@ const ComboboxItem = React.forwardRef<
   React.ComponentRef<typeof CommandItem>,
   ComboboxItemProps
 >(({ className, children, selected = false, ...props }, ref) => (
-  <CommandItem ref={ref} className={cn('w-full gap-0 py-1.5 pl-8 pr-2', className)} {...props}>
+  <CommandItem ref={ref} className={cn('w-full gap-0 px-0 py-1.5 pl-8 pr-2', className)} {...props}>
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       {selected ? <CheckIcon /> : null}
     </span>

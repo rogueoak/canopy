@@ -68,7 +68,7 @@ const CommandInput = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b border-border px-3">
+  <div {...{ 'cmdk-input-wrapper': '' }} className="flex items-center border-b border-border px-3">
     <SearchIcon />
     <CommandPrimitive.Input
       ref={ref}
@@ -217,7 +217,7 @@ const CommandDialog = ({
       className={cn('overflow-hidden p-0', className, contentProps?.className)}
     >
       <DialogTitle className="sr-only">{title}</DialogTitle>
-      <Command className="[&_[cmdk-group-heading]]:text-text-muted [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5">
+      <Command className="[&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5">
         {children}
       </Command>
     </DialogContent>
