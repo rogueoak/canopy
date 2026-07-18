@@ -39,6 +39,19 @@ export { ButtonGroup } from './ButtonGroup';
 export type { ButtonGroupProps } from './ButtonGroup';
 
 export {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupButton,
+} from './InputGroup';
+export type {
+  InputGroupProps,
+  InputGroupAddonProps,
+  InputGroupInputProps,
+  InputGroupButtonProps,
+} from './InputGroup';
+
+export {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
