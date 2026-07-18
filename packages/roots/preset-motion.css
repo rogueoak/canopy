@@ -32,6 +32,13 @@
  * on the content region and exposes the measured height as `--radix-collapsible-content-height`, so
  * these keyframes animate height from 0 to that var and back. Gated with `motion-reduce:animate-none`
  * so reduced-motion users get an instant show/hide.
+ *
+ * It ALSO carries the multi-section accordion height slide (`animate-accordion-down` / `-up`),
+ * first consumed by Accordion (Branches, spec 0052): Radix toggles `data-[state=open|closed]` on
+ * each section's content region and exposes its measured height as
+ * `--radix-accordion-content-height`, so these keyframes animate height from 0 to that var and
+ * back - the accordion analogue of the collapsible slide. Gated the same way with
+ * `motion-reduce:animate-none`.
  */
 @keyframes dialog-overlay-in {
   from {
@@ -167,6 +174,22 @@
     height: 0;
   }
 }
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
 
 @theme {
   --animate-dialog-overlay-in: dialog-overlay-in var(--duration-slow) var(--ease-decelerate);
@@ -184,4 +207,6 @@
   --animate-fade-out: fade-out var(--duration-fast) var(--ease-standard);
   --animate-collapsible-down: collapsible-down var(--duration-base) var(--ease-standard);
   --animate-collapsible-up: collapsible-up var(--duration-base) var(--ease-standard);
+  --animate-accordion-down: accordion-down var(--duration-base) var(--ease-standard);
+  --animate-accordion-up: accordion-up var(--duration-base) var(--ease-standard);
 }
