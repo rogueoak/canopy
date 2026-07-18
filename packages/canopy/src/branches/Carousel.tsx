@@ -211,7 +211,11 @@ export const CarouselContent = React.forwardRef<HTMLDivElement, CarouselContentP
   ({ className, ...props }, ref) => {
     const { viewportRef, orientation } = useCarousel();
     return (
-      <div ref={viewportRef} className="overflow-hidden" tabIndex={0}>
+      <div
+        ref={viewportRef}
+        className="overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"
+        tabIndex={0}
+      >
         <div
           ref={ref}
           className={cn(

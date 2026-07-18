@@ -73,6 +73,26 @@ describe('Carousel', () => {
     });
   });
 
+  it('gives the focusable viewport the shared focus-visible ring', () => {
+    render(
+      <Carousel>
+        <CarouselContent data-testid="track">
+          <CarouselItem>Slide 1</CarouselItem>
+        </CarouselContent>
+      </Carousel>,
+    );
+    // The viewport is the focusable (tabIndex) parent of the track.
+    const viewport = screen.getByTestId('track').parentElement;
+    expect(viewport).toHaveAttribute('tabindex', '0');
+    expect(viewport).toHaveClass(
+      'focus-visible:outline-none',
+      'focus-visible:ring-2',
+      'focus-visible:ring-ring',
+      'focus-visible:ring-offset-2',
+      'focus-visible:ring-offset-ring-offset',
+    );
+  });
+
   it('exposes prev/next as labelled <button>s', () => {
     render(<Basic />);
     const prev = screen.getByRole('button', { name: 'Previous slide' });
@@ -137,6 +157,82 @@ describe('Carousel', () => {
     const spy = vi.spyOn(api!, 'scrollPrev');
     await user.click(prev);
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('runs a caller onKeyDown before paging', () => {
+    let api: CarouselApi;
+    const onKeyDown = vi.fn();
+    render(
+      <Carousel onKeyDown={onKeyDown} setApi={(a) => (api = a)}>
+        <CarouselContent>
+          <CarouselItem>Slide 1</CarouselItem>
+          <CarouselItem>Slide 2</CarouselItem>
+        </CarouselContent>
+      </Carousel>,
+    );
+    const nextSpy = vi.spyOn(api!, 'scrollNext');
+    fireEvent.keyDown(screen.getByRole('region'), { key: 'ArrowRight' });
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(nextSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets a caller onKeyDown preventDefault suppress paging', () => {
+    let api: CarouselApi;
+    render(
+      <Carousel
+        onKeyDown={(event) => event.preventDefault()}
+        setApi={(a) => (api = a)}
+      >
+        <CarouselContent>
+          <CarouselItem>Slide 1</CarouselItem>
+          <CarouselItem>Slide 2</CarouselItem>
+        </CarouselContent>
+      </Carousel>,
+    );
+    const nextSpy = vi.spyOn(api!, 'scrollNext');
+    const prevSpy = vi.spyOn(api!, 'scrollPrev');
+    fireEvent.keyDown(screen.getByRole('region'), { key: 'ArrowRight' });
+    fireEvent.keyDown(screen.getByRole('region'), { key: 'ArrowLeft' });
+    expect(nextSpy).not.toHaveBeenCalled();
+    expect(prevSpy).not.toHaveBeenCalled();
+  });
+
+  it('runs a caller control onClick before scrolling', async () => {
+    const user = userEvent.setup();
+    let api: CarouselApi;
+    const onClick = vi.fn();
+    render(
+      <Carousel opts={{ loop: true }} setApi={(a) => (api = a)}>
+        <CarouselContent>
+          <CarouselItem>Slide 1</CarouselItem>
+          <CarouselItem>Slide 2</CarouselItem>
+        </CarouselContent>
+        <CarouselNext onClick={onClick} />
+      </Carousel>,
+    );
+    const spy = vi.spyOn(api!, 'scrollNext');
+    await user.click(screen.getByRole('button', { name: 'Next slide' }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets a caller control onClick preventDefault suppress scrolling', async () => {
+    const user = userEvent.setup();
+    let api: CarouselApi;
+    render(
+      <Carousel opts={{ loop: true }} setApi={(a) => (api = a)}>
+        <CarouselContent>
+          <CarouselItem>Slide 1</CarouselItem>
+          <CarouselItem>Slide 2</CarouselItem>
+        </CarouselContent>
+        <CarouselNext onClick={(event) => event.preventDefault()} />
+      </Carousel>,
+    );
+    const next = screen.getByRole('button', { name: 'Next slide' });
+    expect(next).toBeEnabled();
+    const spy = vi.spyOn(api!, 'scrollNext');
+    await user.click(next);
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it('maps arrow keys to scrollPrev/scrollNext in horizontal orientation', () => {
@@ -247,6 +343,24 @@ describe('Carousel', () => {
     const opts = api!.internalEngine().options;
     expect(opts.loop).toBe(true);
     expect(opts.align).toBe('start');
+  });
+
+  it('passes plugins through to embla', () => {
+    let api: CarouselApi;
+    const init = vi.fn();
+    // A trivial embla plugin - the engine calls `init` on mount and exposes it by `name` from
+    // `api.plugins()`, so both prove the `plugins` argument reached `useEmblaCarousel`.
+    const probe = () => ({ name: 'probe', options: {}, init, destroy: vi.fn() });
+    render(
+      <Carousel plugins={[probe()]} setApi={(a) => (api = a)}>
+        <CarouselContent>
+          <CarouselItem>Slide 1</CarouselItem>
+          <CarouselItem>Slide 2</CarouselItem>
+        </CarouselContent>
+      </Carousel>,
+    );
+    expect(api!.plugins()).toHaveProperty('probe');
+    expect(init).toHaveBeenCalled();
   });
 
   it('throws when a part is used outside <Carousel>', () => {
