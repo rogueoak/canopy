@@ -59,12 +59,18 @@ importers:
       '@rogueoak/roots':
         specifier: workspace:*
         version: link:../../packages/roots
+      input-otp:
+        specifier: ^1.4.2
+        version: 1.4.2(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react:
         specifier: ^19.0.0
         version: 19.2.7
       react-dom:
         specifier: ^19.0.0
         version: 19.2.7(react@19.2.7)
+      recharts:
+        specifier: ^2.15.0
+        version: 2.15.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
       '@storybook/addon-essentials':
         specifier: ^8.4.7

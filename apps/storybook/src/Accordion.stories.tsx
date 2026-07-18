@@ -96,7 +96,7 @@ export const Multiple: Story = {
       </AccordionItem>
       <AccordionItem value="b">
         <AccordionTrigger>Returns</AccordionTrigger>
-        <AccordionContent>Toggling a section never closes the others under `type="multiple"`.</AccordionContent>
+        <AccordionContent>Toggling a section never closes the others under `type=&quot;multiple&quot;`.</AccordionContent>
       </AccordionItem>
       <AccordionItem value="c">
         <AccordionTrigger>Warranty</AccordionTrigger>
@@ -157,7 +157,7 @@ export const DefaultOpen: Story = {
       <AccordionItem value="details">
         <AccordionTrigger>Details (open by default)</AccordionTrigger>
         <AccordionContent>
-          With `defaultValue="details"`, this section starts expanded and Radix tracks open/closed
+          With `defaultValue=&quot;details&quot;`, this section starts expanded and Radix tracks open/closed
           from there - no wiring required.
         </AccordionContent>
       </AccordionItem>
