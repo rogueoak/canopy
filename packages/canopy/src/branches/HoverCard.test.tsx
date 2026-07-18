@@ -96,6 +96,15 @@ describe('HoverCard', () => {
     await waitForCardToClose();
   });
 
+  it('closes on Escape', async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+    await user.hover(screen.getByText('View profile'));
+    expect(await screen.findByText('Ada Lovelace')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitForCardToClose();
+  });
+
   it('does not trap focus - Tab moves past the trigger to the next focusable element', async () => {
     const user = userEvent.setup();
     render(
