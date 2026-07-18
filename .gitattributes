@@ -1,14 +1,4 @@
-# Barrel/export index files accumulate one export line per component. During the
-# 1.0.0 build-out, many component branches each append to the same barrel, so use
-# git's built-in union merge driver to auto-keep both sides instead of conflicting.
-packages/canopy/src/index.ts          merge=union
-packages/canopy/src/seeds/index.ts    merge=union
-packages/canopy/src/twigs/index.ts    merge=union
-packages/canopy/src/branches/index.ts merge=union
-
-# Dependency manifests: many component branches each add one dep line. Union-merge
-# the manifest + tsup external list so serialized dep-component merges auto-keep both
-# additions. (pnpm-lock.yaml is deliberately NOT union-merged - it is regenerated with
-# `pnpm install` on rebase instead.)
-packages/canopy/package.json   merge=union
-packages/canopy/tsup.config.ts merge=union
+# The union merge driver was used during the 1.0.0 build-out to auto-merge barrel and
+# dependency-manifest appends across many parallel component branches. It is retired now:
+# union concatenation corrupted multi-line export blocks (dropped `export {` openers) and
+# duplicated a dependency key. The few remaining merges resolve these files by hand instead.

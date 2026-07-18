@@ -53,7 +53,6 @@ export default defineConfig({
     'recharts',
     'react-resizable-panels',
     'date-fns',
-    'input-otp',
     'react-day-picker',
     'tailwind-merge',
   ],
