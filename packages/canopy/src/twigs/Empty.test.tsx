@@ -1,12 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyMedia,
-  EmptyTitle,
-} from './Empty';
+import { Empty, EmptyContent, EmptyDescription, EmptyMedia, EmptyTitle } from './Empty';
 
 describe('Empty', () => {
   it('renders each part and its children, composed inside the container', () => {

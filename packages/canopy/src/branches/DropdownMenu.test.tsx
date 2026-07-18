@@ -200,9 +200,10 @@ describe('DropdownMenu', () => {
     expect(item).toHaveAttribute('aria-checked', 'false');
 
     await user.click(item);
-    expect(
-      screen.getByRole('menuitemcheckbox', { name: 'Show grid' }),
-    ).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('menuitemcheckbox', { name: 'Show grid' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
   });
 
   it('marks exactly one radio item checked from the group value, with menuitemradio roles', async () => {

@@ -1,9 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from '@rogueoak/canopy/branches';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@rogueoak/canopy/branches';
 
 /**
  * Branches/Resizable - the canopy resizable split-layout Branch (spec 0063), built on

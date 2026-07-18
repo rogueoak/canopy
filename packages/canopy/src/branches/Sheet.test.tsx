@@ -140,17 +140,20 @@ describe('Sheet', () => {
     ['right', ['inset-y-0', 'right-0', 'max-w-sm'], 'data-[state=open]:animate-drawer-right-in'],
     ['bottom', ['inset-x-0', 'bottom-0'], 'data-[state=open]:animate-bottom-sheet-in'],
     ['left', ['inset-y-0', 'left-0', 'max-w-sm'], 'data-[state=open]:animate-drawer-in'],
-  ] as const)('renders the literal anchor + motion classes for side="%s"', async (side, anchors, motion) => {
-    const user = userEvent.setup();
-    render(<Basic side={side} />);
-    await user.click(screen.getByRole('button', { name: 'Open sheet' }));
+  ] as const)(
+    'renders the literal anchor + motion classes for side="%s"',
+    async (side, anchors, motion) => {
+      const user = userEvent.setup();
+      render(<Basic side={side} />);
+      await user.click(screen.getByRole('button', { name: 'Open sheet' }));
 
-    const sheet = screen.getByRole('dialog');
-    expect(sheet).toHaveClass(...anchors);
-    expect(sheet).toHaveClass(motion);
-    // Shared raised-surface tokens are always present.
-    expect(sheet).toHaveClass('bg-surface-raised', 'shadow-lg', 'motion-reduce:animate-none');
-  });
+      const sheet = screen.getByRole('dialog');
+      expect(sheet).toHaveClass(...anchors);
+      expect(sheet).toHaveClass(motion);
+      // Shared raised-surface tokens are always present.
+      expect(sheet).toHaveClass('bg-surface-raised', 'shadow-lg', 'motion-reduce:animate-none');
+    },
+  );
 
   it('supports controlled open / onOpenChange', async () => {
     const user = userEvent.setup();

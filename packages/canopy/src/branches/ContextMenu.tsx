@@ -181,7 +181,11 @@ const ContextMenuLabel = React.forwardRef<
 >(({ className, inset, ...props }, ref) => (
   <ContextMenuPrimitive.Label
     ref={ref}
-    className={cn('px-2 py-1.5 text-caption font-medium text-text-muted', inset && 'pl-8', className)}
+    className={cn(
+      'px-2 py-1.5 text-caption font-medium text-text-muted',
+      inset && 'pl-8',
+      className,
+    )}
     {...props}
   />
 ));
@@ -266,10 +270,7 @@ ContextMenuSubContent.displayName = ContextMenuPrimitive.SubContent.displayName;
  * Pushed to the trailing edge (`ml-auto`) in the subtle text token at `text-caption` scale. Not a
  * Radix part - a styled `span` the caller drops inside an item.
  */
-const ContextMenuShortcut = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLSpanElement>) => (
+const ContextMenuShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
   <span
     className={cn('ml-auto text-caption tracking-widest text-text-subtle', className)}
     {...props}

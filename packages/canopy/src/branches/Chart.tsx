@@ -105,9 +105,7 @@ export interface ChartContainerProps extends React.ComponentProps<'div'> {
   /** Per-series config: label, optional icon, and token-backed color (or light/dark `theme` map). */
   config: ChartConfig;
   /** The recharts chart element (e.g. `<BarChart>`), rendered inside a `ResponsiveContainer`. */
-  children: React.ComponentProps<
-    typeof RechartsPrimitive.ResponsiveContainer
-  >['children'];
+  children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>['children'];
 }
 
 /**
@@ -135,9 +133,7 @@ export const ChartContainer = React.forwardRef<HTMLDivElement, ChartContainerPro
           {...props}
         >
           <ChartStyle id={chartId} config={config} />
-          <RechartsPrimitive.ResponsiveContainer>
-            {children}
-          </RechartsPrimitive.ResponsiveContainer>
+          <RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
         </div>
       </ChartContext.Provider>
     );
@@ -161,8 +157,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
       const prefix = selector ? `${selector} ` : '';
       const lines = entries
         .map(([key, item], index) => {
-          const explicit =
-            item.theme?.[theme as keyof typeof item.theme] || item.color;
+          const explicit = item.theme?.[theme as keyof typeof item.theme] || item.color;
           // Fall back to the ramp by declaration order for keys without an explicit color; wrap the
           // index so a config longer than the 5-step ramp cycles instead of dropping to unset.
           const color = explicit || CHART_RAMP[index % CHART_RAMP.length];
@@ -191,7 +186,8 @@ export const ChartTooltip = RechartsPrimitive.Tooltip;
 type RechartsTooltipProps = React.ComponentProps<typeof RechartsPrimitive.Tooltip>;
 
 export interface ChartTooltipContentProps
-  extends React.ComponentProps<'div'>,
+  extends
+    React.ComponentProps<'div'>,
     Pick<RechartsTooltipProps, 'active' | 'payload' | 'label' | 'labelFormatter'> {
   /** Hide the little color swatch beside each series row. */
   hideIndicator?: boolean;
@@ -266,13 +262,9 @@ export const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltip
       const key = labelKey || (first.dataKey as string) || (first.name as string) || 'value';
       const itemConfig = getPayloadConfig(config, first, key);
       const value =
-        !labelKey && typeof label === 'string'
-          ? config[label]?.label || label
-          : itemConfig?.label;
+        !labelKey && typeof label === 'string' ? config[label]?.label || label : itemConfig?.label;
       if (labelFormatter && value !== undefined) {
-        return (
-          <div className="text-label text-text">{labelFormatter(value, payload ?? [])}</div>
-        );
+        return <div className="text-label text-text">{labelFormatter(value, payload ?? [])}</div>;
       }
       if (value === undefined || value === null) {
         return null;
@@ -308,7 +300,9 @@ export const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltip
                   />
                 ) : null}
                 <div className="flex flex-1 items-center justify-between gap-2 leading-none">
-                  <span className="text-text-muted">{itemConfig?.label || (item.name as string)}</span>
+                  <span className="text-text-muted">
+                    {itemConfig?.label || (item.name as string)}
+                  </span>
                   {item.value !== undefined && item.value !== null ? (
                     <span className="text-label font-mono text-text">
                       {typeof item.value === 'number'
@@ -336,8 +330,7 @@ export const ChartLegend = RechartsPrimitive.Legend;
 type RechartsLegendProps = React.ComponentProps<typeof RechartsPrimitive.Legend>;
 
 export interface ChartLegendContentProps
-  extends React.ComponentProps<'div'>,
-    Pick<RechartsLegendProps, 'payload' | 'verticalAlign'> {
+  extends React.ComponentProps<'div'>, Pick<RechartsLegendProps, 'payload' | 'verticalAlign'> {
   /** Hide the little color swatch beside each legend entry. */
   hideIcon?: boolean;
   /** Override which payload field supplies the series name. Defaults to `dataKey`. */
@@ -384,7 +377,10 @@ export const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendCo
               ) : !hideIcon ? (
                 <span
                   className="h-2 w-2 shrink-0 rounded-sm"
-                  style={{ backgroundColor: (item.color as string) || `var(--color-${itemConfig?.key ?? key})` }}
+                  style={{
+                    backgroundColor:
+                      (item.color as string) || `var(--color-${itemConfig?.key ?? key})`,
+                  }}
                 />
               ) : null}
               {itemConfig?.label || (item.value as string)}

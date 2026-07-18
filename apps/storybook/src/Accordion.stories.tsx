@@ -52,8 +52,8 @@ export const Playground: Story = {
       <AccordionItem value="how">
         <AccordionTrigger>How does it theme?</AccordionTrigger>
         <AccordionContent>
-          Through semantic tokens only - there is no dark: on the common path. Light and dark flip via
-          the token layer, so the accordion re-themes with the toolbar control above.
+          Through semantic tokens only - there is no dark: on the common path. Light and dark flip
+          via the token layer, so the accordion re-themes with the toolbar control above.
         </AccordionContent>
       </AccordionItem>
     </Accordion>
@@ -78,7 +78,9 @@ export const Single: Story = {
       </AccordionItem>
       <AccordionItem value="three">
         <AccordionTrigger>Third section</AccordionTrigger>
-        <AccordionContent>Opening this collapses whichever section was open before.</AccordionContent>
+        <AccordionContent>
+          Opening this collapses whichever section was open before.
+        </AccordionContent>
       </AccordionItem>
     </Accordion>
   ),
@@ -96,11 +98,15 @@ export const Multiple: Story = {
       </AccordionItem>
       <AccordionItem value="b">
         <AccordionTrigger>Returns</AccordionTrigger>
-        <AccordionContent>Toggling a section never closes the others under `type=&quot;multiple&quot;`.</AccordionContent>
+        <AccordionContent>
+          Toggling a section never closes the others under `type=&quot;multiple&quot;`.
+        </AccordionContent>
       </AccordionItem>
       <AccordionItem value="c">
         <AccordionTrigger>Warranty</AccordionTrigger>
-        <AccordionContent>Open me too - all three can be expanded at the same time.</AccordionContent>
+        <AccordionContent>
+          Open me too - all three can be expanded at the same time.
+        </AccordionContent>
       </AccordionItem>
     </Accordion>
   ),
@@ -113,7 +119,8 @@ export const Collapsible: Story = {
       <AccordionItem value="one">
         <AccordionTrigger>Click me, then click me again</AccordionTrigger>
         <AccordionContent>
-          With `collapsible`, re-clicking the open trigger closes it, leaving every section collapsed.
+          With `collapsible`, re-clicking the open trigger closes it, leaving every section
+          collapsed.
         </AccordionContent>
       </AccordionItem>
       <AccordionItem value="two">
@@ -157,8 +164,8 @@ export const DefaultOpen: Story = {
       <AccordionItem value="details">
         <AccordionTrigger>Details (open by default)</AccordionTrigger>
         <AccordionContent>
-          With `defaultValue=&quot;details&quot;`, this section starts expanded and Radix tracks open/closed
-          from there - no wiring required.
+          With `defaultValue=&quot;details&quot;`, this section starts expanded and Radix tracks
+          open/closed from there - no wiring required.
         </AccordionContent>
       </AccordionItem>
     </Accordion>
@@ -174,16 +181,17 @@ export const LongContent: Story = {
         <AccordionContent>
           <div className="flex flex-col gap-3">
             <p>
-              These terms govern your use of the service. By accessing it you agree to the conditions
-              below, which we may update from time to time with notice.
+              These terms govern your use of the service. By accessing it you agree to the
+              conditions below, which we may update from time to time with notice.
             </p>
             <p>
-              You are responsible for keeping your account credentials secure and for all activity that
-              occurs under your account. Notify us promptly of any unauthorized use.
+              You are responsible for keeping your account credentials secure and for all activity
+              that occurs under your account. Notify us promptly of any unauthorized use.
             </p>
             <p>
-              The service is provided as-is. To the extent permitted by law we disclaim all warranties,
-              and our liability is limited to the amount you paid in the preceding twelve months.
+              The service is provided as-is. To the extent permitted by law we disclaim all
+              warranties, and our liability is limited to the amount you paid in the preceding
+              twelve months.
             </p>
             <p>
               The height animation runs over this taller body so you can see the accordion-down and

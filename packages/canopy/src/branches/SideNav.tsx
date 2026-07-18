@@ -3,12 +3,7 @@ import { Slot } from '@radix-ui/react-slot';
 import { cn } from '../lib/cn';
 import { Button, type ButtonProps } from '../seeds/Button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../seeds/Tooltip';
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerTitle,
-} from './Drawer';
+import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from './Drawer';
 
 /**
  * SideNav - the vertical side-navigation Branch (organism, spec 0026), the companion to TopNav

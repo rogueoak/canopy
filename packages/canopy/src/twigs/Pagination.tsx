@@ -104,10 +104,7 @@ export const PaginationLink = React.forwardRef<HTMLAnchorElement, PaginationLink
       <Comp
         ref={ref}
         aria-current={isActive ? 'page' : undefined}
-        className={cn(
-          buttonVariants({ variant: isActive ? 'outline' : 'ghost', size }),
-          className,
-        )}
+        className={cn(buttonVariants({ variant: isActive ? 'outline' : 'ghost', size }), className)}
         {...props}
       />
     );

@@ -59,7 +59,9 @@ const plainColumns: ColumnDef<Invoice>[] = [
   {
     accessorKey: 'amount',
     header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => <div className="text-right font-medium">{currency(row.original.amount)}</div>,
+    cell: ({ row }) => (
+      <div className="text-right font-medium">{currency(row.original.amount)}</div>
+    ),
   },
 ];
 

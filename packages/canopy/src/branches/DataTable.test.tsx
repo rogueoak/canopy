@@ -2,12 +2,7 @@ import * as React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {
-  DataTable,
-  DataTableColumnHeader,
-  createSelectionColumn,
-  useDataTable,
-} from './DataTable';
+import { DataTable, DataTableColumnHeader, createSelectionColumn, useDataTable } from './DataTable';
 import type { ColumnDef, RowSelectionState, SortingState } from './DataTable';
 
 interface Person {
@@ -169,20 +164,14 @@ describe('DataTable', () => {
     ];
 
     it('renders labelled select-all and per-row checkboxes', () => {
-      render(
-        <DataTable columns={selectableColumns} data={people} enablePagination={false} />,
-      );
-      expect(
-        screen.getByRole('checkbox', { name: 'Select all rows' }),
-      ).toBeInTheDocument();
+      render(<DataTable columns={selectableColumns} data={people} enablePagination={false} />);
+      expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument();
       expect(screen.getAllByRole('checkbox', { name: 'Select row' })).toHaveLength(3);
     });
 
     it('select-all toggles every row and marks rows selected', async () => {
       const user = userEvent.setup();
-      render(
-        <DataTable columns={selectableColumns} data={people} enablePagination={false} />,
-      );
+      render(<DataTable columns={selectableColumns} data={people} enablePagination={false} />);
 
       const selectAll = screen.getByRole('checkbox', { name: 'Select all rows' });
       await user.click(selectAll);

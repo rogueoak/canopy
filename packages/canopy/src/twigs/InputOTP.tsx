@@ -38,21 +38,20 @@ export type InputOTPProps = React.ComponentPropsWithoutRef<typeof OTPInput> & {
  * disabled tokens (`bg-disabled` / `text-disabled-foreground`) via `group-has-[:disabled]:`,
  * matching a disabled `Input` rather than the toggle-control opacity wash.
  */
-export const InputOTP = React.forwardRef<
-  React.ComponentRef<typeof OTPInput>,
-  InputOTPProps
->(({ className, containerClassName, pattern = REGEXP_ONLY_DIGITS, ...props }, ref) => (
-  <OTPInput
-    ref={ref}
-    pattern={pattern}
-    containerClassName={cn(
-      'group flex items-center gap-2 has-[:disabled]:cursor-not-allowed',
-      containerClassName,
-    )}
-    className={cn('disabled:cursor-not-allowed', className)}
-    {...props}
-  />
-));
+export const InputOTP = React.forwardRef<React.ComponentRef<typeof OTPInput>, InputOTPProps>(
+  ({ className, containerClassName, pattern = REGEXP_ONLY_DIGITS, ...props }, ref) => (
+    <OTPInput
+      ref={ref}
+      pattern={pattern}
+      containerClassName={cn(
+        'group flex items-center gap-2 has-[:disabled]:cursor-not-allowed',
+        containerClassName,
+      )}
+      className={cn('disabled:cursor-not-allowed', className)}
+      {...props}
+    />
+  ),
+);
 InputOTP.displayName = 'InputOTP';
 
 export type InputOTPGroupProps = React.ComponentPropsWithoutRef<'div'>;

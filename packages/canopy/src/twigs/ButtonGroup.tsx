@@ -61,7 +61,8 @@ export type ButtonGroupLabelProps =
  * {@link ButtonGroupLabelProps} instead, so it is Omit-ted from the native attributes here.
  */
 export interface ButtonGroupOwnProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'role' | 'aria-label' | 'aria-labelledby'>,
+  extends
+    Omit<React.HTMLAttributes<HTMLDivElement>, 'role' | 'aria-label' | 'aria-labelledby'>,
     Omit<VariantProps<typeof buttonGroupVariants>, 'separator'> {
   /**
    * Lay the segments in a row (`horizontal`, default) or stack them in a column (`vertical`); the

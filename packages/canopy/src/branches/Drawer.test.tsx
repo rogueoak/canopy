@@ -19,11 +19,7 @@ import {
 // OUR observable outcomes (opens on trigger, role/aria, close, focus, per-direction anchor classes),
 // NOT vaul's internal drag physics - jsdom cannot model pointer velocity.
 
-function Basic({
-  direction,
-}: {
-  direction?: 'bottom' | 'top' | 'left' | 'right';
-}) {
+function Basic({ direction }: { direction?: 'bottom' | 'top' | 'left' | 'right' }) {
   return (
     <Drawer direction={direction}>
       <DrawerTrigger>Open drawer</DrawerTrigger>

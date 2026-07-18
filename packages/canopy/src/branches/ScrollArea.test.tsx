@@ -38,9 +38,7 @@ describe('ScrollArea', () => {
         <span data-testid="child">Item</span>
       </ScrollArea>,
     );
-    const viewport = screen
-      .getByTestId('root')
-      .querySelector('[data-radix-scroll-area-viewport]');
+    const viewport = screen.getByTestId('root').querySelector('[data-radix-scroll-area-viewport]');
     expect(viewport).not.toBeNull();
     expect(viewport).toContainElement(screen.getByTestId('child'));
   });
@@ -54,9 +52,7 @@ describe('ScrollArea', () => {
         <p>Scrollable content</p>
       </ScrollArea>,
     );
-    const bar = screen
-      .getByTestId('root')
-      .querySelector('[data-orientation="vertical"]');
+    const bar = screen.getByTestId('root').querySelector('[data-orientation="vertical"]');
     expect(bar).not.toBeNull();
     expect(bar).toHaveClass('h-full', 'w-2.5', 'touch-none', 'select-none');
   });

@@ -38,20 +38,20 @@ describe('Alert', () => {
     ['success', ['bg-success', 'text-success-foreground', 'border-transparent']],
     ['warning', ['bg-warning', 'text-warning-foreground', 'border-transparent']],
     ['danger', ['bg-danger', 'text-danger-foreground', 'border-transparent']],
-  ] as const)('renders the %s variant with its paired surface / border / text tokens', (
-    variant,
-    classes,
-  ) => {
-    render(
-      <Alert data-testid="alert" variant={variant}>
-        <AlertTitle>Notice</AlertTitle>
-      </Alert>,
-    );
-    const alert = screen.getByTestId('alert');
-    expect(alert).toHaveClass(...classes);
-    // Every variant shares the base layout.
-    expect(alert).toHaveClass('flex', 'gap-3', 'rounded-lg', 'border', 'p-4');
-  });
+  ] as const)(
+    'renders the %s variant with its paired surface / border / text tokens',
+    (variant, classes) => {
+      render(
+        <Alert data-testid="alert" variant={variant}>
+          <AlertTitle>Notice</AlertTitle>
+        </Alert>,
+      );
+      const alert = screen.getByTestId('alert');
+      expect(alert).toHaveClass(...classes);
+      // Every variant shares the base layout.
+      expect(alert).toHaveClass('flex', 'gap-3', 'rounded-lg', 'border', 'p-4');
+    },
+  );
 
   it('defaults to the "default" variant when none is given', () => {
     render(

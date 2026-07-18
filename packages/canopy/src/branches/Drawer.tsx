@@ -134,8 +134,9 @@ const handleClasses: Record<DrawerDirection, string> = {
   right: 'my-auto mr-auto ml-4 h-10 w-1.5 shrink-0 rounded-full bg-muted-raised',
 };
 
-export interface DrawerContentProps
-  extends React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> {
+export interface DrawerContentProps extends React.ComponentPropsWithoutRef<
+  typeof DrawerPrimitive.Content
+> {
   /**
    * The edge the drawer anchors to: `bottom` (default) / `top` / `left` / `right`. Drives the
    * anchored edge, the rounded corners on the exposed side, and the grab-handle axis. Pass the same
@@ -225,15 +226,16 @@ export type DrawerDescriptionProps = React.ComponentPropsWithoutRef<
  */
 const DrawerDescription: React.ForwardRefExoticComponent<
   DrawerDescriptionProps & React.RefAttributes<HTMLParagraphElement>
-> = React.forwardRef<React.ComponentRef<typeof DrawerPrimitive.Description>, DrawerDescriptionProps>(
-  ({ className, ...props }, ref) => (
-    <DrawerPrimitive.Description
-      ref={ref}
-      className={cn('text-body-sm text-text-muted', className)}
-      {...props}
-    />
-  ),
-);
+> = React.forwardRef<
+  React.ComponentRef<typeof DrawerPrimitive.Description>,
+  DrawerDescriptionProps
+>(({ className, ...props }, ref) => (
+  <DrawerPrimitive.Description
+    ref={ref}
+    className={cn('text-body-sm text-text-muted', className)}
+    {...props}
+  />
+));
 DrawerDescription.displayName = 'DrawerDescription';
 
 export {

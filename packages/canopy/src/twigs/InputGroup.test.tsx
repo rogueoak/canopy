@@ -1,12 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from './InputGroup';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from './InputGroup';
 
 describe('InputGroup', () => {
   it('renders the bordered group with its inner input', () => {
@@ -32,9 +27,7 @@ describe('InputGroup', () => {
     expect(leading).toHaveAttribute('data-align', 'start');
     expect(trailing).toHaveAttribute('data-align', 'end');
     // Leading addon precedes the trailing addon in DOM order (flex reading order).
-    expect(leading.compareDocumentPosition(trailing)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING,
-    );
+    expect(leading.compareDocumentPosition(trailing)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it('defaults an addon to align="start"', () => {
@@ -158,9 +151,7 @@ describe('InputGroup', () => {
           <InputGroupInput aria-label="Amount" />
         </InputGroup>,
       );
-      expect(screen.getByRole('textbox', { name: 'Amount' })).not.toHaveAttribute(
-        'aria-invalid',
-      );
+      expect(screen.getByRole('textbox', { name: 'Amount' })).not.toHaveAttribute('aria-invalid');
     });
 
     // Boundary: aria-invalid="false" is the ONLY non-invalid string; it must NOT propagate as

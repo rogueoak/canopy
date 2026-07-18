@@ -179,10 +179,7 @@ describe('Carousel', () => {
   it('lets a caller onKeyDown preventDefault suppress paging', () => {
     let api: CarouselApi;
     render(
-      <Carousel
-        onKeyDown={(event) => event.preventDefault()}
-        setApi={(a) => (api = a)}
-      >
+      <Carousel onKeyDown={(event) => event.preventDefault()} setApi={(a) => (api = a)}>
         <CarouselContent>
           <CarouselItem>Slide 1</CarouselItem>
           <CarouselItem>Slide 2</CarouselItem>

@@ -152,7 +152,9 @@ describe('Menubar', () => {
         <MenubarMenu>
           <MenubarTrigger>View</MenubarTrigger>
           <MenubarContent>
-            <MenubarCheckboxItem onCheckedChange={onCheckedChange}>Show Toolbar</MenubarCheckboxItem>
+            <MenubarCheckboxItem onCheckedChange={onCheckedChange}>
+              Show Toolbar
+            </MenubarCheckboxItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>,

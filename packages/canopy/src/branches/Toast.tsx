@@ -89,7 +89,8 @@ export const toastVariants = cva(
 );
 
 export interface ToastProps
-  extends React.ComponentPropsWithoutRef<typeof ToastPrimitive.Root>,
+  extends
+    React.ComponentPropsWithoutRef<typeof ToastPrimitive.Root>,
     VariantProps<typeof toastVariants> {}
 
 /**
@@ -97,17 +98,16 @@ export interface ToastProps
  * merge with the caller `className` winning. The `variant` maps through `toastVariants`; Radix owns
  * the open/close state, the auto-dismiss timer (`duration`), hover/focus pause, and swipe-to-dismiss.
  */
-const Toast = React.forwardRef<
-  React.ComponentRef<typeof ToastPrimitive.Root>,
-  ToastProps
->(({ className, variant, ...props }, ref) => (
-  <ToastPrimitive.Root
-    ref={ref}
-    data-variant={variant ?? 'default'}
-    className={cn(toastVariants({ variant }), className)}
-    {...props}
-  />
-));
+const Toast = React.forwardRef<React.ComponentRef<typeof ToastPrimitive.Root>, ToastProps>(
+  ({ className, variant, ...props }, ref) => (
+    <ToastPrimitive.Root
+      ref={ref}
+      data-variant={variant ?? 'default'}
+      className={cn(toastVariants({ variant }), className)}
+      {...props}
+    />
+  ),
+);
 Toast.displayName = ToastPrimitive.Root.displayName;
 
 /**
@@ -285,8 +285,9 @@ function useToast(): ToastContextValue {
   return context;
 }
 
-export interface ToasterProps
-  extends React.ComponentPropsWithoutRef<typeof ToastPrimitive.Provider> {
+export interface ToasterProps extends React.ComponentPropsWithoutRef<
+  typeof ToastPrimitive.Provider
+> {
   /** Extra classes for the rendered `ToastViewport`. */
   viewportClassName?: string;
 }
