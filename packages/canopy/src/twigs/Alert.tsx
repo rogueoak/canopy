@@ -13,10 +13,18 @@ import { cn } from '../lib/cn';
  * The base carries the shared layout: a leading icon column (`[&>svg]` sizing on the caller's
  * icon slot, `shrink-0`) and a stacked title/description text column. Each variant maps to its
  * paired surface / `border` / `*-foreground` text, reusing the same status roles Badge (0008)
- * exercises: `default` is the neutral muted surface with a hairline border; `info` / `success` /
- * `warning` / `danger` are the solid status fills with their `*-foreground` text and a
- * transparent border (the fill carries on any surface, matching the Badge role idiom) so the
- * border box in the base layout stays consistent across variants.
+ * exercises: `default` is the neutral muted surface with a hairline border and the default text
+ * token; `info` / `success` / `warning` / `danger` are the solid status fills with their
+ * `*-foreground` text and a transparent border (the fill carries on any surface, matching the
+ * Badge role idiom) so the border box in the base layout stays consistent across variants.
+ *
+ * The container owns the variant foreground: it sets `text-text` (default) or `text-*-foreground`
+ * (colour variants), and the title/description parts INHERIT that colour (`text-current`) rather
+ * than pinning a fixed token. This is what makes the variant theming reach the text - a `danger`
+ * banner renders near-white title + body on the danger fill, not a dark title pinned to
+ * `text-text`. The muted body step is expressed as opacity (`opacity-80`) so it reads against
+ * every fill instead of dropping to a grey (`text-text-muted`) that only pairs with the page
+ * surface (Spectra Engineer review, PR 61).
  */
 export const alertVariants = cva(
   'relative flex gap-3 rounded-lg border p-4',
@@ -82,14 +90,16 @@ Alert.displayName = 'Alert';
 export type AlertTitleProps = React.HTMLAttributes<HTMLDivElement>;
 
 /**
- * AlertTitle - the banner's heading line: the `label` typography role at `font-medium` on the
- * default text token. Rendered as a `<div>` (not a heading element) so it never injects an
+ * AlertTitle - the banner's heading line: the `label` typography role at `font-medium`. It
+ * INHERITS the container's variant foreground (`text-text` on `default`, `text-*-foreground` on
+ * the colour variants) instead of pinning a fixed colour, so the title reads correctly against
+ * every variant fill. Rendered as a `<div>` (not a heading element) so it never injects an
  * unpredictable heading level into the caller's document outline; callers who need a heading
  * level supply their own via children semantics or `className`. `forwardRef` + native prop spread.
  */
 export const AlertTitle = React.forwardRef<HTMLDivElement, AlertTitleProps>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('text-label font-medium text-text', className)} {...props} />
+    <div ref={ref} className={cn('text-label font-medium', className)} {...props} />
   ),
 );
 AlertTitle.displayName = 'AlertTitle';
@@ -97,12 +107,16 @@ AlertTitle.displayName = 'AlertTitle';
 export type AlertDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
 /**
- * AlertDescription - the supporting body text under the title: muted `body-sm` text. `forwardRef`
- * + native prop spread; no `dark:` - light/dark flips through the token layer.
+ * AlertDescription - the supporting body text under the title: `body-sm` text. It INHERITS the
+ * container's variant foreground (`text-current`) and expresses the muted step as `opacity-80`
+ * rather than pinning `text-text-muted` (a grey that only pairs with the page surface). This keeps
+ * the body readable against every variant fill - a `danger` banner shows a slightly softened
+ * near-white body on the danger fill, not a low-contrast grey. `forwardRef` + native prop spread;
+ * no `dark:` - light/dark flips through the token layer.
  */
 export const AlertDescription = React.forwardRef<HTMLParagraphElement, AlertDescriptionProps>(
   ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn('text-text-muted text-body-sm', className)} {...props} />
+    <p ref={ref} className={cn('text-body-sm text-current opacity-80', className)} {...props} />
   ),
 );
 AlertDescription.displayName = 'AlertDescription';

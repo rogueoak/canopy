@@ -112,9 +112,15 @@ describe('Alert', () => {
     const title = screen.getByTestId('title');
     const desc = screen.getByTestId('desc');
     expect(title).toHaveTextContent('Deprecation notice');
-    expect(title).toHaveClass('text-label', 'font-medium', 'text-text');
+    // The title carries its typography role and font weight; its colour is INHERITED from the
+    // container's variant foreground (not pinned to a fixed token), so it reads on every fill.
+    expect(title).toHaveClass('text-label', 'font-medium');
+    expect(title).not.toHaveClass('text-text');
     expect(desc).toHaveTextContent('This endpoint retires in v2.');
-    expect(desc).toHaveClass('text-text-muted', 'text-body-sm');
+    // The body inherits the container foreground (text-current) and dims via opacity - not a grey
+    // token that only pairs with the page surface - so it stays readable on a colour-variant fill.
+    expect(desc).toHaveClass('text-body-sm', 'text-current', 'opacity-80');
+    expect(desc).not.toHaveClass('text-text-muted');
   });
 
   it('renders AlertDescription as a paragraph element', () => {
@@ -152,9 +158,9 @@ describe('Alert', () => {
     expect(title).toHaveClass('text-body');
     expect(title).not.toHaveClass('text-label');
     const desc = screen.getByTestId('desc');
-    // The caller's colour wins over the default `text-text-muted`.
+    // The caller's colour wins over the default inherited `text-current`.
     expect(desc).toHaveClass('text-text');
-    expect(desc).not.toHaveClass('text-text-muted');
+    expect(desc).not.toHaveClass('text-current');
   });
 
   it('spreads native props onto Alert', () => {
