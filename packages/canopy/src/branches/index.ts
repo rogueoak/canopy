@@ -317,3 +317,24 @@ export type {
   DatePickerSingleProps,
   DatePickerRangeProps,
 } from './DatePicker';
+export {
+  DataTable,
+  DataTablePager,
+  DataTableColumnHeader,
+  useDataTable,
+  createSelectionColumn,
+} from './DataTable';
+export type {
+  DataTableProps,
+  DataTablePagerProps,
+  DataTableColumnHeaderProps,
+  UseDataTableOptions,
+  UseDataTableResult,
+  SelectionColumnLabels,
+  ColumnDef,
+  ColumnFiltersState,
+  PaginationState,
+  RowSelectionState,
+  SortingState,
+  VisibilityState,
+} from './DataTable';
