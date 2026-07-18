@@ -1,6 +1,6 @@
 {
   "name": "@rogueoak/icons",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Canopy icons - a curated, tree-shakeable React icon set re-exported from react-icons (Lucide + Font Awesome 6 brands).",
   "license": "MIT",
   "repository": {

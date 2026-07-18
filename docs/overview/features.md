@@ -745,6 +745,103 @@ always anticipated ("just another Style Dictionary platform - no token rewrite")
   builds AA-clean and the emitter's structure (header, a role's light+dark hex, spacing/radius/font
   constants, valid Swift).
 
-Not yet built: more **Branches** (the layer is open - Dialog · TopNav · SideNav · Combobox ·
-SubscribeForm are live; DataTable to come) and more Twigs as needed, then **Boughs** (templates), and
-an Xcode/Swift Package wrapper around the generated `Tokens.swift`.
+## 1.0.0 component build-out (0037-0069)
+
+The build-out that closes the shadcn coverage gap and makes the component library
+**feature-complete** for 1.0.0: **30 net-new components** across the three tiers (plus 3
+API-preserving refactors, below), each on the established recipe - semantic tokens only, `cn()`,
+full-literal classes, `forwardRef` + native spread, no `dark:` on the common path. Behavioural
+cores come from Radix where it has a primitive, and from a small, sanctioned set of non-Radix
+libraries where it does not (cmdk, vaul, embla, recharts, TanStack Table, react-day-picker,
+input-otp). Where a component needed keyframed motion, the keyframes ship from the Roots preset
+(the accordion and drawer motion joined the dialog/bottom-sheet keyframes there).
+
+### Seeds added (0037-0039) - the layer now covers 18 atoms
+
+- **Progress** (0037) - a determinate progress bar for bounded, measurable tasks, on
+  `@radix-ui/react-progress` (the determinate sibling to Spinner).
+- **Slider** (0038) - a single-value or range numeric input with full keyboard support, on
+  `@radix-ui/react-slider`.
+- **Toggle** (0039) - a two-state pressed button carrying `aria-pressed`, on
+  `@radix-ui/react-toggle` (the single-toggle primitive ToggleGroup also builds on).
+
+### Twigs added (0040-0049) - the layer now covers 14 molecules
+
+- **Alert** (0040) - a static inline notice banner (info / success / warning / danger) with an
+  optional icon slot.
+- **Empty** (0041) - a zero-data placeholder block (media + title + description + actions).
+- **Item** (0042) - a horizontal row layout: leading media, content, and a trailing actions cluster.
+- **ButtonGroup** (0043) - a segmented cluster of joined Buttons sharing one seam.
+- **InputGroup** (0044) - a text field with leading/trailing addons inside one bordered box.
+- **InputOTP** (0045) - a segmented one-time-passcode field (paste support, auto-advance), on
+  `input-otp`.
+- **Collapsible** (0046) - a single expand/collapse disclosure (controlled/uncontrolled), on
+  `@radix-ui/react-collapsible`.
+- **Pagination** (0047) - a numbered page navigator with previous/next and ellipsis affordances.
+- **FieldSet** (0048) - grouped form controls with fieldset/legend semantics and a disabled cascade.
+- **ToggleGroup** (0049) - a segmented toggle bar (single or multiple select) with a roving
+  tabindex, on `@radix-ui/react-toggle-group`.
+
+### Branches added (0050-0069) - the layer now covers 26 organisms
+
+- **ScrollArea** (0050) - a themed cross-browser scrollbar (thin track, rounded thumb), on
+  `@radix-ui/react-scroll-area`.
+- **Tabs** (0051) - a tab switcher with roving focus, arrow navigation, and an active underline, on
+  `@radix-ui/react-tabs`.
+- **Accordion** (0052) - a multi-section inline disclosure (single/multiple expansion), on
+  `@radix-ui/react-accordion`; its expand/collapse motion joined the Roots preset keyframes.
+- **AlertDialog** (0053) - a blocking confirmation modal for destructive actions (a danger Action
+  button), on `@radix-ui/react-alert-dialog`.
+- **DropdownMenu** (0054) - a button-triggered actions menu (roving focus, typeahead, submenus,
+  checkbox/radio items), on `@radix-ui/react-dropdown-menu`.
+- **ContextMenu** (0055) - a right-click menu anchored at the pointer, sharing DropdownMenu's item
+  and submenu parts, on `@radix-ui/react-context-menu`.
+- **Menubar** (0056) - a horizontal app menu bar (roving focus, hover-to-open siblings, submenus),
+  on `@radix-ui/react-menubar`.
+- **HoverCard** (0057) - a rich preview surface on hover/focus, non-modal with a grace area, on
+  `@radix-ui/react-hover-card`.
+- **Toast** (0058) - transient notifications with auto-dismiss, swipe-to-dismiss, and an imperative
+  `useToast` hook, on `@radix-ui/react-toast`.
+- **Table** (0059) - semantic table parts (thead/tbody/tr/th/td) styled with token borders and row
+  hover.
+- **Calendar** (0060) - a month grid with single/range/multiple selection, keyboard nav, and
+  disabled dates, on `react-day-picker` + `date-fns`.
+- **Carousel** (0061) - a horizontal or vertical item carousel (drag, snap, prev/next), on
+  `embla-carousel-react`.
+- **Chart** (0062) - a `recharts` wrapper with token-driven colour injection and a styled
+  tooltip/legend.
+- **Resizable** (0063) - draggable panel dividers with arrow-key resize and separator ARIA, on
+  `react-resizable-panels`.
+- **DataTable** (0064) - a headless `useDataTable` hook plus a styled grid that composes Table /
+  Pagination / Empty, with sorting, row selection, and filters, on `@tanstack/react-table`.
+- **DatePicker** (0065) - a popover-triggered date/range picker composing Calendar with a formatted
+  trigger.
+- **Command** (0066) - a filterable command palette on `cmdk`, composable inline or in a dialog.
+- **Drawer** (0067) - a vaul-backed edge-anchored panel with drag-to-dismiss, on `vaul`; its slide
+  motion joined the Roots preset keyframes.
+- **Sheet** (0068) - a Radix Dialog-based edge panel with slide motion (no new dependency - additive
+  to Dialog).
+- **NavigationMenu** (0069) - a mega-menu with a dropdown per item, roving focus, and indicator
+  tracking, on `@radix-ui/react-navigation-menu`.
+
+### API-preserving refactors (0066 / 0067 / 0069)
+
+Three earlier Branches were rebuilt onto the new shared primitives **without changing their public
+surface**, so a consumer's imports and props are untouched:
+
+- **Combobox now consumes Command** (0066) - its inline `cmdk` wrappers were replaced with the
+  shared `Command` parts.
+- **SideNav and ResponsiveDialog now consume Drawer** (0067) - SideNav's mobile rail and
+  ResponsiveDialog's mobile sheet both delegate to the new `Drawer` (vaul) instead of hand-wiring
+  the Radix dialog primitive.
+- **TopNav now composes NavigationMenu** (0069) - the links area was updated to compose
+  `NavigationMenu` where it adds value; the public `TopNav*` surface is unchanged.
+
+These refactors are the reason the "test the outcome, not that existing tests still pass" learning
+below matters: swapping the primitive under a preserved API can silently regress focus and motion
+(see learnings).
+
+## Not yet built
+
+**Boughs** (page scaffolds and layout patterns) and an Xcode/Swift Package wrapper around the
+generated `Tokens.swift`. The web component library itself is feature-complete as of 1.0.0.

@@ -573,3 +573,79 @@ to `text-base md:text-sm` (16px on phones, 14px from `md` up) rather than a bare
 design-system default is a stronger guarantee than asking each consumer to override. This is a
 platform rule, not an aesthetic choice - verify the computed size, and remember `md` (width) is the
 right proxy since iOS zoom is a small-viewport phone behavior.
+
+## Never `union`-merge structured TS/JSON - it corrupts barrels and manifests
+
+Git's `union` merge driver resolves a conflict by keeping **both** sides' lines. On prose that is
+harmless; on a **multi-line structured block** it is corruption. Merging two branches that both add
+exports to a barrel produced a broken `index.ts`: the `union` driver kept both branches' bodies but
+**dropped the `export {` opener** of one block (the shared opening line collapsed to one copy while
+the two bodies concatenated), and on a JSON manifest it **duplicated keys**. Both "merged" files
+were syntactically broken yet looked plausible in a diff. During the 1.0.0 build-out, many parallel
+branches each touched the three tier barrels (`seeds` / `twigs` / `branches` `index.ts`) and
+`package.json`, so this hit repeatedly.
+
+**Apply it:** do **not** put a `union` merge driver (or any auto-both-sides strategy) on structured
+files - TS barrels, JSON manifests, lockfiles. Resolve barrel and manifest conflicts **explicitly**
+(take both entries, but keep exactly one `export {` / one JSON key each), and after any merge that
+touched a barrel or a `package.json`, build once - a dropped `export {` or a duplicate key fails the
+parse immediately, where a diff read will not. See
+[`docs/feedback/0018-union-merge-corrupts-structured-files.md`](../feedback/0018-union-merge-corrupts-structured-files.md).
+
+## A package-scoped gate misses the Storybook app - gate the FULL turbo build before release
+
+Running the lint/build gate scoped to one package (`--filter @rogueoak/canopy`) is fast, but it does
+**not** build or lint the Storybook app, so a broken story file - a bad import, a hook in a `render`
+callback, a stale prop after a component's API changed - ships green through the package-scoped gate
+and only fails when someone builds Storybook (or in the Pages deploy). During the build-out, several
+components changed and their story files drifted, invisible to `--filter @rogueoak/canopy`.
+
+**Apply it:** the pre-release (and CI) gate must be the **full** `turbo` build/lint/test across every
+package **and** app (`apps/storybook` included), not a package-scoped filter - the storybook app is a
+first-class consumer and its build is part of "green." Use `--filter` only for a fast inner-loop
+check, never as the release gate. See
+[`docs/feedback/0019-scope-the-full-build-gate-before-release.md`](../feedback/0019-scope-the-full-build-gate-before-release.md).
+
+## Do not assert a third-party library's browser internals in jsdom - test your own mapping
+
+Several 1.0.0 Branches wrap a third-party behavioural library (cmdk, vaul, embla, recharts,
+react-day-picker). Tests that asserted **the library's own** caret position, text selection, or
+computed layout were **flaky** under jsdom, which under-models focus, selection, and layout - the
+assertions passed or failed on jsdom's approximation, not on real behaviour, so they broke
+intermittently while proving nothing about our code.
+
+**Apply it:** in jsdom, assert the **observable mapping you own** - the props you pass in, the
+callbacks you fire, the ARIA/classes you render, the data you transform - not the wrapped library's
+internal caret/selection/layout state. Trust the library's own suite for its internals; if you must
+verify real browser behaviour (focus, selection, motion), do it in a real browser, not jsdom.
+
+## Any coloured fill pairs with its `text-<fill>-foreground` token, never `text-text`
+
+A component that paints a coloured fill (`bg-primary`, `bg-danger`, a status fill on a Toast / Alert
+/ Badge) must set its text to the **matching foreground token** (`text-primary-foreground`,
+`text-danger-foreground`, ...), which the token layer guarantees meets AA against that fill in both
+themes. Reaching for the generic body colour `text-text` instead breaks contrast: `text-text` is
+tuned for the page surface, not for a saturated coloured fill, and there is no AA guard for that
+pairing - so it can read fine in one theme and fail in the other.
+
+**Apply it:** whenever you set a `bg-<role>` fill, set the paired `text-<role>-foreground` in the
+same class string - never `text-text` on a coloured fill. The foreground tokens exist precisely so
+the contrast is AA-verified; using the body colour opts out of that guarantee silently.
+
+## An API-preserving refactor can silently regress focus and motion - verify the outcome, not the tests
+
+Rebuilding a component onto a new primitive while keeping its public API (Combobox onto Command,
+SideNav / ResponsiveDialog onto the vaul-backed Drawer, TopNav onto NavigationMenu - specs
+0066/0067/0069) is tempting to gate on "the existing tests still pass." But the existing tests were
+written against the **old** primitive's behaviour, and jsdom under-models exactly what the swap can
+break: **focus** (vaul's `autoFocus`/focus-return differs from the Radix dialog SideNav previously
+used) and **motion** (a new primitive brings its own, or per-direction, keyframes, so a drawer can
+lose its slide or animate the wrong axis). Both regress with every test still green, because the
+suite asserts the old mechanics or asserts nothing about focus/motion at all.
+
+**Apply it:** when refactoring onto a new primitive under a preserved API, don't stop at "old tests
+pass." Verify the **a11y and motion outcomes** the component promises - focus lands and returns where
+it should (asserted on a captured node, since jsdom/Radix hide the background from role queries), and
+the motion fires in the right direction - adding tests for those outcomes if the old suite lacked
+them. A preserved API is not a preserved experience; jsdom's under-modelling of focus makes "tests
+still pass" a weak signal for precisely the properties a primitive swap threatens.
