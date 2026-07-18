@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRef, useState } from 'react';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   Drawer,
   DrawerClose,
@@ -13,62 +13,11 @@ import {
   DrawerTrigger,
 } from './Drawer';
 
-// vaul (like Radix Dialog) drives dismissal on Pointer Events and locks scroll; jsdom implements
-// neither. Mirror the Dialog/SideNav test stubs so `user.click`, focus, and scroll-lock don't throw.
-// We test OUR observable outcomes (opens on trigger, role/aria, close, per-direction anchor classes),
+// The jsdom shims vaul needs (Pointer Capture, `matchMedia`, a string computed `transform`,
+// `ResizeObserver`) live in the shared `vitest.setup.ts` `setupFiles`, which runs before every test
+// file - so this suite relies on that global setup rather than re-declaring the environment. We test
+// OUR observable outcomes (opens on trigger, role/aria, close, focus, per-direction anchor classes),
 // NOT vaul's internal drag physics - jsdom cannot model pointer velocity.
-beforeAll(() => {
-  if (!Element.prototype.hasPointerCapture) {
-    Element.prototype.hasPointerCapture = vi.fn(() => false);
-  }
-  if (!Element.prototype.setPointerCapture) {
-    Element.prototype.setPointerCapture = vi.fn();
-  }
-  if (!Element.prototype.releasePointerCapture) {
-    Element.prototype.releasePointerCapture = vi.fn();
-  }
-  if (!Element.prototype.scrollIntoView) {
-    Element.prototype.scrollIntoView = vi.fn();
-  }
-  // vaul reads `window.matchMedia('(display-mode: standalone)')` when the drawer opens and locks the
-  // body; jsdom has no `matchMedia`, so stub it (return `matches: false` - not a standalone PWA).
-  if (typeof window.matchMedia !== 'function') {
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
-  }
-  if (!globalThis.ResizeObserver) {
-    globalThis.ResizeObserver = vi.fn(() => ({
-      observe: vi.fn(),
-      unobserve: vi.fn(),
-      disconnect: vi.fn(),
-    })) as unknown as typeof ResizeObserver;
-  }
-  // vaul's `onRelease` (fired on every pointer-up inside the drawer) reads the panel's computed
-  // `transform` to measure the drag offset; jsdom returns `undefined` for `transform`, so vaul throws
-  // `transform.match is not a function` as an uncaught error - failing the run even though the
-  // observable assertions pass. Guarantee a string `transform` so the (no-op in jsdom) drag math is
-  // inert. We are NOT testing vaul's drag physics here - only our observable outcomes.
-  const realGetComputedStyle = window.getComputedStyle.bind(window);
-  window.getComputedStyle = ((element: Element, pseudoElt?: string | null) => {
-    const style = realGetComputedStyle(element, pseudoElt ?? undefined);
-    if (!style.transform) {
-      try {
-        Object.defineProperty(style, 'transform', { value: 'none', configurable: true });
-      } catch {
-        /* some environments freeze the declaration; the fallback below still applies */
-      }
-    }
-    return style;
-  }) as typeof window.getComputedStyle;
-});
 
 function Basic({
   direction,
@@ -236,6 +185,34 @@ describe('Drawer', () => {
     render(<Basic />);
     await user.click(screen.getByRole('button', { name: 'Open drawer' }));
     expect(screen.getByRole('dialog')).toHaveClass('motion-reduce:animate-none');
+  });
+
+  it('moves focus INTO the drawer on open (autoFocus default, the modal focus trap)', async () => {
+    // vaul defaults `autoFocus` to `false` (focus stays on the trigger); Drawer flips it on so the
+    // panel gets focus on open. Assert focus lands inside `role="dialog"`, not on the opener.
+    const user = userEvent.setup();
+    render(<Basic />);
+    const trigger = screen.getByRole('button', { name: 'Open drawer' });
+    await user.click(trigger);
+
+    const dialog = screen.getByRole('dialog');
+    await waitFor(() => {
+      const active = document.activeElement;
+      expect(active).not.toBe(trigger);
+      expect(dialog.contains(active)).toBe(true);
+    });
+  });
+
+  it('returns focus to the trigger on close (Esc)', async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+    const trigger = screen.getByRole('button', { name: 'Open drawer' });
+    await user.click(trigger);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
 });
 

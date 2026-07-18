@@ -152,9 +152,11 @@ export interface SideNavProps extends React.HTMLAttributes<HTMLElement> {
  * full-height `DrawerContent` panel that **slides in/out** (`animate-drawer-in`/`-out`, from the Roots
  * preset) and sits on the raised-surface lift (`bg-surface-raised` + `shadow-lg` + `border-r`), holding
  * an sr-only `DrawerTitle` (the drawer needs a Title for its accessible name), a visible `X` close
- * affordance, and the `<nav>` landmark. Either way exactly one `<nav>` renders. Drawer keeps focus on
- * the external `SideNavTrigger` while open (vaul does not steal it into the panel) and `Esc` /
- * outside-click / a swipe-to-close all dismiss it, so focus is returned to the trigger for free.
+ * affordance, and the `<nav>` landmark. Either way exactly one `<nav>` renders. Opening moves focus
+ * INTO the panel (the modal focus trap); because the `SideNavTrigger` is a decoupled sibling (no
+ * Drawer `Trigger` is rendered here), SideNav captures the opener on `onOpenAutoFocus` and restores
+ * it on `onCloseAutoFocus`, so `Esc` / outside-click / a swipe-to-close all return focus to the
+ * external trigger.
  *
  * The **public surface lands on the rail panel** in both forms - the forwarded `ref`, `className`,
  * and native `{...props}` go to the styled `<aside>` on desktop and to `DrawerContent` (the drawer
@@ -199,6 +201,24 @@ export const SideNav = React.forwardRef<HTMLElement, SideNavProps>(
       if (mobile) setOpen(false);
     }, [mobile, setOpen]);
 
+    // The `SideNavTrigger` is a decoupled sibling (it lives in the app bar, not inside SideNav), so
+    // NO Drawer/vaul `Trigger` is rendered here - which means neither vaul nor its underlying Radix
+    // `FocusScope` knows what opened the panel, and on close focus would fall to `<body>` instead of
+    // returning to the trigger. Capture whatever had focus when the panel opens (`onOpenAutoFocus`,
+    // before vaul moves focus in) and restore it on close (`onCloseAutoFocus`, pre-empting Radix's
+    // null-`triggerRef` default), preserving the external-trigger return-focus contract (spec 0026).
+    const openerRef = React.useRef<HTMLElement | null>(null);
+    const handleOpenAutoFocus = React.useCallback(() => {
+      // Capture the opener before vaul/Radix moves focus in. Do NOT preventDefault: let the panel
+      // take focus (the modal trap); we only need the node to restore to on close.
+      openerRef.current = document.activeElement as HTMLElement | null;
+    }, []);
+    const handleCloseAutoFocus = React.useCallback((event: Event) => {
+      // Radix's default would focus its (null) trigger and lose focus; take over the restore.
+      event.preventDefault();
+      openerRef.current?.focus();
+    }, []);
+
     // On mobile the rail is always expanded (the drawer has room for labels); the underlying
     // collapse state is preserved for when the viewport returns to desktop.
     const effectiveCollapsed = mobile ? false : collapsed;
@@ -225,6 +245,8 @@ export const SideNav = React.forwardRef<HTMLElement, SideNavProps>(
                 id={drawerId}
                 direction="left"
                 showHandle={false}
+                onOpenAutoFocus={handleOpenAutoFocus}
+                onCloseAutoFocus={handleCloseAutoFocus}
                 className={cn(
                   'w-60 max-w-none rounded-none border-r p-0 data-[state=open]:animate-drawer-in data-[state=closed]:animate-drawer-out',
                   className,

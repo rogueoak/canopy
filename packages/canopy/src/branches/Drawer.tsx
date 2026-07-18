@@ -43,10 +43,13 @@ export type DrawerProps = DrawerPrimitiveProps;
 /**
  * Drawer - the stateful root (vaul `Drawer.Root`). Controlled or uncontrolled via `open` /
  * `defaultOpen` / `onOpenChange`; `direction` (default `bottom`) anchors the panel; `modal` (default
- * `true`) traps focus and scrolls-locks the page. All vaul root props pass through.
+ * `true`) traps focus and scrolls-locks the page. `autoFocus` defaults to `true` so opening the
+ * drawer moves focus INTO the panel (vaul defaults it to `false`, which would leave focus on the
+ * trigger and break keyboard/SR users - the spec's "focus is trapped" contract). All vaul root props
+ * pass through, so a caller can still opt out with `autoFocus={false}`.
  */
-const Drawer = ({ direction = 'bottom', ...props }: DrawerProps) => (
-  <DrawerPrimitive.Root direction={direction} {...props} />
+const Drawer = ({ direction = 'bottom', autoFocus = true, ...props }: DrawerProps) => (
+  <DrawerPrimitive.Root direction={direction} autoFocus={autoFocus} {...props} />
 );
 Drawer.displayName = 'Drawer';
 
@@ -93,8 +96,10 @@ DrawerOverlay.displayName = 'DrawerOverlay';
 /**
  * drawerContentVariants - maps `direction` to a FULL LITERAL token-utility string (no dynamically
  * composed class names, so Tailwind v4's scanner emits each): the anchored edge, the full-bleed axis,
- * the rounded corners on the exposed side, and the enter/exit motion token. `bottom` reuses the
- * `bottom-sheet-*` motion; the three side directions use the `drawer-*` motion. Every variant sits on
+ * the rounded corners on the exposed side, and the enter/exit motion token. Each direction slides
+ * toward its anchored edge: `bottom` reuses the `bottom-sheet-*` motion, `left` the `drawer-*`
+ * (left-edge) motion, `top` the `drawer-top-*` (translateY(-100%)) motion, and `right` the
+ * `drawer-right-*` (translateX(100%)) motion. Every variant sits on
  * the raised-surface pattern (`bg-surface-raised` + `border-border` + `text-text` + `shadow-lg`).
  */
 const drawerContentVariants = cva(
@@ -104,10 +109,10 @@ const drawerContentVariants = cva(
       direction: {
         bottom:
           'inset-x-0 bottom-0 mt-24 max-h-[85vh] rounded-t-lg border-t data-[state=open]:animate-bottom-sheet-in data-[state=closed]:animate-bottom-sheet-out',
-        top: 'inset-x-0 top-0 mb-24 max-h-[85vh] rounded-b-lg border-b data-[state=open]:animate-drawer-in data-[state=closed]:animate-drawer-out',
+        top: 'inset-x-0 top-0 mb-24 max-h-[85vh] rounded-b-lg border-b data-[state=open]:animate-drawer-top-in data-[state=closed]:animate-drawer-top-out',
         left: 'inset-y-0 left-0 w-3/4 max-w-sm rounded-r-lg border-r data-[state=open]:animate-drawer-in data-[state=closed]:animate-drawer-out',
         right:
-          'inset-y-0 right-0 w-3/4 max-w-sm rounded-l-lg border-l data-[state=open]:animate-drawer-in data-[state=closed]:animate-drawer-out',
+          'inset-y-0 right-0 w-3/4 max-w-sm rounded-l-lg border-l data-[state=open]:animate-drawer-right-in data-[state=closed]:animate-drawer-right-out',
       },
     },
     defaultVariants: {

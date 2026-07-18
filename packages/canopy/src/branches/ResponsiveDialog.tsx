@@ -103,12 +103,41 @@ const ResponsiveDialog = ({
   children,
 }: ResponsiveDialogProps) => {
   const [open, setOpen] = useControllableOpen(openProp, defaultOpen, onOpenChange);
+  // Seed the form context from the active breakpoint so a `ResponsiveDialogClose` (or Trigger)
+  // rendered OUTSIDE a `ResponsiveDialogContent` still dispatches to the surface the breakpoint
+  // actually shows - without this default a sibling Close on a mobile viewport would target the
+  // hidden desktop Radix scope instead of the visible vaul sheet. A Close nested inside Content still
+  // wins via the Content-provided context (nearest provider). `useIsMobile()` returns `false` on the
+  // server/first paint, matching the previous plain-Radix `Close` behaviour there.
+  const mobile = useIsMobile();
+  const rootFormValue = React.useMemo(() => ({ mobile }), [mobile]);
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setOpen} modal={modal}>
-      <Drawer open={open} onOpenChange={setOpen} direction="bottom" modal={modal}>
-        {children}
-      </Drawer>
-    </DialogPrimitive.Root>
+    <ResponsiveDialogFormContext.Provider value={rootFormValue}>
+      <DialogPrimitive.Root open={open} onOpenChange={setOpen} modal={modal}>
+        {/*
+          Both roots mount driven by the same `open` state, but only ONE surface renders per
+          breakpoint. On desktop the centred Radix `DialogContent` shows and no `DrawerContent`
+          mounts, yet the vaul root still runs its root-level `usePositionFixed`/`useScaleBackground`;
+          on Safari/iOS `usePositionFixed` would set `document.body.style.position = 'fixed'` on open,
+          stacking a body lock on top of Radix's own scroll lock (a scroll-position jump). Pass
+          `noBodyStyles` while desktop is active so the inert vaul root can never touch the body; the
+          mobile branch (where the sheet actually shows) keeps vaul's body handling. We gate on the
+          root's own `useIsMobile()` rather than the vaul open state so the `open` prop stays
+          unconditional - the Content `mobile` OVERRIDE (used in tests / SSR hints) drives which
+          surface renders, and must not be able to leave the vaul root closed while a `DrawerContent`
+          mounts. jsdom stubs matchMedia to non-Safari, so this guards a real-browser-only path.
+        */}
+        <Drawer
+          open={open}
+          onOpenChange={setOpen}
+          direction="bottom"
+          modal={modal}
+          noBodyStyles={!mobile}
+        >
+          {children}
+        </Drawer>
+      </DialogPrimitive.Root>
+    </ResponsiveDialogFormContext.Provider>
   );
 };
 ResponsiveDialog.displayName = 'ResponsiveDialog';

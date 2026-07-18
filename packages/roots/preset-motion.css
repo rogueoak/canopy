@@ -13,7 +13,11 @@
  * portalled overlay + content, which reference these `animate-dialog-*` utilities (gated with
  * `motion-reduce:animate-none`). The partial now ALSO carries the off-canvas drawer slide
  * (`animate-drawer-in` / `-out`), first consumed by SideNav (spec 0026): the mobile drawer slides in
- * from the left edge and back out, gated the same way. It further carries the bottom-sheet slide
+ * from the left edge and back out, gated the same way. The `Drawer` Branch (spec 0067) extends this
+ * with the matching top / right edge slides (`animate-drawer-top-in` / `-out` = translateY(-100%),
+ * `animate-drawer-right-in` / `-out` = translateX(100%)) so each `direction` animates toward its
+ * anchored edge (`left` reuses `animate-drawer-*`, `bottom` the `bottom-sheet-*` pair below). It
+ * further carries the bottom-sheet slide
  * (`animate-bottom-sheet-in` / `-out`), first consumed by ResponsiveDialog (spec 0031): the mobile
  * dialog form slides up from the bottom edge and back down, gated the same way. The partial now
  * ALSO carries generic expressive presets, not tied to one component: `animate-pop-in` / `-out`
@@ -90,6 +94,38 @@
   }
   to {
     transform: translateX(-100%);
+  }
+}
+@keyframes drawer-top-in {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes drawer-top-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+@keyframes drawer-right-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes drawer-right-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
   }
 }
 @keyframes bottom-sheet-in {
@@ -198,6 +234,10 @@
   --animate-dialog-content-out: dialog-content-out var(--duration-base) var(--ease-standard);
   --animate-drawer-in: drawer-in var(--duration-slow) var(--ease-decelerate);
   --animate-drawer-out: drawer-out var(--duration-base) var(--ease-standard);
+  --animate-drawer-top-in: drawer-top-in var(--duration-slow) var(--ease-decelerate);
+  --animate-drawer-top-out: drawer-top-out var(--duration-base) var(--ease-standard);
+  --animate-drawer-right-in: drawer-right-in var(--duration-slow) var(--ease-decelerate);
+  --animate-drawer-right-out: drawer-right-out var(--duration-base) var(--ease-standard);
   --animate-bottom-sheet-in: bottom-sheet-in var(--duration-slow) var(--ease-decelerate);
   --animate-bottom-sheet-out: bottom-sheet-out var(--duration-base) var(--ease-standard);
   --animate-pop-in: pop-in var(--duration-base) var(--ease-spring);
