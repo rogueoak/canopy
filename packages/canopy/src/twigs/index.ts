@@ -48,6 +48,8 @@ export type {
   ItemDescriptionProps,
   ItemActionsProps,
 } from './Item';
+export { Alert, AlertTitle, AlertDescription } from './Alert';
+export type { AlertProps, AlertTitleProps, AlertDescriptionProps } from './Alert';
 
 export { SearchBar } from './SearchBar';
 export type { SearchBarProps } from './SearchBar';
