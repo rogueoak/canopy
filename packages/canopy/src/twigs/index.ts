@@ -13,6 +13,20 @@ export type {
   FormFieldMessageProps,
 } from './FormField';
 
+export {
+  FieldSet,
+  FieldSetLegend,
+  FieldSetDescription,
+  FieldGroup,
+  fieldGroupVariants,
+} from './FieldSet';
+export type {
+  FieldSetProps,
+  FieldSetLegendProps,
+  FieldSetDescriptionProps,
+  FieldGroupProps,
+} from './FieldSet';
+
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
 export type {
   CardProps,
