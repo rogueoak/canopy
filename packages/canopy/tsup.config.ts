@@ -36,6 +36,7 @@ export default defineConfig({
     '@radix-ui/react-hover-card',
     '@radix-ui/react-switch',
     '@radix-ui/react-tabs',
+    '@radix-ui/react-toast',
     '@radix-ui/react-toggle',
     '@radix-ui/react-toggle-group',
     '@radix-ui/react-radio-group',
