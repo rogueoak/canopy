@@ -36,6 +36,9 @@ export type {
   ResponsiveDialogContentProps,
 } from './ResponsiveDialog';
 
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
+export type { TabsProps, TabsListProps, TabsTriggerProps, TabsContentProps } from './Tabs';
+
 export { Combobox } from './Combobox';
 export type {
   ComboboxProps,
