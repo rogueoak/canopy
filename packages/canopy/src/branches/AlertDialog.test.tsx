@@ -120,6 +120,30 @@ describe('AlertDialog', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
   });
 
+  it("runs a caller's onEscapeKeyDown but still does NOT close (pass-through, then block)", async () => {
+    const user = userEvent.setup();
+    const onEscapeKeyDown = vi.fn();
+    render(
+      <AlertDialog defaultOpen>
+        <AlertDialogContent onEscapeKeyDown={onEscapeKeyDown}>
+          <AlertDialogTitle>Blocking</AlertDialogTitle>
+          <AlertDialogDescription>Body</AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    // The caller's handler still runs (pass-through) even though we then preventDefault.
+    expect(onEscapeKeyDown).toHaveBeenCalledTimes(1);
+    // And the alert stays open - our wrapper prevents the default dismissal after the caller ran.
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+  });
+
   it('closes and fires onClick when AlertDialogAction is clicked', async () => {
     const user = userEvent.setup();
     const onAction = vi.fn();
