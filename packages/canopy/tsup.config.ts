@@ -36,6 +36,7 @@ export default defineConfig({
     'class-variance-authority',
     'clsx',
     'cmdk',
+    'input-otp',
     'tailwind-merge',
   ],
 });
