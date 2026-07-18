@@ -245,6 +245,7 @@ export type {
 } from './Table';
 export { ScrollArea, ScrollBar } from './ScrollArea';
 export type { ScrollAreaProps, ScrollBarProps } from './ScrollArea';
+export {
   Menubar,
   MenubarMenu,
   MenubarGroup,
@@ -279,6 +280,7 @@ export type {
   MenubarLabelProps,
   MenubarShortcutProps,
 } from './Menubar';
+export {
   Toast,
   ToastProvider,
   ToastViewport,
