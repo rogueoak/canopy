@@ -35,6 +35,7 @@ export default defineConfig({
     '@radix-ui/react-toggle',
     '@radix-ui/react-toggle-group',
     '@radix-ui/react-radio-group',
+    '@radix-ui/react-scroll-area',
     '@radix-ui/react-select',
     '@radix-ui/react-separator',
     '@radix-ui/react-tooltip',
