@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createRef, useState } from 'react';
+import { createRef, useRef, useState } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   Toast,
@@ -194,6 +194,58 @@ describe('Toast (imperative useToast + Toaster)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Dismiss all' }));
     await waitFor(() => expect(screen.queryByText('Enqueued')).not.toBeInTheDocument());
+  });
+
+  it('stacks multiple queued toasts and dismiss(id) closes only the targeted one', async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+
+    // Captures each enqueued id so the test can target the first toast by id (the one-of-many
+    // branch of dismiss(id) that dismiss-all never exercises).
+    function StackHarness() {
+      const { toast, dismiss } = useToast();
+      const firstId = useRef<string | null>(null);
+      return (
+        <div>
+          <button
+            type="button"
+            onClick={() => {
+              const id = toast({ title: 'First', duration: Infinity });
+              firstId.current = id;
+            }}
+          >
+            Enqueue first
+          </button>
+          <button type="button" onClick={() => toast({ title: 'Second', duration: Infinity })}>
+            Enqueue second
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (firstId.current) dismiss(firstId.current);
+            }}
+          >
+            Dismiss first
+          </button>
+        </div>
+      );
+    }
+
+    render(
+      <Toaster>
+        <StackHarness />
+      </Toaster>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Enqueue first' }));
+    await user.click(screen.getByRole('button', { name: 'Enqueue second' }));
+    // Both queued toasts render (stacking, newest first per the spec).
+    expect(await screen.findByText('First')).toBeInTheDocument();
+    expect(screen.getByText('Second')).toBeInTheDocument();
+
+    // Target the first toast by its id: only it closes, the second stays open.
+    await user.click(screen.getByRole('button', { name: 'Dismiss first' }));
+    await waitFor(() => expect(screen.queryByText('First')).not.toBeInTheDocument());
+    expect(screen.getByText('Second')).toBeInTheDocument();
   });
 
   it('throws when useToast is used outside a Toaster', () => {

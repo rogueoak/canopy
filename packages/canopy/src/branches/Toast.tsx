@@ -101,7 +101,12 @@ const Toast = React.forwardRef<
   React.ComponentRef<typeof ToastPrimitive.Root>,
   ToastProps
 >(({ className, variant, ...props }, ref) => (
-  <ToastPrimitive.Root ref={ref} className={cn(toastVariants({ variant }), className)} {...props} />
+  <ToastPrimitive.Root
+    ref={ref}
+    data-variant={variant ?? 'default'}
+    className={cn(toastVariants({ variant }), className)}
+    {...props}
+  />
 ));
 Toast.displayName = ToastPrimitive.Root.displayName;
 
@@ -146,6 +151,13 @@ ToastDescription.displayName = ToastPrimitive.Description.displayName;
  * outline affordance with the shared focus-visible ring. Radix REQUIRES `altText` so the action is
  * described when the toast is announced; it is a real prop passed straight through. `forwardRef` +
  * native prop spread; `cn()` caller-wins merge.
+ *
+ * The affordance is variant-aware via the root's `group`/`data-variant`: on the neutral `default`
+ * toast it lifts to the raised-surface `muted-raised` and rings off `surface-raised` (matching the
+ * portal-close convention of `Dialog` / `ResponsiveDialog` / `SideNav`); on the saturated
+ * `success` / `danger` fills a neutral grey lift would clash behind the near-white foreground, so it
+ * uses a `text-current`-tinted `white/15` overlay and rings off the fill (`ring-offset-transparent`)
+ * instead. The neutral outline border is likewise dropped on the colour fills where it reads wrong.
  */
 const ToastAction = React.forwardRef<
   React.ComponentRef<typeof ToastPrimitive.Action>,
@@ -154,7 +166,10 @@ const ToastAction = React.forwardRef<
   <ToastPrimitive.Action
     ref={ref}
     className={cn(
-      'inline-flex h-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border-strong bg-transparent px-3 text-sm font-medium text-current transition-colors hover:bg-muted-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:pointer-events-none disabled:opacity-50',
+      'inline-flex h-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-border-strong bg-transparent px-3 text-sm font-medium text-current transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+      'group-data-[variant=default]:hover:bg-muted-raised group-data-[variant=default]:focus-visible:ring-offset-surface-raised',
+      'group-data-[variant=success]:border-transparent group-data-[variant=success]:hover:bg-white/15 group-data-[variant=success]:focus-visible:ring-offset-transparent',
+      'group-data-[variant=danger]:border-transparent group-data-[variant=danger]:hover:bg-white/15 group-data-[variant=danger]:focus-visible:ring-offset-transparent',
       className,
     )}
     {...props}
@@ -166,8 +181,12 @@ ToastAction.displayName = ToastPrimitive.Action.displayName;
  * ToastClose - `Toast.Close` as a labelled icon `button` (an "x") that dismisses the toast
  * immediately. Defaults `aria-label` to `Close` (overridable via a caller `aria-label`, applied
  * after so the caller wins). The close glyph is an inline `currentColor` SVG marked `aria-hidden`,
- * so the button's accessible name comes only from the label. Uses the raised-surface `muted-raised`
- * hover lift and the shared focus-visible ring.
+ * so the button's accessible name comes only from the label. The hover lift is variant-aware via the
+ * root's `group`/`data-variant`: the neutral `default` toast lifts to the raised-surface
+ * `muted-raised` and rings off `surface-raised` (matching the `Dialog` portal-close convention),
+ * while the `success` / `danger` fills use a `text-current`-tinted `white/15` overlay and ring off
+ * the fill (`ring-offset-transparent`) so the affordance reads against the colour instead of dropping
+ * to a clashing grey. Shared focus-visible ring throughout.
  */
 const ToastClose = React.forwardRef<
   React.ComponentRef<typeof ToastPrimitive.Close>,
@@ -177,7 +196,10 @@ const ToastClose = React.forwardRef<
     ref={ref}
     aria-label="Close"
     className={cn(
-      'inline-flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-current opacity-70 transition-opacity hover:bg-muted-raised hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset',
+      'inline-flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-current opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+      'group-data-[variant=default]:hover:bg-muted-raised group-data-[variant=default]:focus-visible:ring-offset-surface-raised',
+      'group-data-[variant=success]:hover:bg-white/15 group-data-[variant=success]:focus-visible:ring-offset-transparent',
+      'group-data-[variant=danger]:hover:bg-white/15 group-data-[variant=danger]:focus-visible:ring-offset-transparent',
       className,
     )}
     {...props}
@@ -276,9 +298,80 @@ export interface ToasterProps
  * it `const { toast } = useToast()` fires notifications with no hand-written JSX. Provider props
  * (`swipeDirection`, default `duration`, `label`) pass straight through.
  *
- * A closed toast is removed from the queue on Radix's `onOpenChange(false)` (which fires after the
- * exit animation / swipe / timeout), so the DOM does not accumulate dismissed toasts.
+ * Dismissal is a two-step lifecycle so the exit animation runs. `onOpenChange(false)` (fired the
+ * instant a close is initiated - timer, swipe, or the close button) only marks the item `open:false`
+ * via `dismiss(id)`; Radix then holds the element mounted with `data-state=closed` to play
+ * `data-[state=closed]:animate-fade-out` (or the swipe-end fade). The item is dropped from the queue
+ * only after that exit finishes - fast path on the root's `onAnimationEnd` (gated on
+ * `data-state=closed`), with an effect-scheduled timeout as the fallback for reduced-motion, where
+ * `animate-none` means no `animationend` ever fires. So the DOM does not accumulate dismissed toasts
+ * and the motion the spec requires is preserved.
  */
+/** Milliseconds the closed toast stays mounted for its exit animation before the fallback sweep. */
+const TOAST_REMOVE_DELAY = 200;
+
+/**
+ * ToasterItem - one queued toast. Owns the deferred-removal lifecycle so the exit animation runs:
+ * `onOpenChange(false)` marks it closed (via `dismiss`), then removal happens either on the root's
+ * exit `animationend` (fast path) or, when reduced-motion has stripped the animation, a short timeout
+ * scheduled the moment `open` flips false (fallback). Both call the idempotent `remove(id)`.
+ */
+function ToasterItem({
+  item,
+  dismiss,
+  remove,
+}: {
+  item: QueuedToast;
+  dismiss: (id?: string) => void;
+  remove: (id: string) => void;
+}) {
+  const { id, title, description, variant, duration, action, open } = item;
+
+  React.useEffect(() => {
+    if (open) return;
+    const timer = setTimeout(() => remove(id), TOAST_REMOVE_DELAY);
+    return () => clearTimeout(timer);
+  }, [open, id, remove]);
+
+  return (
+    <Toast
+      variant={variant}
+      duration={duration}
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) {
+          // Mark closed only; Radix keeps the node mounted with data-state=closed so the exit
+          // animation runs. Removal is deferred to onAnimationEnd / the effect fallback.
+          dismiss(id);
+        }
+      }}
+      onAnimationEnd={(event) => {
+        // Fast path: drop the item the moment its own exit animation finishes (guard against
+        // bubbled child animations and only when actually closed).
+        if (
+          event.currentTarget === event.target &&
+          event.currentTarget.getAttribute('data-state') === 'closed'
+        ) {
+          remove(id);
+        }
+      }}
+    >
+      <div className="flex min-w-0 flex-col gap-1">
+        {title != null ? <ToastTitle>{title}</ToastTitle> : null}
+        {description != null ? <ToastDescription>{description}</ToastDescription> : null}
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        {action != null ? (
+          <ToastAction altText={action.altText} onClick={action.onClick}>
+            {action.label}
+          </ToastAction>
+        ) : null}
+        <ToastClose />
+      </div>
+    </Toast>
+  );
+}
+
 function Toaster({ children, viewportClassName, ...providerProps }: ToasterProps) {
   const [toasts, setToasts] = React.useState<QueuedToast[]>([]);
 
@@ -307,32 +400,8 @@ function Toaster({ children, viewportClassName, ...providerProps }: ToasterProps
     <ToastContext.Provider value={value}>
       <ToastProvider {...providerProps}>
         {children}
-        {toasts.map(({ id, title, description, variant, duration, action, open }) => (
-          <Toast
-            key={id}
-            variant={variant}
-            duration={duration}
-            open={open}
-            onOpenChange={(next) => {
-              if (!next) {
-                dismiss(id);
-                remove(id);
-              }
-            }}
-          >
-            <div className="flex min-w-0 flex-col gap-1">
-              {title != null ? <ToastTitle>{title}</ToastTitle> : null}
-              {description != null ? <ToastDescription>{description}</ToastDescription> : null}
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              {action != null ? (
-                <ToastAction altText={action.altText} onClick={action.onClick}>
-                  {action.label}
-                </ToastAction>
-              ) : null}
-              <ToastClose />
-            </div>
-          </Toast>
+        {toasts.map((item) => (
+          <ToasterItem key={item.id} item={item} dismiss={dismiss} remove={remove} />
         ))}
         <ToastViewport className={viewportClassName} />
       </ToastProvider>
