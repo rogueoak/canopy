@@ -125,7 +125,7 @@ describe('FieldSet', () => {
 
     const description = screen.getByText('Manage how we reach you.');
     expect(description).toHaveAttribute('data-disabled');
-    expect(description).toHaveClass('text-disabled-foreground');
+    expect(description).toHaveClass('text-text-muted', 'cursor-not-allowed');
   });
 
   it('does not dim the legend or description when enabled', () => {
@@ -143,7 +143,8 @@ describe('FieldSet', () => {
 
     const description = screen.getByText('Manage how we reach you.');
     expect(description).not.toHaveAttribute('data-disabled');
-    expect(description).not.toHaveClass('text-disabled-foreground');
+    expect(description).not.toHaveClass('cursor-not-allowed');
+    expect(description).toHaveClass('text-text-muted');
   });
 
   it('renders the required marker on the legend without polluting the group name', () => {

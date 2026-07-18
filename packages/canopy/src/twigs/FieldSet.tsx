@@ -135,9 +135,11 @@ export type FieldSetDescriptionProps = React.HTMLAttributes<HTMLParagraphElement
 /**
  * FieldSetDescription - muted group help text carrying `${id}-description`. Registers its presence
  * via the context setter (mount/unmount effect) so `FieldSet` adds the id to `aria-describedby` only
- * while it is rendered. Dims to `text-disabled-foreground` when the group is disabled. Same
- * `text-text-muted text-body-sm` role as FormFieldDescription (0020); no `dark:` - light/dark flips
- * through the token layer.
+ * while it is rendered. Stays `text-text-muted` when the group is disabled - the same muted token
+ * the legend dims to, so legend + description dim in step (FormFieldDescription 0020, which this
+ * mirrors, likewise stays muted when its FormField is disabled). Adds a `cursor-not-allowed` hook
+ * and a `data-disabled` styling attribute when disabled. Same `text-text-muted text-body-sm` role as
+ * FormFieldDescription (0020); no `dark:` - light/dark flips through the token layer.
  */
 export const FieldSetDescription = React.forwardRef<HTMLParagraphElement, FieldSetDescriptionProps>(
   ({ className, ...props }, ref) => {
@@ -154,7 +156,7 @@ export const FieldSetDescription = React.forwardRef<HTMLParagraphElement, FieldS
         data-disabled={disabled ? '' : undefined}
         className={cn(
           'text-text-muted text-body-sm',
-          disabled && 'text-disabled-foreground',
+          disabled && 'cursor-not-allowed',
           className,
         )}
         {...props}
