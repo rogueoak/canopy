@@ -157,3 +157,25 @@ to component source.
 - [ ] Canopy `README.md` component list includes Chart; `overview/features.md` (new visualization
       capability) and `overview/architecture.md` (new `recharts` dependency in the canopy footprint)
       updated on completion.
+
+## Review decisions
+
+Two deliberate divergences from the sections above, accepted during the Spectra review of PR #81
+and recorded here so they are explicit, time-boxed choices rather than incidental drift:
+
+- **Series ramp aliases intent tokens (v1), dedicated `--chart-1..--chart-5` ramp is a follow-up.**
+  The Outcome/Scope/Acceptance above call for a NEW `--chart-1..--chart-5` categorical token ramp in
+  the Roots token layer. v1 instead aliases five existing semantic role tokens
+  (`--color-primary/info/success/warning/danger`) directly in the component source: it ships the
+  themeable wrapper without a cross-package Roots token change and still themes light/dark with no
+  `dark:`. Accepted trade-off (Designer + Architect review): these are intent colors, so multi-series
+  contrast and meaning-neutrality are weaker than a dedicated ramp would give. Follow-up: add a
+  meaning-neutral `--chart-1..--chart-5` ramp to the Roots preset (light + dark) and repoint the
+  component's `CHART_RAMP` at it. Callers needing distinguishable categorical hues today pass explicit
+  per-series `color`/`theme`.
+- **`recharts` pinned to `^2.15` (v2) for v1, v3 migration is a tracked follow-up.** recharts marks
+  its 1.x/2.x branches EOL and recommends v3. v1 stays on `^2.15` to land the component against the
+  stable, well-understood v2 API rather than couple the initial ship to a v3 API migration. Accepted
+  as a time-boxed decision (Architect review); a v3 bump - evaluating its API deltas against this
+  wrapper's `Tooltip`/`Legend`/`ResponsiveContainer` bindings - is a planned follow-up, not a v1
+  blocker.

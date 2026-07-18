@@ -49,6 +49,7 @@ export default defineConfig({
     'cmdk',
     'embla-carousel-react',
     'input-otp',
+    'recharts',
     'tailwind-merge',
   ],
 });
