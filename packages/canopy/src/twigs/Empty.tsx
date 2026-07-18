@@ -108,13 +108,14 @@ export type EmptyContentProps = React.HTMLAttributes<HTMLDivElement>;
 /**
  * EmptyContent - the actions row. Lays its children out in a centred, wrapping row
  * (`flex flex-wrap items-center justify-center gap-2`) so one or two `Button`s centre under the copy
- * and wrap on narrow widths. A small top margin separates the actions from the description.
+ * and wrap on narrow widths. Spacing before the row is owned by the container's column `gap`, so
+ * the actions inherit the same uniform rhythm as the rest of the stack.
  */
 export const EmptyContent = React.forwardRef<HTMLDivElement, EmptyContentProps>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('mt-2 flex flex-wrap items-center justify-center gap-2', className)}
+      className={cn('flex flex-wrap items-center justify-center gap-2', className)}
       {...props}
     />
   ),
