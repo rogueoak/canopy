@@ -23,6 +23,15 @@ export type {
   CardFooterProps,
 } from './Card';
 
+export { Empty, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from './Empty';
+export type {
+  EmptyProps,
+  EmptyMediaProps,
+  EmptyTitleProps,
+  EmptyDescriptionProps,
+  EmptyContentProps,
+} from './Empty';
+
 export { SearchBar } from './SearchBar';
 export type { SearchBarProps } from './SearchBar';
 
