@@ -122,6 +122,9 @@ export type {
   BreadcrumbEllipsisProps,
 } from './Breadcrumb';
 
+export { ToggleGroup, ToggleGroupItem } from './ToggleGroup';
+export type { ToggleGroupProps, ToggleGroupItemProps } from './ToggleGroup';
+
 export {
   Pagination,
   PaginationContent,
