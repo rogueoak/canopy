@@ -209,3 +209,37 @@ export type {
 } from './Table';
 export { ScrollArea, ScrollBar } from './ScrollArea';
 export type { ScrollAreaProps, ScrollBarProps } from './ScrollArea';
+  Menubar,
+  MenubarMenu,
+  MenubarGroup,
+  MenubarPortal,
+  MenubarTrigger,
+  MenubarContent,
+  MenubarItem,
+  MenubarCheckboxItem,
+  MenubarRadioGroup,
+  MenubarRadioItem,
+  MenubarSub,
+  MenubarSubTrigger,
+  MenubarSubContent,
+  MenubarSeparator,
+  MenubarLabel,
+  MenubarShortcut,
+} from './Menubar';
+export type {
+  MenubarProps,
+  MenubarMenuProps,
+  MenubarGroupProps,
+  MenubarTriggerProps,
+  MenubarContentProps,
+  MenubarItemProps,
+  MenubarCheckboxItemProps,
+  MenubarRadioGroupProps,
+  MenubarRadioItemProps,
+  MenubarSubProps,
+  MenubarSubTriggerProps,
+  MenubarSubContentProps,
+  MenubarSeparatorProps,
+  MenubarLabelProps,
+  MenubarShortcutProps,
+} from './Menubar';
