@@ -16,6 +16,8 @@ export { Switch } from './Switch';
 export type { SwitchProps } from './Switch';
 export { Slider } from './Slider';
 export type { SliderProps } from './Slider';
+export { Toggle, toggleVariants } from './Toggle';
+export type { ToggleProps } from './Toggle';
 export { RadioGroup, RadioGroupItem } from './RadioGroup';
 export type { RadioGroupProps, RadioGroupItemProps } from './RadioGroup';
 export {
