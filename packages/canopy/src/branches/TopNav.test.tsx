@@ -10,6 +10,12 @@ import {
   TopNavLinks,
   TopNavMenuButton,
 } from './TopNav';
+import {
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuTrigger,
+} from './NavigationMenu';
 
 function Basic({
   ariaLabel,
@@ -227,5 +233,61 @@ describe('TopNav', () => {
     // The ref resolves to the element the caller styles (the nav bar), not the wrapper header.
     expect(ref.current).toBe(screen.getByRole('navigation'));
     expect(ref.current).toHaveClass('h-14', 'bg-surface');
+  });
+});
+
+// Regression coverage for the 0069 refactor: TopNavLinks now composes NavigationMenu internally.
+// These assert the refactor is API-preserving - exactly ONE navigation landmark (no second <nav>
+// from the composed NavigationMenu), the mobile disclosure collapse still governs the panel id,
+// and a consumer can now add a NavigationMenu dropdown into the links area.
+describe('TopNav + NavigationMenu (0069 refactor)', () => {
+  it('exposes exactly one navigation landmark (the composed NavigationMenu is not a second <nav>)', () => {
+    render(<Basic />);
+    // getByRole (singular) throws on multiple matches, so this proves the inner NavigationMenu
+    // renders `asChild` onto the panel <div> rather than adding its own <nav>.
+    const nav = screen.getByRole('navigation');
+    expect(nav).toHaveAttribute('aria-label', 'Main');
+  });
+
+  it('keeps the mobile disclosure collapse: the panel id still toggles hidden with aria-expanded', async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+    const button = screen.getByRole('button', { name: 'Open menu' });
+    const panel = document.getElementById(button.getAttribute('aria-controls')!)!;
+
+    expect(panel).toHaveClass('hidden');
+    await user.click(button);
+    expect(panel).not.toHaveClass('hidden');
+    expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
+
+  it('lets a consumer add a NavigationMenu dropdown into the links area', async () => {
+    const user = userEvent.setup();
+    render(
+      <TopNav>
+        <TopNavBrand>Acme</TopNavBrand>
+        <TopNavLinks>
+          <TopNavLink href="#home">Home</TopNavLink>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Products</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuLink href="#analytics">Analytics</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </TopNavLinks>
+      </TopNav>,
+    );
+
+    // The flat TopNavLink and the dropdown trigger coexist in the same list.
+    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
+    const trigger = screen.getByRole('button', { name: /Products/ });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(await screen.findByRole('link', { name: 'Analytics' })).toBeInTheDocument();
   });
 });
