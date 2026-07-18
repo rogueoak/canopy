@@ -23,6 +23,7 @@ export default defineConfig({
     '@radix-ui/react-slot',
     '@radix-ui/react-label',
     '@radix-ui/react-popover',
+    '@radix-ui/react-progress',
     '@radix-ui/react-checkbox',
     '@radix-ui/react-dialog',
     '@radix-ui/react-switch',
