@@ -21,6 +21,7 @@ export default defineConfig({
     '@rogueoak/roots',
     '@radix-ui/react-avatar',
     '@radix-ui/react-collapsible',
+    '@radix-ui/react-slider',
     '@radix-ui/react-slot',
     '@radix-ui/react-label',
     '@radix-ui/react-popover',
