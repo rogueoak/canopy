@@ -47,12 +47,16 @@ export interface ProgressProps
  * recipe.
  *
  * Determinate: pass a `value` (0-100) and the indicator fills proportionally - it is translated
- * left by `100 - value` percent, an inline per-instance style value (NOT a Tailwind class, so it
- * is safe from the scanner). `transition-transform` animates the fill as the value changes.
+ * left by `100 - clamped` percent, an inline per-instance style value (NOT a Tailwind class, so it
+ * is safe from the scanner). The value is clamped to 0-100 first: Radix *nullifies* (does not
+ * clamp) out-of-range values, dropping `aria-valuenow` and going indeterminate for the ARIA layer,
+ * so clamping the fill keeps the bar and the ARIA state in agreement. `transition-transform`
+ * animates the fill as the value changes.
  *
  * Indeterminate: omit `value` (pass `null` / `undefined`) and Radix drops `aria-valuenow`; the
- * indicator gently pulses via `animate-pulse`, gated with `motion-reduce:animate-none` so
- * reduced-motion users see a static bar. The fill stays full-width in this state.
+ * indicator becomes a partial-width bar (`w-2/5`, ~40%) that gently pulses via `animate-pulse`,
+ * gated with `motion-reduce:animate-none` so reduced-motion users see a static bar. The partial
+ * width keeps it from reading as a completed 100% fill.
  */
 export const Progress = React.forwardRef<
   React.ComponentRef<typeof ProgressPrimitive.Root>,
@@ -60,6 +64,9 @@ export const Progress = React.forwardRef<
 >(({ className, size, value, ...props }, ref) => {
   // Radix: `value` is a number for determinate, `null` / `undefined` for indeterminate.
   const isIndeterminate = value === null || value === undefined;
+  // Radix nullifies (does NOT clamp) out-of-range values, so clamp here to keep the fill
+  // transform and the ARIA state consistent for value > 100 or value < 0.
+  const clamped = Math.min(100, Math.max(0, value ?? 0));
   return (
     <ProgressPrimitive.Root
       ref={ref}
@@ -69,10 +76,16 @@ export const Progress = React.forwardRef<
     >
       <ProgressPrimitive.Indicator
         className={cn(
-          'h-full w-full flex-1 rounded-full bg-primary transition-transform',
-          isIndeterminate && 'animate-pulse motion-reduce:animate-none',
+          'h-full flex-1 rounded-full bg-primary transition-transform',
+          isIndeterminate
+            ? 'w-2/5 animate-pulse motion-reduce:animate-none'
+            : 'w-full',
         )}
-        style={{ transform: `translateX(-${100 - (value ?? 100)}%)` }}
+        style={
+          isIndeterminate
+            ? undefined
+            : { transform: `translateX(-${100 - clamped}%)` }
+        }
       />
     </ProgressPrimitive.Root>
   );
