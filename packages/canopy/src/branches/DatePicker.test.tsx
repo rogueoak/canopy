@@ -222,6 +222,23 @@ describe('DatePicker (range)', () => {
     expect(lastCall.to).toBeInstanceOf(Date);
   });
 
+  it('keeps the popover open when the second click lands on the start day', async () => {
+    const user = userEvent.setup();
+    render(<DatePicker mode="range" aria-label="Span" onValueChange={vi.fn()} />);
+    const trigger = screen.getByRole('button', { name: 'Span' });
+    await user.click(trigger);
+    await screen.findByRole('grid');
+
+    // First pick sets the start. react-day-picker reports `{ from: d, to: d }`.
+    await pickDay(user, 10);
+    expect(getGrid()).toBeInTheDocument();
+
+    // Second click on the SAME day is still a partial range (to === from), so the popover must
+    // stay open - this pins the `to.getTime() !== from.getTime()` boundary the source special-cases.
+    await pickDay(user, 10);
+    expect(getGrid()).toBeInTheDocument();
+  });
+
   it('shows the muted placeholder when unset', () => {
     render(<DatePicker mode="range" aria-label="Span" placeholder="Pick a range" />);
     const trigger = screen.getByRole('button', { name: 'Span' });
