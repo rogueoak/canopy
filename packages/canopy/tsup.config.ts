@@ -19,6 +19,7 @@ export default defineConfig({
     'react',
     'react-dom',
     '@rogueoak/roots',
+    '@radix-ui/react-accordion',
     '@radix-ui/react-avatar',
     '@radix-ui/react-collapsible',
     '@radix-ui/react-slider',

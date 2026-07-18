@@ -38,6 +38,13 @@ export type {
 
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
 export type { TabsProps, TabsListProps, TabsTriggerProps, TabsContentProps } from './Tabs';
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './Accordion';
+export type {
+  AccordionProps,
+  AccordionItemProps,
+  AccordionTriggerProps,
+  AccordionContentProps,
+} from './Accordion';
 
 export { Combobox } from './Combobox';
 export type {
