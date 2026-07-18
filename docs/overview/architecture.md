@@ -327,21 +327,49 @@ deferred from this remediation as engineer finding E4, to be picked up in a late
 ## Component build (Canopy)
 
 `@rogueoak/canopy` is a **compiled npm library** (not a shadcn copy-in registry). **tsup**
-builds `src/index.ts` and `src/seeds/index.ts` to ESM + `.d.ts` with subpath exports (`.`
-and `./seeds`); React/react-dom are peer deps, and the Radix runtime deps
-(`@radix-ui/react-slot`) plus `@rogueoak/roots` are `external` (resolved at the consumer's
-install, never bundled). Vitest + Testing Library + `user-event` (jsdom) drive the component tests.
-The Seeds layer covers **16 atoms** - Batch 1 (specs 0005-0013: Button, Input, Label,
-Badge, Checkbox, Switch, Radio Group, Textarea, Select) plus Batch 2 (0014-0019: Tooltip, Avatar,
-Separator, Spinner, Skeleton, Keyboard), plus **Progress** (0037), added on
-**`@radix-ui/react-progress`** (declared in `dependencies` and `external`-ised in tsup like every
-other Radix dep, so it is resolved at the consumer's install, never bundled). Every atom follows the same **cva + `cn()` + Radix** recipe
-below; two of them are **portalled** on `surface-raised` (Select, then Tooltip), establishing the
-raised-surface pattern that introduced the `muted-raised` token above. All refs type with
-`React.ComponentRef` (not the deprecated `React.ElementRef`). The **Twigs** layer (molecules)
-is now live too - `FormField`, `SearchBar`, `Card` (specs 0020-0022) - shipped on a new
-`./twigs` subpath, and the **Branches** layer (organisms) has opened with `Dialog` (spec 0024) on a
-`./branches` subpath; see the Twigs and Branches composition recipes below.
+builds `src/index.ts`, `src/seeds/index.ts`, `src/twigs/index.ts`, and `src/branches/index.ts` to
+ESM + `.d.ts` with subpath exports (`.`, `./seeds`, `./twigs`, `./branches`); React/react-dom are
+peer deps, and every runtime dep (the Radix primitives plus cmdk / vaul / embla / recharts /
+TanStack Table / react-day-picker / date-fns / input-otp / react-resizable-panels) plus
+`@rogueoak/roots` are `external` (resolved at the consumer's install, never bundled). Vitest +
+Testing Library + `user-event` (jsdom) drive the component tests.
+
+As of **1.0.0** all four tiers are feature-complete: **18 Seeds**, **14 Twigs**, and **26
+Branches** (58 components), each on the same **cva + `cn()` + Radix** recipe below. The Seeds layer
+is the atoms (Button through Keyboard, plus Progress / Slider / Toggle from 0037-0039); two of them
+are **portalled** on `surface-raised` (Select, then Tooltip), establishing the raised-surface
+pattern that introduced the `muted-raised` token above. All refs type with `React.ComponentRef`
+(not the deprecated `React.ElementRef`). The **Twigs** layer (molecules) ships on the `./twigs`
+subpath, and the **Branches** layer (organisms) on `./branches`; see the Twigs and Branches
+composition recipes below.
+
+### Runtime dependencies added in the 1.0.0 build-out (0037-0069)
+
+The build-out that filled the Seeds / Twigs / Branches layers added these runtime `dependencies`
+to `@rogueoak/canopy` (each also `external`-ised in tsup, like every existing dep, so it resolves
+at the consumer's install and is never bundled):
+
+- **Radix primitives:** `@radix-ui/react-progress`, `-slider`, `-toggle`, `-toggle-group`,
+  `-collapsible`, `-scroll-area`, `-tabs`, `-accordion`, `-alert-dialog`, `-dropdown-menu`,
+  `-context-menu`, `-menubar`, `-hover-card`, `-toast`, `-navigation-menu`.
+- **Non-Radix behavioural libraries** (each a sanctioned family for a behaviour Radix has no
+  primitive for): `input-otp` (InputOTP), `vaul` (Drawer), `@tanstack/react-table` (DataTable),
+  `react-day-picker` + `date-fns` (Calendar / DatePicker), `embla-carousel-react` (Carousel),
+  `recharts` (Chart). `cmdk` (Command / Combobox) and `react-resizable-panels` (Resizable) were
+  already present from earlier specs.
+
+**Motion.** The accordion expand/collapse and drawer slide keyframes were added to the Roots
+**`tailwind-preset.css`** motion block (folded in by `build.mjs`, composing the `--duration-*` /
+`--ease-*` tokens), joining the dialog / bottom-sheet keyframes already there - because keyframes
+and `@theme --animate-*` declarations can't ride the `@source` seam (see the preset/motion fold
+above and the motion learning).
+
+**Shared primitives feed the refactors.** Two of the new Branches became the shared surface an
+earlier component now consumes, refactored **without an API change** (see the Branches recipe and
+learnings): **Command** is the cmdk-backed filterable-listbox surface that **Combobox** now consumes
+(replacing its inline cmdk wrappers), and **Drawer** (vaul) is the edge-anchored panel that backs
+**SideNav**'s mobile rail and **ResponsiveDialog**'s mobile sheet. **NavigationMenu** is likewise
+composed by **TopNav**'s links area.
 
 ### The component recipe (spec 0005)
 

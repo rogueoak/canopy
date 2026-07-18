@@ -1,5 +1,12 @@
 # Project
 
+## Status
+
+**1.0.0 - shipped.** The component library is feature-complete: all four tiers are live and
+published to npm under the `@rogueoak` scope - Roots (tokens), 18 Seeds, 14 Twigs, and 26
+Branches (58 components in all), plus the `@rogueoak/icons` set. The remaining tier, Boughs
+(page scaffolds), and the native/Swift target are the future direction; the web library is done.
+
 ## Mission
 
 **Canopy** is the design system for the **rogueoak** org - the source of truth for the look
@@ -14,7 +21,7 @@ from one considered, earthy foundation instead of being reinvented per app.
 - A **semantic token layer** (Roots) that every component styles against - never raw
   values - so theming (light/dark, future brands) is a token concern, not a component one.
 - Shipped as **versioned npm packages** under the `@rogueoak` scope: `@rogueoak/roots`
-  (tokens) and `@rogueoak/canopy` (components).
+  (tokens), `@rogueoak/canopy` (components), and `@rogueoak/icons` (icons).
 - Showcased in **Storybook on GitHub Pages**.
 
 ## Principles

@@ -21,12 +21,6 @@
 
 ---
 
-> [!NOTE]
-> **🚧 Status: early development.** Canopy is being built in the open, foundation-first.
-> The first packages are published to npm under the `@rogueoak` scope; APIs below marked
-> _(planned)_ don't exist yet - they describe where we're headed. Follow the
-> [roadmap](#roadmap) for what's live.
-
 ## What is Canopy?
 
 Canopy is the design system that defines the look, feel, and building blocks of **rogueoak**
@@ -45,9 +39,9 @@ Atomic design, renamed by tree anatomy:
 | Atomic layer        | Canopy name  | What lives here                                                                                                        |
 | ------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------- |
 | Design tokens       | **Roots** 🌱 | primitive + semantic tokens - colour, type, spacing, radii, elevation, motion. Everything draws nourishment from here. |
-| Atoms               | **Seeds**    | the smallest components - Button, Input, Label, Badge (icons ship separately, see below)                               |
-| Molecules           | **Twigs**    | small compositions - FormField, SearchBar, Card, Breadcrumb                                                            |
-| Organisms           | **Branches** | larger assemblies - NavBar, DataTable, Dialog                                                                          |
+| Atoms               | **Seeds**    | the smallest components - Button, Input, Label, Badge, Slider, Toggle (18 in all; icons ship separately, see below)    |
+| Molecules           | **Twigs**    | small compositions - FormField, SearchBar, Card, Breadcrumb, InputOTP, Pagination (14 in all)                          |
+| Organisms           | **Branches** | larger assemblies - Dialog, DataTable, Command, Toast, DropdownMenu, NavigationMenu (26 in all)                        |
 | Templates _(later)_ | **Boughs**   | page scaffolds and layout patterns                                                                                     |
 | The whole system    | **Canopy**   | the published library + the Storybook showcase                                                                         |
 
@@ -253,24 +247,24 @@ Layout:
 
 > Roots ships the **real foundation** plus **light & dark theming**: primitive ramps + semantic
 > tokens (light + dark, with interaction states), type, spacing, radii, elevation, and motion.
-> The full **Seeds** atom catalogue is live, built on the shared component **recipe** (`cn()`, cva
-> variants over semantic tokens, Radix `Slot` for `asChild`). The first **Twigs** (molecules) are
-> live too - **FormField**, **SearchBar**, **Card**, and **Breadcrumb** - composing those atoms on
-> the `@rogueoak/canopy/twigs` subpath. The **Branches** (organisms) layer is filling in on the new
-> `@rogueoak/canopy/branches` subpath - **Dialog** (a focus-trapping, portalled modal), **TopNav**
-> (a responsive, hand-rolled-disclosure navigation bar), **SideNav** (a collapsible side rail
-> whose mobile drawer reuses the Radix Dialog primitive), **Combobox** (a filterable multi-select),
-> and **SubscribeForm** (a transport-agnostic email-capture box you wire to your own submit +
-> analytics), each composing Seeds and Twigs.
+> Every component tier is live, built on the shared component **recipe** (`cn()`, cva variants over
+> semantic tokens, Radix `Slot` for `asChild`): **18 Seeds** (atoms) on `@rogueoak/canopy/seeds`,
+> **14 Twigs** (molecules) on `@rogueoak/canopy/twigs`, and **26 Branches** (organisms) on
+> `@rogueoak/canopy/branches`, each importing the layers below it one-way. Branches span the whole
+> range - portalled Radix overlays (Dialog, DropdownMenu, Toast, HoverCard), a headless DataTable,
+> the cmdk-backed Command palette, vaul-backed Drawer, charts, a calendar and date picker, and the
+> responsive TopNav / SideNav navigation. See the catalogue in
+> [`packages/canopy/README.md`](packages/canopy/README.md).
 
 ## Roadmap
 
-Built foundation-first, so there's **always working software and working docs** at each step:
+Built foundation-first, so there's **always working software and working docs** at each step.
+**1.0.0** ships the full component library - Roots, Seeds, Twigs, and Branches - to npm:
 
 - [x] **Roots** - tokens: palette, typography, spacing, radii, elevation, motion; light & dark theming
-- [x] **Seeds** - the atoms; the full first catalogue is live
-- [x] **Twigs** - molecules; the first compositions are live (FormField · SearchBar · Card · Breadcrumb)
-- [ ] **Branches** - organisms; the layer is open (**Dialog · TopNav · SideNav · Combobox · SubscribeForm** are live; DataTable to come)
+- [x] **Seeds** - the atoms; all 18 are live
+- [x] **Twigs** - molecules; all 14 are live
+- [x] **Branches** - organisms; all 26 are live (Dialog, DataTable, Command, Toast, and the rest)
 - [x] **Icons** - `@rogueoak/icons`, a curated tree-shakeable set (Lucide + social marks) re-exported from react-icons
 - [ ] **Boughs** - page scaffolds and layout patterns
 
