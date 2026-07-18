@@ -134,6 +134,8 @@ export type {
   ChartTooltipContentProps,
   ChartLegendContentProps,
 } from './Chart';
+export { Calendar } from './Calendar';
+export type { CalendarProps } from './Calendar';
 
 export { Combobox } from './Combobox';
 export type {

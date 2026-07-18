@@ -51,6 +51,9 @@ export default defineConfig({
     'input-otp',
     'recharts',
     'react-resizable-panels',
+    'date-fns',
+    'input-otp',
+    'react-day-picker',
     'tailwind-merge',
   ],
 });
