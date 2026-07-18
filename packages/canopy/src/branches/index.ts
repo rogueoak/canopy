@@ -245,3 +245,26 @@ export type {
   MenubarLabelProps,
   MenubarShortcutProps,
 } from './Menubar';
+  Toast,
+  ToastProvider,
+  ToastViewport,
+  ToastTitle,
+  ToastDescription,
+  ToastAction,
+  ToastClose,
+  Toaster,
+  useToast,
+  toastVariants,
+} from './Toast';
+export type {
+  ToastProps,
+  ToastProviderProps,
+  ToastViewportProps,
+  ToastTitleProps,
+  ToastDescriptionProps,
+  ToastActionProps,
+  ToastCloseProps,
+  ToasterProps,
+  ToastOptions,
+  ToastActionOptions,
+} from './Toast';
