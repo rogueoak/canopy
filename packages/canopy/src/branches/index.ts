@@ -120,6 +120,20 @@ export type {
   CarouselPlugin,
   CarouselOrientation,
 } from './Carousel';
+export {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  useChart,
+} from './Chart';
+export type {
+  ChartConfig,
+  ChartContainerProps,
+  ChartTooltipContentProps,
+  ChartLegendContentProps,
+} from './Chart';
 
 export { Combobox } from './Combobox';
 export type {
