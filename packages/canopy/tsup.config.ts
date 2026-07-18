@@ -47,6 +47,7 @@ export default defineConfig({
     'class-variance-authority',
     'clsx',
     'cmdk',
+    'embla-carousel-react',
     'input-otp',
     'tailwind-merge',
   ],
