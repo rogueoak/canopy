@@ -35,6 +35,9 @@ export type {
 export { SearchBar } from './SearchBar';
 export type { SearchBarProps } from './SearchBar';
 
+export { ButtonGroup } from './ButtonGroup';
+export type { ButtonGroupProps } from './ButtonGroup';
+
 export {
   Breadcrumb,
   BreadcrumbList,
