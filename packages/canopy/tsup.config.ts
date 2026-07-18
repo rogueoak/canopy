@@ -56,5 +56,6 @@ export default defineConfig({
     'date-fns',
     'react-day-picker',
     'tailwind-merge',
+    'vaul',
   ],
 });
