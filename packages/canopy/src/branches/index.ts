@@ -68,6 +68,38 @@ export type {
   AccordionTriggerProps,
   AccordionContentProps,
 } from './Accordion';
+export {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuGroup,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuCheckboxItem,
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+  ContextMenuShortcut,
+} from './ContextMenu';
+export type {
+  ContextMenuProps,
+  ContextMenuTriggerProps,
+  ContextMenuGroupProps,
+  ContextMenuContentProps,
+  ContextMenuItemProps,
+  ContextMenuCheckboxItemProps,
+  ContextMenuRadioGroupProps,
+  ContextMenuRadioItemProps,
+  ContextMenuLabelProps,
+  ContextMenuSeparatorProps,
+  ContextMenuSubProps,
+  ContextMenuSubTriggerProps,
+  ContextMenuSubContentProps,
+  ContextMenuShortcutProps,
+} from './ContextMenu';
 
 export { Combobox } from './Combobox';
 export type {
