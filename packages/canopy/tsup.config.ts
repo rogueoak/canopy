@@ -44,6 +44,7 @@ export default defineConfig({
     '@radix-ui/react-select',
     '@radix-ui/react-separator',
     '@radix-ui/react-tooltip',
+    '@tanstack/react-table',
     'class-variance-authority',
     'clsx',
     'cmdk',
