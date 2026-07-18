@@ -40,6 +40,8 @@ export type {
 } from './Select';
 export { Separator } from './Separator';
 export type { SeparatorProps } from './Separator';
+export { Progress, progressVariants } from './Progress';
+export type { ProgressProps } from './Progress';
 export { Spinner, spinnerVariants } from './Spinner';
 export type { SpinnerProps } from './Spinner';
 export { Skeleton } from './Skeleton';

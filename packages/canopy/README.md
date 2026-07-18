@@ -22,7 +22,7 @@ pnpm add react@^19 react-dom@^19
 | Subpath                     | What it is                                                                                                                                                |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@rogueoak/canopy`          | the package root re-export                                                                                                                                |
-| `@rogueoak/canopy/seeds`    | **Seeds** (atoms) - Button, Input, Label, Badge, Checkbox, Switch, Radio Group, Textarea, Select, Tooltip, Avatar, Separator, Spinner, Skeleton, Keyboard |
+| `@rogueoak/canopy/seeds`    | **Seeds** (atoms) - Button, Input, Label, Badge, Checkbox, Switch, Radio Group, Textarea, Select, Tooltip, Avatar, Separator, Spinner, Progress, Skeleton, Keyboard |
 | `@rogueoak/canopy/twigs`    | **Twigs** (molecules) - FormField, SearchBar, Card                                                                                                        |
 | `@rogueoak/canopy/branches` | **Branches** (organisms) - Dialog, Combobox, TopNav, SideNav                                                                                              |
 

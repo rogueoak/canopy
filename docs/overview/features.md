@@ -350,6 +350,26 @@ no dependency).
   who prefer reduced motion see a static indicator. `forwardRef<HTMLSpanElement>` + native prop spread
   + `cn()` merge. Semantic tokens only - both themes automatically.
 
+## Seeds: Progress (0037)
+
+The determinate progress-bar atom - a filled bar showing _how far along_ a bounded task is (an
+upload, a checkout stepper, a storage meter), built on the 0005 recipe on **`@radix-ui/react-progress`**.
+It is the **determinate sibling to Spinner** (0017): a spinner answers "is it busy?" with
+`role="status"` and no value, whereas Progress answers "how much is done?" with `role="progressbar"`
+carrying `aria-valuenow` / `aria-valuemin` / `aria-valuemax`.
+
+- **Progress** (`@rogueoak/canopy/seeds`) - a `bg-muted`, `rounded-full` track whose `bg-primary`
+  indicator fills proportionally. **Determinate:** pass a `value` (0-100) and Radix emits
+  `role="progressbar"` with `aria-valuenow` / `aria-valuemin="0"` / `aria-valuemax="100"`; the
+  indicator is translated by `translateX(-(100 - value)%)` (an inline per-instance style value, not a
+  Tailwind class, so it is safe from the scanner) with a `transition-transform`. **Indeterminate:**
+  omit `value` (pass `null` / `undefined`) and Radix drops `aria-valuenow`; the indicator pulses via
+  `animate-pulse` gated with `motion-reduce:animate-none`, so reduced-motion users see a static bar. A
+  cva `size` variant sets the track height (`sm` `h-1.5` / `md` (default) `h-2.5`).
+  `forwardRef` to the Root + native prop spread + `cn()` merge (caller `className` wins). Semantic
+  tokens only - both themes automatically. v1 fixes the 0-100 range; buffered/secondary progress, a
+  circular ring, a labelled Twig, and an arbitrary `max` are additive follow-ups.
+
 ## Seeds: Skeleton (0018)
 
 The loading-placeholder atom - a pulsing block that holds layout while content fetches, built on the
