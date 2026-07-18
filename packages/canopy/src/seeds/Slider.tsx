@@ -37,10 +37,13 @@ export const Slider = React.forwardRef<
   // thumb and no `role="slider"`. Falling back to `[min]` keeps a single thumb at the lower bound.
   const resolvedDefault =
     Array.isArray(defaultValue) && defaultValue.length > 0 ? defaultValue : [min];
-  // Thumb count tracks whichever value array Radix actually renders: the controlled `value` (when
-  // provided and non-empty) wins, otherwise the normalized default. This keeps the thumbs we emit
-  // and the primitive's ARIA in agreement at the empty-array boundary.
-  const resolved = Array.isArray(value) && value.length > 0 ? value : resolvedDefault;
+  // Normalize the controlled `value` the same way: when a controlled empty (or non-array) `value`
+  // is passed, Radix would render zero thumbs while we emit one, so we clamp to `[min]` and hand
+  // the SAME normalized array to Radix (line below) - the thumbs we emit and the primitive's ARIA
+  // stay in agreement at the empty-array boundary on BOTH the controlled and uncontrolled paths.
+  const resolvedValue =
+    value === undefined ? undefined : Array.isArray(value) && value.length > 0 ? value : [min];
+  const resolved = resolvedValue ?? resolvedDefault;
   const thumbCount = resolved.length;
 
   // Radix spreads native props onto the Root span but forwards NONE of them to the thumbs - yet
@@ -49,9 +52,10 @@ export const Slider = React.forwardRef<
   // native props and apply them to the thumb(s) ourselves; the Root keeps them too via the spread.
   const ariaInvalid = props['aria-invalid'];
   // A single-value slider has one interactive thumb, so the control's `aria-label` /
-  // `aria-labelledby` names it directly. A range has two thumbs that each need a distinct name
-  // (e.g. "minimum" / "maximum"), which the caller supplies per thumb via `getThumbProps`-style
-  // wiring downstream - so we do NOT copy one shared name onto both, which would mislead.
+  // `aria-labelledby` names it directly. A range has two thumbs that each need a DISTINCT name
+  // (e.g. "minimum" / "maximum"); copying one shared control name onto both would mislead, so we
+  // deliberately do NOT name range thumbs here. A per-thumb naming API is out of scope for v1
+  // (see spec 0038 Out-of-scope) - callers needing named range thumbs drop to raw Radix for now.
   const singleThumb = thumbCount === 1;
   const thumbAriaLabel = singleThumb ? props['aria-label'] : undefined;
   const thumbAriaLabelledBy = singleThumb ? props['aria-labelledby'] : undefined;
@@ -59,7 +63,7 @@ export const Slider = React.forwardRef<
   return (
     <SliderPrimitive.Root
       ref={ref}
-      value={value}
+      value={resolvedValue}
       defaultValue={value === undefined ? resolvedDefault : undefined}
       min={min}
       max={max}

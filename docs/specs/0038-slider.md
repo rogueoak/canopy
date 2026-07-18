@@ -78,6 +78,11 @@ like the other field Seeds.
   composes this Seed later; no change to `FormField` here.
 - **Multi-thumb (3+) ranges** beyond the standard two-thumb range - deferred; Radix supports more
   thumbs but v1 documents single and two-thumb range only.
+- **Per-thumb accessible names for range sliders** - a single-thumb slider inherits the control's
+  `aria-label` / `aria-labelledby`, but the two thumbs of a range each want a DISTINCT name (e.g.
+  "minimum" / "maximum") and v1 ships no per-thumb naming API (copying one shared name onto both
+  would mislead). Deferred; callers needing named range thumbs drop to raw Radix until a follow-up
+  adds a typed escape hatch (e.g. `thumbLabels?: string[]`).
 - Changing any other component - Slider is purely additive.
 
 ## Approach

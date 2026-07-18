@@ -55,6 +55,17 @@ describe('Slider', () => {
     expect(thumbs).toHaveLength(1);
   });
 
+  it('normalizes a controlled empty value array to a single thumb (controlled boundary)', () => {
+    // The controlled `value={[]}` path is normalized the same as the uncontrolled one: without the
+    // clamp Radix keys its thumbs off the raw `[]` and renders zero `role="slider"` while the Seed
+    // emits one - the ARIA/visual mismatch the normalization exists to prevent. The clamped array
+    // is handed to Radix, so exactly one thumb, sitting at `min`, is rendered.
+    render(<Slider value={[]} min={5} max={100} aria-label="Empty controlled" />);
+    const thumbs = screen.getAllByRole('slider');
+    expect(thumbs).toHaveLength(1);
+    expect(thumbs[0]).toHaveAttribute('aria-valuenow', '5');
+  });
+
   it('moves the value by step with ArrowRight / ArrowLeft', async () => {
     const user = userEvent.setup();
     render(<Slider defaultValue={[50]} step={5} aria-label="Volume" />);
@@ -136,6 +147,18 @@ describe('Slider', () => {
     // The disabled root carries the Radix disabled markers that drive those variants.
     expect(root).toHaveAttribute('data-disabled', '');
     expect(root).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('does not share the control name across range thumbs (each thumb needs a distinct name)', () => {
+    // A single-thumb slider inherits the control's `aria-label`, but a range has two thumbs that
+    // each need a DISTINCT name - copying one shared name onto both would mislead. Guard the gate
+    // so a future refactor that naively forwards the label to every thumb is caught.
+    render(<Slider defaultValue={[20, 80]} aria-label="Shared" />);
+    const thumbs = screen.getAllByRole('slider');
+    expect(thumbs).toHaveLength(2);
+    for (const thumb of thumbs) {
+      expect(thumb).not.toHaveAttribute('aria-label');
+    }
   });
 
   it('applies aria-invalid and the danger ring to every thumb (range)', () => {
