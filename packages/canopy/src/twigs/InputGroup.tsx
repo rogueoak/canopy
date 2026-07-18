@@ -77,15 +77,27 @@ export interface InputGroupProps
  * the `div` and native props spread onto it.
  */
 export const InputGroup = React.forwardRef<HTMLDivElement, InputGroupProps>(
-  ({ className, size, disabled = false, children, ...props }, ref) => {
-    const invalid = isAriaInvalid(props['aria-invalid']);
+  ({ className, size, disabled = false, 'aria-invalid': ariaInvalid, children, ...props }, ref) => {
+    const invalid = isAriaInvalid(ariaInvalid);
     const value = React.useMemo<InputGroupContextValue>(
       () => ({ disabled, invalid }),
       [disabled, invalid],
     );
     return (
       <InputGroupContext.Provider value={value}>
-        <div ref={ref} className={cn(inputGroupVariants({ size }), className)} {...props}>
+        {/*
+          Spread a normalized boolean `aria-invalid` onto the div, not the raw attribute: Tailwind's
+          `aria-invalid:` variant only matches the literal `"true"`, so `aria-invalid="grammar"`
+          would report invalid on the inner input yet leave the group frame non-danger. Deriving the
+          spread flag from the same `invalid` the context propagates keeps styling and the flag in
+          lockstep. `undefined` (not `false`) when valid so no attribute is emitted for the default.
+        */}
+        <div
+          ref={ref}
+          aria-invalid={invalid || undefined}
+          className={cn(inputGroupVariants({ size }), className)}
+          {...props}
+        >
           {children}
         </div>
       </InputGroupContext.Provider>
@@ -167,6 +179,11 @@ export type InputGroupButtonProps = React.ComponentPropsWithoutRef<typeof Button
  * defaulting to `variant="ghost"` and `size="sm"` with `rounded-none h-full` so it fills the group
  * edge. Reads the group context so a disabled group disables the button too; a caller can override.
  * `ref` forwards to the `<button>`; native button props spread onto it.
+ *
+ * Focus ring: the group is `overflow-hidden`, so the base Button's offset ring - drawn OUTSIDE the
+ * button box at the very edge of the group - would be clipped, leaving a keyboard user tabbing to
+ * the button with no visible focus state. Override to an INSET ring (`ring-inset`, `ring-offset-0`)
+ * so the indicator renders inside the clipped box and stays visible.
  */
 export const InputGroupButton = React.forwardRef<
   React.ComponentRef<typeof Button>,
@@ -180,7 +197,10 @@ export const InputGroupButton = React.forwardRef<
       variant={variant}
       size={size}
       disabled={disabled ?? group.disabled}
-      className={cn('h-full shrink-0 rounded-none', className)}
+      className={cn(
+        'h-full shrink-0 rounded-none focus-visible:ring-inset focus-visible:ring-offset-0',
+        className,
+      )}
       {...props}
     />
   );

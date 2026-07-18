@@ -177,14 +177,19 @@ describe('InputGroup', () => {
       );
     });
 
-    // Boundary: a non-boolean token like "grammar" is still an invalid state and must propagate.
-    it('treats a non-false aria-invalid token (grammar) as invalid', () => {
+    // Boundary: a non-boolean token like "grammar" is still an invalid state and must propagate -
+    // AND the group frame must paint danger too. Tailwind's `aria-invalid:` variant only matches the
+    // literal "true", so the group normalizes the attribute it spreads to a boolean "true" so the
+    // visual (group frame) and the propagated flag (inner input) never disagree.
+    it('treats a non-false aria-invalid token (grammar) as invalid on both input and group', () => {
       render(
-        <InputGroup aria-invalid="grammar">
+        <InputGroup aria-invalid="grammar" data-testid="group">
           <InputGroupInput aria-label="Amount" />
         </InputGroup>,
       );
       expect(screen.getByRole('textbox', { name: 'Amount' })).toHaveAttribute('aria-invalid');
+      // Normalized to the literal "true" so the group's aria-invalid: danger variant matches.
+      expect(screen.getByTestId('group')).toHaveAttribute('aria-invalid', 'true');
     });
 
     it('lets a part override the group invalid default', () => {
@@ -223,6 +228,21 @@ describe('InputGroup', () => {
         </InputGroup>,
       );
       expect(screen.getByRole('button', { name: 'Go' })).toHaveAttribute('type', 'button');
+    });
+
+    // The group is overflow-hidden, so the base Button's OFFSET focus ring (drawn outside the box)
+    // would be clipped at the group edge - a keyboard user tabbing to the button would see no focus
+    // state. The button overrides to an inset ring with no offset so it renders inside the box.
+    it('uses an inset focus ring so overflow-hidden does not clip it', () => {
+      render(
+        <InputGroup>
+          <InputGroupInput aria-label="Amount" />
+          <InputGroupButton>Go</InputGroupButton>
+        </InputGroup>,
+      );
+      const button = screen.getByRole('button', { name: 'Go' });
+      expect(button.className).toContain('focus-visible:ring-inset');
+      expect(button.className).toContain('focus-visible:ring-offset-0');
     });
   });
 
