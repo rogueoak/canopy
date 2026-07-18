@@ -168,8 +168,7 @@ const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>((props, 
     'aria-labelledby': ariaLabelledby,
   } = props;
 
-  const rangeSeparator =
-    props.mode === 'range' ? (props.rangeSeparator ?? ' - ') : ' - ';
+  const rangeSeparator = props.mode === 'range' ? (props.rangeSeparator ?? ' - ') : ' - ';
 
   const [open, setOpen] = React.useState(false);
 

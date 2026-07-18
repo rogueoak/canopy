@@ -63,7 +63,10 @@ describe('Tabs', () => {
     render(<Fixture />);
     const account = screen.getByRole('tab', { name: 'Account' });
     expect(account).toHaveAttribute('data-state', 'active');
-    expect(account).toHaveClass('data-[state=active]:border-primary', 'data-[state=active]:text-text');
+    expect(account).toHaveClass(
+      'data-[state=active]:border-primary',
+      'data-[state=active]:text-text',
+    );
     expect(screen.getByRole('tab', { name: 'Password' })).toHaveAttribute('data-state', 'inactive');
   });
 

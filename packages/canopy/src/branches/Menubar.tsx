@@ -320,7 +320,10 @@ MenubarSeparator.displayName = MenubarPrimitive.Separator.displayName;
  * token with wide tracking reads it as a secondary hint.
  */
 const MenubarShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
-  <span className={cn('ml-auto text-caption text-text-subtle tracking-widest', className)} {...props} />
+  <span
+    className={cn('ml-auto text-caption text-text-subtle tracking-widest', className)}
+    {...props}
+  />
 );
 MenubarShortcut.displayName = 'MenubarShortcut';
 

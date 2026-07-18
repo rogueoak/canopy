@@ -154,11 +154,7 @@ export const FieldSetDescription = React.forwardRef<HTMLParagraphElement, FieldS
         ref={ref}
         id={descriptionId}
         data-disabled={disabled ? '' : undefined}
-        className={cn(
-          'text-text-muted text-body-sm',
-          disabled && 'cursor-not-allowed',
-          className,
-        )}
+        className={cn('text-text-muted text-body-sm', disabled && 'cursor-not-allowed', className)}
         {...props}
       />
     );

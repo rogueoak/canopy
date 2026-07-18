@@ -199,8 +199,20 @@ function renderInChart(node: React.ReactElement) {
 
 describe('ChartTooltipContent', () => {
   const payload = [
-    { name: 'desktop', dataKey: 'desktop', value: 120, color: 'var(--color-desktop)', payload: DATA[0] },
-    { name: 'mobile', dataKey: 'mobile', value: 80, color: 'var(--color-mobile)', payload: DATA[0] },
+    {
+      name: 'desktop',
+      dataKey: 'desktop',
+      value: 120,
+      color: 'var(--color-desktop)',
+      payload: DATA[0],
+    },
+    {
+      name: 'mobile',
+      dataKey: 'mobile',
+      value: 80,
+      color: 'var(--color-mobile)',
+      payload: DATA[0],
+    },
   ];
 
   it('renders the configured labels and values for a payload', () => {
@@ -260,7 +272,12 @@ describe('ChartTooltipContent', () => {
 
   it('merges the caller className on the tooltip card (caller wins)', () => {
     const { container } = renderInChart(
-      <ChartTooltipContent active payload={payload} label="Jan" className="rounded-none custom-tip" />,
+      <ChartTooltipContent
+        active
+        payload={payload}
+        label="Jan"
+        className="rounded-none custom-tip"
+      />,
     );
     const card = container.querySelector('.custom-tip');
     expect(card).not.toBeNull();

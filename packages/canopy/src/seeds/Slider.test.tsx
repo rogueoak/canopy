@@ -92,9 +92,7 @@ describe('Slider', () => {
   it('fires onValueChange with the next value (controlled path)', async () => {
     const user = userEvent.setup();
     const onValueChange = vi.fn();
-    render(
-      <Slider value={[50]} onValueChange={onValueChange} step={10} aria-label="Volume" />,
-    );
+    render(<Slider value={[50]} onValueChange={onValueChange} step={10} aria-label="Volume" />);
     const thumb = screen.getByRole('slider');
     thumb.focus();
     await user.keyboard('{ArrowRight}');

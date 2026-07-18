@@ -49,7 +49,12 @@ export const Single: Story = {
     const Demo = () => {
       const [selected, setSelected] = useState<Date | undefined>(new Date(2024, 5, 12));
       return (
-        <Calendar mode="single" defaultMonth={DEFAULT_MONTH} selected={selected} onSelect={setSelected} />
+        <Calendar
+          mode="single"
+          defaultMonth={DEFAULT_MONTH}
+          selected={selected}
+          onSelect={setSelected}
+        />
       );
     };
     return <Demo />;
@@ -69,7 +74,9 @@ export const Range: Story = {
         from: new Date(2024, 5, 9),
         to: new Date(2024, 5, 14),
       });
-      return <Calendar mode="range" defaultMonth={DEFAULT_MONTH} selected={range} onSelect={setRange} />;
+      return (
+        <Calendar mode="range" defaultMonth={DEFAULT_MONTH} selected={range} onSelect={setRange} />
+      );
     };
     return <Demo />;
   },
@@ -86,7 +93,9 @@ export const Multiple: Story = {
         new Date(2024, 5, 11),
         new Date(2024, 5, 18),
       ]);
-      return <Calendar mode="multiple" defaultMonth={DEFAULT_MONTH} selected={days} onSelect={setDays} />;
+      return (
+        <Calendar mode="multiple" defaultMonth={DEFAULT_MONTH} selected={days} onSelect={setDays} />
+      );
     };
     return <Demo />;
   },

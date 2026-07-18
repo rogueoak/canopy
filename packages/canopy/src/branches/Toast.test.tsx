@@ -76,7 +76,11 @@ describe('Toast (parts)', () => {
 
   it('applies the default variant token classes (raised surface)', () => {
     render(<DeclarativeToast variant="default" />);
-    expect(screen.getByTestId('toast')).toHaveClass('bg-surface-raised', 'text-text', 'border-border');
+    expect(screen.getByTestId('toast')).toHaveClass(
+      'bg-surface-raised',
+      'text-text',
+      'border-border',
+    );
   });
 
   it('applies the success variant token classes', () => {
@@ -154,7 +158,9 @@ function ImperativeHarness() {
     <div>
       <button
         type="button"
-        onClick={() => toast({ title: 'Enqueued', description: 'From toast()', variant: 'success' })}
+        onClick={() =>
+          toast({ title: 'Enqueued', description: 'From toast()', variant: 'success' })
+        }
       >
         Notify
       </button>

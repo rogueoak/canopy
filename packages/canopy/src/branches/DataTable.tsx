@@ -28,14 +28,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '../twigs/Pagination';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from './Table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './Table';
 import { cn } from '../lib/cn';
 
 /**
@@ -99,8 +92,10 @@ function SortGlyph({ direction }: { direction: 'asc' | 'desc' | false }) {
 
 /* ------------------------------------------------------------------- column helpers */
 
-export interface DataTableColumnHeaderProps<TData, TValue>
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
+export interface DataTableColumnHeaderProps<TData, TValue> extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  'title'
+> {
   /** The TanStack column this header controls; drives the sort toggle and current direction. */
   column: Column<TData, TValue>;
   /** The visible header label. */
@@ -160,9 +155,7 @@ export interface SelectionColumnLabels {
  * Both checkboxes are real, labelled canopy `Checkbox` controls, and selected rows are marked by
  * `DataTable` with `data-state="selected"` so the 0059 selected-row token styling applies.
  */
-export function createSelectionColumn<TData>(
-  labels: SelectionColumnLabels = {},
-): ColumnDef<TData> {
+export function createSelectionColumn<TData>(labels: SelectionColumnLabels = {}): ColumnDef<TData> {
   const allLabel = labels.all ?? 'Select all rows';
   const rowLabel = labels.row ?? 'Select row';
   return {
@@ -195,8 +188,10 @@ export function createSelectionColumn<TData>(
 
 /* ------------------------------------------------------------------- headless hook */
 
-export interface UseDataTableOptions<TData, TValue = unknown>
-  extends Pick<TableOptions<TData>, 'columns' | 'data'> {
+export interface UseDataTableOptions<TData, TValue = unknown> extends Pick<
+  TableOptions<TData>,
+  'columns' | 'data'
+> {
   /** Extra columns type carrier - never used directly; keeps the generic inferable. */
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -333,11 +328,7 @@ export function DataTablePager<TData>({ table }: DataTablePagerProps<TData>) {
               aria-disabled={!canPrevious}
               className={cn(!canPrevious && 'pointer-events-none opacity-50')}
             >
-              <button
-                type="button"
-                disabled={!canPrevious}
-                onClick={() => table.previousPage()}
-              >
+              <button type="button" disabled={!canPrevious} onClick={() => table.previousPage()}>
                 Previous
               </button>
             </PaginationPrevious>
@@ -361,8 +352,10 @@ export function DataTablePager<TData>({ table }: DataTablePagerProps<TData>) {
 
 /* ------------------------------------------------------------------- styled DataTable */
 
-interface DataTableBaseProps<TData>
-  extends Omit<React.HTMLAttributes<HTMLTableElement>, 'children'> {
+interface DataTableBaseProps<TData> extends Omit<
+  React.HTMLAttributes<HTMLTableElement>,
+  'children'
+> {
   /** Enable client-side pagination and render the default pager. Defaults to `true`. */
   enablePagination?: boolean;
   /** Initial page size when `DataTable` owns the table. Defaults to `10`. */
@@ -406,8 +399,7 @@ export type DataTableProps<TData, TValue = unknown> = DataTableBaseProps<TData> 
 
 // The permissive shape the inner render function receives - the public `DataTableProps` union above
 // guarantees callers pass exactly one of (`columns` + `data`) or `table`.
-interface DataTableInnerProps<TData, TValue = unknown>
-  extends DataTableBaseProps<TData> {
+interface DataTableInnerProps<TData, TValue = unknown> extends DataTableBaseProps<TData> {
   columns?: ColumnDef<TData, TValue>[];
   data?: TData[];
   table?: TanStackTable<TData>;

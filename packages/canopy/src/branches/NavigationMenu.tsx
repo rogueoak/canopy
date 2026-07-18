@@ -144,8 +144,9 @@ const NavigationMenuContent = React.forwardRef<
 ));
 NavigationMenuContent.displayName = NavigationMenuPrimitive.Content.displayName;
 
-export interface NavigationMenuLinkProps
-  extends React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Link> {
+export interface NavigationMenuLinkProps extends React.ComponentPropsWithoutRef<
+  typeof NavigationMenuPrimitive.Link
+> {
   /**
    * Marks the link as the current page: sets `aria-current="page"` AND `data-active` (via Radix's
    * `active`) so the active token styling (`text-text font-medium`) and the attribute stay in

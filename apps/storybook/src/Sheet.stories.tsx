@@ -70,7 +70,9 @@ export const Right: Story = {
       <SheetContent side="right">
         <SheetHeader>
           <SheetTitle>Right sheet</SheetTitle>
-          <SheetDescription>Anchored to the right edge, sliding in from the right.</SheetDescription>
+          <SheetDescription>
+            Anchored to the right edge, sliding in from the right.
+          </SheetDescription>
         </SheetHeader>
       </SheetContent>
     </Sheet>
@@ -191,7 +193,9 @@ function ControlledSheet() {
         <SheetContent>
           <SheetHeader>
             <SheetTitle>Controlled sheet</SheetTitle>
-            <SheetDescription>Its open state is owned by the surrounding component.</SheetDescription>
+            <SheetDescription>
+              Its open state is owned by the surrounding component.
+            </SheetDescription>
           </SheetHeader>
           <SheetFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>

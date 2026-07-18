@@ -26,27 +26,23 @@ import { cn } from '../lib/cn';
  * every fill instead of dropping to a grey (`text-text-muted`) that only pairs with the page
  * surface (Spectra Engineer review, PR 61).
  */
-export const alertVariants = cva(
-  'relative flex gap-3 rounded-lg border p-4',
-  {
-    variants: {
-      variant: {
-        default: 'border-border bg-muted text-text',
-        info: 'border-transparent bg-info text-info-foreground',
-        success: 'border-transparent bg-success text-success-foreground',
-        warning: 'border-transparent bg-warning text-warning-foreground',
-        danger: 'border-transparent bg-danger text-danger-foreground',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
+export const alertVariants = cva('relative flex gap-3 rounded-lg border p-4', {
+  variants: {
+    variant: {
+      default: 'border-border bg-muted text-text',
+      info: 'border-transparent bg-info text-info-foreground',
+      success: 'border-transparent bg-success text-success-foreground',
+      warning: 'border-transparent bg-warning text-warning-foreground',
+      danger: 'border-transparent bg-danger text-danger-foreground',
     },
   },
-);
+  defaultVariants: {
+    variant: 'default',
+  },
+});
 
 export interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof alertVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
   /**
    * Optional leading graphic rendered in the banner's start column. It is decorative and wrapped
    * in an `aria-hidden` span - the banner's meaning lives in the text (`AlertTitle` /

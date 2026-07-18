@@ -77,12 +77,7 @@ export type { SearchBarProps } from './SearchBar';
 export { ButtonGroup } from './ButtonGroup';
 export type { ButtonGroupProps } from './ButtonGroup';
 
-export {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupButton,
-} from './InputGroup';
+export { InputGroup, InputGroupAddon, InputGroupInput, InputGroupButton } from './InputGroup';
 export type {
   InputGroupProps,
   InputGroupAddonProps,
@@ -90,12 +85,7 @@ export type {
   InputGroupButtonProps,
 } from './InputGroup';
 
-export {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-  InputOTPSeparator,
-} from './InputOTP';
+export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from './InputOTP';
 export type {
   InputOTPProps,
   InputOTPGroupProps,

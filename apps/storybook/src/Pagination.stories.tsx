@@ -212,10 +212,7 @@ export const DisabledEnds: Story = {
     <Pagination>
       <PaginationContent>
         <PaginationItem>
-          <PaginationPrevious
-            aria-disabled="true"
-            className="pointer-events-none opacity-50"
-          />
+          <PaginationPrevious aria-disabled="true" className="pointer-events-none opacity-50" />
         </PaginationItem>
         <PaginationItem>
           <PaginationLink href="#" isActive>

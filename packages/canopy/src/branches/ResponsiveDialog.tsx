@@ -9,13 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from './Dialog';
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerTitle,
-} from './Drawer';
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerTitle } from './Drawer';
 
 /**
  * ResponsiveDialog - the Dialog Branch's responsive form (spec 0031): ONE compound component whose
@@ -159,7 +153,11 @@ const ResponsiveDialogClose = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>
 >((props, ref) => {
   const { mobile } = useResponsiveDialogForm();
-  return mobile ? <DrawerClose ref={ref} {...props} /> : <DialogPrimitive.Close ref={ref} {...props} />;
+  return mobile ? (
+    <DrawerClose ref={ref} {...props} />
+  ) : (
+    <DialogPrimitive.Close ref={ref} {...props} />
+  );
 });
 ResponsiveDialogClose.displayName = 'ResponsiveDialogClose';
 

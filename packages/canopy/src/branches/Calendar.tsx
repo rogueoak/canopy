@@ -98,7 +98,10 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
           // Day flags (react-day-picker DayFlag).
           today: cn(defaults.today, '[&>button]:ring-1 [&>button]:ring-ring'),
           outside: cn(defaults.outside, 'text-text-muted [&>button]:text-text-muted'),
-          disabled: cn(defaults.disabled, 'cursor-not-allowed opacity-50 [&>button]:cursor-not-allowed'),
+          disabled: cn(
+            defaults.disabled,
+            'cursor-not-allowed opacity-50 [&>button]:cursor-not-allowed',
+          ),
           hidden: cn(defaults.hidden, 'invisible'),
           ...classNames,
         }}

@@ -152,10 +152,10 @@ export const LongContent: Story = {
         <div className="text-body-sm text-text-muted flex flex-col gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
             <p key={i}>
-              Closing your account deletes all workspaces you own, revokes every member&apos;s access,
-              cancels active subscriptions with no refund for the current period, and removes all
-              stored data after a 30-day grace window. Exported archives are not recoverable once
-              the grace window closes.
+              Closing your account deletes all workspaces you own, revokes every member&apos;s
+              access, cancels active subscriptions with no refund for the current period, and
+              removes all stored data after a 30-day grace window. Exported archives are not
+              recoverable once the grace window closes.
             </p>
           ))}
         </div>

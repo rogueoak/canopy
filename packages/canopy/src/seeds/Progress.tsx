@@ -29,7 +29,8 @@ export const progressVariants = cva(
 );
 
 export interface ProgressProps
-  extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>,
+  extends
+    React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>,
     VariantProps<typeof progressVariants> {}
 
 /**
@@ -77,15 +78,9 @@ export const Progress = React.forwardRef<
       <ProgressPrimitive.Indicator
         className={cn(
           'h-full flex-1 rounded-full bg-primary transition-transform',
-          isIndeterminate
-            ? 'w-2/5 animate-pulse motion-reduce:animate-none'
-            : 'w-full',
+          isIndeterminate ? 'w-2/5 animate-pulse motion-reduce:animate-none' : 'w-full',
         )}
-        style={
-          isIndeterminate
-            ? undefined
-            : { transform: `translateX(-${100 - clamped}%)` }
-        }
+        style={isIndeterminate ? undefined : { transform: `translateX(-${100 - clamped}%)` }}
       />
     </ProgressPrimitive.Root>
   );

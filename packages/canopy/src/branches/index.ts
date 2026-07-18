@@ -312,11 +312,7 @@ export type {
 } from './Resizable';
 
 export { DatePicker, DatePickerTrigger, DatePickerContent } from './DatePicker';
-export type {
-  DatePickerProps,
-  DatePickerSingleProps,
-  DatePickerRangeProps,
-} from './DatePicker';
+export type { DatePickerProps, DatePickerSingleProps, DatePickerRangeProps } from './DatePicker';
 export {
   DataTable,
   DataTablePager,

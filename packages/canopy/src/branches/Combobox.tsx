@@ -2,13 +2,7 @@ import * as React from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Badge } from '../seeds/Badge';
 import { cn } from '../lib/cn';
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandItem,
-} from './Command';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandItem } from './Command';
 
 /**
  * Combobox - the canopy filterable-select Branch (spec 0030), built on
@@ -119,17 +113,20 @@ interface ComboboxItemProps extends React.ComponentPropsWithoutRef<typeof Comman
   selected?: boolean;
 }
 
-const ComboboxItem = React.forwardRef<
-  React.ComponentRef<typeof CommandItem>,
-  ComboboxItemProps
->(({ className, children, selected = false, ...props }, ref) => (
-  <CommandItem ref={ref} className={cn('w-full gap-0 px-0 py-1.5 pl-8 pr-2', className)} {...props}>
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      {selected ? <CheckIcon /> : null}
-    </span>
-    {children}
-  </CommandItem>
-));
+const ComboboxItem = React.forwardRef<React.ComponentRef<typeof CommandItem>, ComboboxItemProps>(
+  ({ className, children, selected = false, ...props }, ref) => (
+    <CommandItem
+      ref={ref}
+      className={cn('w-full gap-0 px-0 py-1.5 pl-8 pr-2', className)}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        {selected ? <CheckIcon /> : null}
+      </span>
+      {children}
+    </CommandItem>
+  ),
+);
 ComboboxItem.displayName = 'ComboboxItem';
 
 /* --------------------------------------------------------------------- root */

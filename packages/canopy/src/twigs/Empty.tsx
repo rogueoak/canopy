@@ -27,13 +27,15 @@ import { cn } from '../lib/cn';
  */
 export type EmptyProps = React.HTMLAttributes<HTMLDivElement>;
 
-export const Empty = React.forwardRef<HTMLDivElement, EmptyProps>(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn('flex flex-col items-center gap-2 py-12 text-center text-text', className)}
-    {...props}
-  />
-));
+export const Empty = React.forwardRef<HTMLDivElement, EmptyProps>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn('flex flex-col items-center gap-2 py-12 text-center text-text', className)}
+      {...props}
+    />
+  ),
+);
 Empty.displayName = 'Empty';
 
 export interface EmptyMediaProps extends React.HTMLAttributes<HTMLDivElement> {

@@ -1,12 +1,7 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from '@rogueoak/canopy/twigs';
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@rogueoak/canopy/twigs';
 
 /**
  * Twigs/InputOTP - the segmented one-time-passcode field (spec 0045). Built on the `input-otp`

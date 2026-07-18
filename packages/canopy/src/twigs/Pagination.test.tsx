@@ -62,9 +62,7 @@ describe('Pagination', () => {
         <PaginationContent />
       </Pagination>,
     );
-    expect(
-      screen.getByRole('navigation', { name: 'Search results pages' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Search results pages' })).toBeInTheDocument();
   });
 
   it('marks only the active link with aria-current="page"', () => {

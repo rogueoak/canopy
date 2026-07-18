@@ -111,7 +111,9 @@ describe('ContextMenu', () => {
     // the dismiss gesture on the document body directly. `button: 0` matters: a secondary-button
     // (right-click) pointerdown is the open gesture, not the dismiss one. The outside listener
     // attaches after the open commits, so we let focus land in the content first.
-    await waitFor(() => expect(screen.getByRole('menu').contains(document.activeElement)).toBe(true));
+    await waitFor(() =>
+      expect(screen.getByRole('menu').contains(document.activeElement)).toBe(true),
+    );
     fireEvent.pointerDown(document.body, { button: 0 });
     await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
   });

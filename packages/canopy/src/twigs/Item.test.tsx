@@ -1,14 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from './Item';
+import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from './Item';
 
 describe('Item', () => {
   it('renders every part with its children, composed inside the row', () => {

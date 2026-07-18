@@ -219,7 +219,10 @@ DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName;
  * pushed to the right edge (`ml-auto`) in the subtle text token with wide tracking.
  */
 const DropdownMenuShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
-  <span className={cn('ml-auto text-caption text-text-subtle tracking-widest', className)} {...props} />
+  <span
+    className={cn('ml-auto text-caption text-text-subtle tracking-widest', className)}
+    {...props}
+  />
 );
 DropdownMenuShortcut.displayName = 'DropdownMenuShortcut';
 
