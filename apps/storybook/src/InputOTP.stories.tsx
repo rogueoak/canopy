@@ -148,32 +148,34 @@ export const Invalid: Story = {
  * Controlled value with `onComplete`: the parent owns the value via `value` / `onChange`, and
  * `onComplete` fires once every slot is filled (shown here by echoing the completed code).
  */
+function ControlledOnCompleteDemo() {
+  const [value, setValue] = React.useState('');
+  const [completed, setCompleted] = React.useState<string | null>(null);
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <InputOTP
+        maxLength={6}
+        value={value}
+        onChange={(next) => {
+          setValue(next);
+          if (next.length < 6) setCompleted(null);
+        }}
+        onComplete={setCompleted}
+        aria-label="Controlled code"
+      >
+        <InputOTPGroup>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <InputOTPSlot key={i} index={i} />
+          ))}
+        </InputOTPGroup>
+      </InputOTP>
+      <p className="text-body-sm text-text-muted">
+        {completed ? `Completed: ${completed}` : `Current: ${value || '(empty)'}`}
+      </p>
+    </div>
+  );
+}
+
 export const ControlledOnComplete: Story = {
-  render: () => {
-    const [value, setValue] = React.useState('');
-    const [completed, setCompleted] = React.useState<string | null>(null);
-    return (
-      <div className="flex flex-col items-center gap-3">
-        <InputOTP
-          maxLength={6}
-          value={value}
-          onChange={(next) => {
-            setValue(next);
-            if (next.length < 6) setCompleted(null);
-          }}
-          onComplete={setCompleted}
-          aria-label="Controlled code"
-        >
-          <InputOTPGroup>
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <InputOTPSlot key={i} index={i} />
-            ))}
-          </InputOTPGroup>
-        </InputOTP>
-        <p className="text-body-sm text-text-muted">
-          {completed ? `Completed: ${completed}` : `Current: ${value || '(empty)'}`}
-        </p>
-      </div>
-    );
-  },
+  render: () => <ControlledOnCompleteDemo />,
 };
