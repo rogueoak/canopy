@@ -110,15 +110,16 @@ TableRow.displayName = 'TableRow';
 export interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {}
 
 /**
- * TableHead - a `<th>` column header. Left-aligned, muted, medium-weight `label`-role text with
- * cell padding, plus the checkbox-column spacing helper so a leading checkbox cell aligns.
+ * TableHead - a `<th>` column header. Left-aligned, muted `label`-role text (whose token already
+ * carries medium weight) with cell padding, plus the checkbox-column spacing helper so a leading
+ * checkbox cell aligns.
  */
 export const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
   ({ className, ...props }, ref) => (
     <th
       ref={ref}
       className={cn(
-        'h-10 px-2 text-left align-middle text-label font-medium text-text-muted [&:has([role=checkbox])]:pr-0',
+        'h-10 px-2 text-left align-middle text-label text-text-muted [&:has([role=checkbox])]:pr-0',
         className,
       )}
       {...props}
