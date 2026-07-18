@@ -95,6 +95,21 @@ describe('Sheet', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
+  it('returns focus to the trigger after closing (Radix return-focus)', async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+
+    const trigger = screen.getByRole('button', { name: 'Open sheet' });
+    await user.click(trigger);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    // Radix restores focus to the element that opened the sheet, so keyboard/SR users land back
+    // where they were - guards against a future refactor dropping the Portal or going non-modal.
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
   it('closes when the overlay scrim is clicked', async () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     render(<Basic />);

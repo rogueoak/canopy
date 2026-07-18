@@ -73,21 +73,22 @@ SheetOverlay.displayName = DialogPrimitive.Overlay.displayName;
 /**
  * sheetContentVariants - maps the `side` prop to a FULL LITERAL token-utility string (no dynamically
  * composed class names, so Tailwind v4's scanner emits each): the anchored edge, the span/size
- * (`left`/`right` -> full height, capped width; `top`/`bottom` -> full width, capped auto height),
- * and the per-edge slide motion. Every variant sits on the shared raised-surface pattern in the base
- * (`bg-surface-raised` + `border-border` + `text-text` + `shadow-lg`), gated with
- * `motion-reduce:animate-none`.
+ * (`left`/`right` -> full height, capped width; `top`/`bottom` -> full width, capped auto height via
+ * `max-h-[85vh]`, matching the Drawer sibling), and the per-edge slide motion. Every variant sits on
+ * the shared raised-surface pattern in the base (`bg-surface-raised` + `border-border` + `text-text`
+ * + `shadow-lg`) with `overflow-y-auto` so tall content scrolls inside the panel instead of
+ * overflowing the viewport, gated with `motion-reduce:animate-none`.
  */
 const sheetContentVariants = cva(
-  'fixed z-50 flex flex-col gap-4 border-border bg-surface-raised p-6 text-text shadow-lg motion-reduce:animate-none',
+  'fixed z-50 flex flex-col gap-4 overflow-y-auto border-border bg-surface-raised p-6 text-text shadow-lg motion-reduce:animate-none',
   {
     variants: {
       side: {
-        top: 'inset-x-0 top-0 border-b data-[state=open]:animate-drawer-top-in data-[state=closed]:animate-drawer-top-out',
+        top: 'inset-x-0 top-0 max-h-[85vh] border-b data-[state=open]:animate-drawer-top-in data-[state=closed]:animate-drawer-top-out',
         right:
           'inset-y-0 right-0 h-full w-3/4 max-w-sm border-l data-[state=open]:animate-drawer-right-in data-[state=closed]:animate-drawer-right-out',
         bottom:
-          'inset-x-0 bottom-0 border-t data-[state=open]:animate-bottom-sheet-in data-[state=closed]:animate-bottom-sheet-out',
+          'inset-x-0 bottom-0 max-h-[85vh] border-t data-[state=open]:animate-bottom-sheet-in data-[state=closed]:animate-bottom-sheet-out',
         left: 'inset-y-0 left-0 h-full w-3/4 max-w-sm border-r data-[state=open]:animate-drawer-in data-[state=closed]:animate-drawer-out',
       },
     },
