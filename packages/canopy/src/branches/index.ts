@@ -100,6 +100,8 @@ export type {
   ContextMenuSubContentProps,
   ContextMenuShortcutProps,
 } from './ContextMenu';
+export { HoverCard, HoverCardTrigger, HoverCardContent } from './HoverCard';
+export type { HoverCardProps, HoverCardTriggerProps, HoverCardContentProps } from './HoverCard';
 
 export { Combobox } from './Combobox';
 export type {
