@@ -26,6 +26,12 @@
  * vestibular trigger, so any consumer applying it to an error / `aria-invalid` state MUST pair it
  * with `motion-reduce:animate-none`. The overlay/pop/fade presets are also gated by convention,
  * but shake is the one that can actively harm - never ship it ungated.
+ *
+ * The partial further carries the disclosure height slide (`animate-collapsible-down` /
+ * `-up`), first consumed by Collapsible (Twigs, spec 0046): Radix toggles `data-[state=open|closed]`
+ * on the content region and exposes the measured height as `--radix-collapsible-content-height`, so
+ * these keyframes animate height from 0 to that var and back. Gated with `motion-reduce:animate-none`
+ * so reduced-motion users get an instant show/hide.
  */
 @keyframes dialog-overlay-in {
   from {
@@ -145,6 +151,22 @@
     opacity: 0;
   }
 }
+@keyframes collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+@keyframes collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
 
 @theme {
   --animate-dialog-overlay-in: dialog-overlay-in var(--duration-slow) var(--ease-decelerate);
@@ -160,4 +182,6 @@
   --animate-shake: shake var(--duration-slow) var(--ease-standard);
   --animate-fade-in: fade-in var(--duration-base) var(--ease-standard);
   --animate-fade-out: fade-out var(--duration-fast) var(--ease-standard);
+  --animate-collapsible-down: collapsible-down var(--duration-base) var(--ease-standard);
+  --animate-collapsible-up: collapsible-up var(--duration-base) var(--ease-standard);
 }

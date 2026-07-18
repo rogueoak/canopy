@@ -64,6 +64,12 @@ export type {
 } from './Item';
 export { Alert, AlertTitle, AlertDescription } from './Alert';
 export type { AlertProps, AlertTitleProps, AlertDescriptionProps } from './Alert';
+export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './Collapsible';
+export type {
+  CollapsibleProps,
+  CollapsibleTriggerProps,
+  CollapsibleContentProps,
+} from './Collapsible';
 
 export { SearchBar } from './SearchBar';
 export type { SearchBarProps } from './SearchBar';
