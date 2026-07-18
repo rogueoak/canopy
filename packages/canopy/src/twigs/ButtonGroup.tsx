@@ -46,8 +46,22 @@ export const buttonGroupVariants = cva('inline-flex isolate [&>*]:relative', {
   },
 });
 
-export interface ButtonGroupProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'role'>,
+/**
+ * The group's required accessible name. Per spec 0043 the `role="group"` cluster MUST carry a name
+ * so assistive tech announces it as one labelled control - modelled here as a discriminated union so
+ * exactly one of `aria-label` / `aria-labelledby` is a COMPILE-TIME requirement, not just prose:
+ * `<ButtonGroup>...</ButtonGroup>` with no name is a type error.
+ */
+export type ButtonGroupLabelProps =
+  | { 'aria-label': string; 'aria-labelledby'?: never }
+  | { 'aria-labelledby': string; 'aria-label'?: never };
+
+/**
+ * Own (non-label) props for the group. The `aria-label` / `aria-labelledby` pair is supplied by
+ * {@link ButtonGroupLabelProps} instead, so it is Omit-ted from the native attributes here.
+ */
+export interface ButtonGroupOwnProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'role' | 'aria-label' | 'aria-labelledby'>,
     Omit<VariantProps<typeof buttonGroupVariants>, 'separator'> {
   /**
    * Lay the segments in a row (`horizontal`, default) or stack them in a column (`vertical`); the
@@ -61,6 +75,12 @@ export interface ButtonGroupProps
    */
   separator?: boolean;
 }
+
+/**
+ * Public props for {@link ButtonGroup}: the own props plus the required accessible-name union, so a
+ * group with no `aria-label`/`aria-labelledby` fails to typecheck.
+ */
+export type ButtonGroupProps = ButtonGroupOwnProps & ButtonGroupLabelProps;
 
 /**
  * ButtonGroup - the segmented-cluster Twig (spec 0043). It COMPOSES 2+ canopy `Button` (0005)
