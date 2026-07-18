@@ -61,10 +61,7 @@ describe('Collapsible', () => {
 
   it('respects uncontrolled defaultOpen (content visible on mount)', () => {
     render(<Basic defaultOpen />);
-    expect(screen.getByRole('button', { name: 'Toggle' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
+    expect(screen.getByRole('button', { name: 'Toggle' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Hidden details')).toBeInTheDocument();
   });
 
@@ -100,10 +97,7 @@ describe('Collapsible', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open externally' }));
     expect(screen.getByText('Hidden details')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Toggle' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
+    expect(screen.getByRole('button', { name: 'Toggle' })).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('renders the trigger inert with the toggle-disabled tokens when the root is disabled', async () => {

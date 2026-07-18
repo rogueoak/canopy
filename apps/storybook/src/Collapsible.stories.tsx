@@ -1,11 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Button } from '@rogueoak/canopy/seeds';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@rogueoak/canopy/twigs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@rogueoak/canopy/twigs';
 
 /**
  * Twigs/Collapsible - the single expand/collapse disclosure Twig (spec 0046), built on
@@ -80,8 +76,8 @@ export const Uncontrolled: Story = {
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="px-4 py-2 text-body-sm text-text-muted">
-          With `defaultOpen`, the disclosure mounts expanded and Radix tracks open/closed from
-          there - no wiring required.
+          With `defaultOpen`, the disclosure mounts expanded and Radix tracks open/closed from there
+          - no wiring required.
         </div>
       </CollapsibleContent>
     </Collapsible>
