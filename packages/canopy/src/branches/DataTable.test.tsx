@@ -129,7 +129,7 @@ describe('DataTable', () => {
             setSorting(updater as SortingState);
           },
         });
-        return <DataTable columns={sortableColumns} data={people} table={table} />;
+        return <DataTable table={table} />;
       }
 
       render(<Controlled />);
@@ -150,7 +150,7 @@ describe('DataTable', () => {
           enablePagination: false,
           columnVisibility: { age: false },
         });
-        return <DataTable columns={basicColumns} data={people} table={table} />;
+        return <DataTable table={table} />;
       }
       render(<Hidden />);
 
@@ -196,6 +196,16 @@ describe('DataTable', () => {
       }
     });
 
+    it('select-all is indeterminate when only some rows are selected', async () => {
+      const user = userEvent.setup();
+      render(<DataTable columns={selectableColumns} data={people} enablePagination={false} />);
+      await user.click(screen.getAllByRole('checkbox', { name: 'Select row' })[0]);
+      expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toHaveAttribute(
+        'aria-checked',
+        'mixed',
+      );
+    });
+
     it('per-row selection toggles one row and exposes it', async () => {
       const user = userEvent.setup();
       const onRowSelectionChange = vi.fn();
@@ -214,7 +224,7 @@ describe('DataTable', () => {
         });
         return (
           <>
-            <DataTable columns={selectableColumns} data={people} table={table} />
+            <DataTable table={table} />
             <output data-testid="count">{table.getSelectedRowModel().rows.length}</output>
           </>
         );
@@ -295,7 +305,7 @@ describe('DataTable', () => {
           enablePagination: false,
           globalFilter: 'Ada',
         });
-        return <DataTable columns={basicColumns} data={people} table={table} />;
+        return <DataTable table={table} />;
       }
       render(<Filtered />);
       expect(screen.getByRole('cell', { name: 'Ada' })).toBeInTheDocument();

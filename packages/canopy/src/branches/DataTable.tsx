@@ -136,7 +136,7 @@ export function DataTableColumnHeader<TData, TValue>({
         type="button"
         variant="ghost"
         size="sm"
-        className="-ml-3 h-8 px-2 text-label text-text-muted data-[state=open]:bg-muted"
+        className="-ml-3 h-8 px-2 text-label text-text-muted"
         onClick={() => column.toggleSorting()}
       >
         {title}
@@ -233,10 +233,10 @@ export interface UseDataTableResult<TData> {
 
 /**
  * useDataTable - the headless layer. Wraps `useReactTable` with the core / sorted / filtered /
- * paginated row models pre-wired and canopy defaults applied. Each piece of state is uncontrolled by
- * default: when a controlled `state` value is passed WITHOUT its `on*Change` handler, TanStack still
- * lets the internal state drive, so callers get the standard controlled/uncontrolled contract. The
- * returned `table` is the source of truth for both the styled `DataTable` and any custom chrome.
+ * paginated row models pre-wired and canopy defaults applied. Each slice of state is uncontrolled
+ * until you pass BOTH its `state` value and its `on*Change` handler; omit either and that slice stays
+ * driven by TanStack's internal state, so callers get the standard controlled/uncontrolled contract.
+ * The returned `table` is the source of truth for both the styled `DataTable` and any custom chrome.
  */
 export function useDataTable<TData, TValue = unknown>(
   options: UseDataTableOptions<TData, TValue>,
@@ -361,17 +361,8 @@ export function DataTablePager<TData>({ table }: DataTablePagerProps<TData>) {
 
 /* ------------------------------------------------------------------- styled DataTable */
 
-export interface DataTableProps<TData, TValue = unknown>
+interface DataTableBaseProps<TData>
   extends Omit<React.HTMLAttributes<HTMLTableElement>, 'children'> {
-  /** The column definitions (TanStack `ColumnDef[]`, with canopy header/selection helpers). */
-  columns: ColumnDef<TData, TValue>[];
-  /** The in-memory data rows. */
-  data: TData[];
-  /**
-   * Provide a pre-built table instance from `useDataTable` for advanced control. When omitted,
-   * `DataTable` creates its own via `useDataTable` from `columns` + `data` + the options below.
-   */
-  table?: TanStackTable<TData>;
   /** Enable client-side pagination and render the default pager. Defaults to `true`. */
   enablePagination?: boolean;
   /** Initial page size when `DataTable` owns the table. Defaults to `10`. */
@@ -386,6 +377,40 @@ export interface DataTableProps<TData, TValue = unknown>
    * Defaults to an `Empty` (0041) block.
    */
   emptyState?: React.ReactNode;
+}
+
+/**
+ * The two ways to feed `DataTable`, expressed as a discriminated union so `columns`/`data` and a
+ * pre-built `table` never coexist (which would let the two drift and pay for a second, discarded
+ * table instance):
+ * - the common path: pass `columns` + `data` (+ the pagination options) and `DataTable` builds the
+ *   table internally via `useDataTable`;
+ * - the advanced path: pass a pre-built `table` from `useDataTable` and omit `columns`/`data`.
+ */
+export type DataTableProps<TData, TValue = unknown> = DataTableBaseProps<TData> &
+  (
+    | {
+        /** The column definitions (TanStack `ColumnDef[]`, with canopy header/selection helpers). */
+        columns: ColumnDef<TData, TValue>[];
+        /** The in-memory data rows. */
+        data: TData[];
+        table?: never;
+      }
+    | {
+        /** A pre-built table instance from `useDataTable` for advanced control. */
+        table: TanStackTable<TData>;
+        columns?: never;
+        data?: never;
+      }
+  );
+
+// The permissive shape the inner render function receives - the public `DataTableProps` union above
+// guarantees callers pass exactly one of (`columns` + `data`) or `table`.
+interface DataTableInnerProps<TData, TValue = unknown>
+  extends DataTableBaseProps<TData> {
+  columns?: ColumnDef<TData, TValue>[];
+  data?: TData[];
+  table?: TanStackTable<TData>;
 }
 
 /**
@@ -407,12 +432,16 @@ function DataTableInner<TData, TValue = unknown>(
     emptyState,
     className,
     ...props
-  }: DataTableProps<TData, TValue>,
+  }: DataTableInnerProps<TData, TValue>,
   ref: React.ForwardedRef<HTMLTableElement>,
 ) {
+  // Rules of hooks force the internal hook to run every render, but when the caller hands in a
+  // pre-built `table` we feed it EMPTY inputs so no second table is ever built over the real
+  // `columns`/`data` (no discarded row models, and no `columns`/`data` living in two places to
+  // drift). The public prop union guarantees `columns`/`data` are present on the internal path.
   const { table: internalTable } = useDataTable<TData, TValue>({
-    columns,
-    data,
+    columns: externalTable ? [] : (columns ?? []),
+    data: externalTable ? [] : (data ?? []),
     enablePagination,
     pageSize,
   });
@@ -429,7 +458,15 @@ function DataTableInner<TData, TValue = unknown>(
   );
 
   const renderPager = () => {
-    if (!enablePagination || pager === null) return null;
+    if (pager === null) return null;
+    // For a caller-owned `table` the DataTable-level `enablePagination` prop configured the
+    // discarded internal instance only, so derive pager visibility from the external table itself
+    // (its pagination row model is present only when pagination was enabled on it). On the internal
+    // path the prop is the source of truth.
+    const paginationEnabled = externalTable
+      ? externalTable.options.getPaginationRowModel !== undefined
+      : enablePagination;
+    if (!paginationEnabled) return null;
     if (pager) return pager(table);
     return <DataTablePager table={table} />;
   };

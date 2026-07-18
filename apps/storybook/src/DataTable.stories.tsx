@@ -156,7 +156,7 @@ export const Selectable: Story = {
           </Button>
           <span className="text-body-sm text-text-muted">{selectedCount} selected</span>
         </div>
-        <DataTable columns={columns} data={invoices} table={table} />
+        <DataTable table={table} />
       </div>
     );
   },
@@ -206,7 +206,7 @@ export const ColumnVisibility: Story = {
             </Button>
           ))}
         </div>
-        <DataTable columns={plainColumns} data={invoices} table={table} />
+        <DataTable table={table} />
       </div>
     );
   },
@@ -237,7 +237,7 @@ export const GlobalFilter: Story = {
           value={globalFilter}
           onValueChange={setGlobalFilter}
         />
-        <DataTable columns={plainColumns} data={invoices} table={table} />
+        <DataTable table={table} />
       </div>
     );
   },
@@ -279,7 +279,7 @@ export const ControlledSorting: Story = {
         <Button size="sm" variant="outline" onClick={() => setSorting([])}>
           Reset sort
         </Button>
-        <DataTable columns={sortableColumns} data={invoices} table={table} />
+        <DataTable table={table} />
       </div>
     );
   },
