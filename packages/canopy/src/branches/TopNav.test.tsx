@@ -117,9 +117,11 @@ describe('TopNav', () => {
   it('lays the mobile links out as a flex column, not display:contents', () => {
     render(<Basic />);
     const list = screen.getByRole('list');
-    expect(list.className).toContain('flex');
-    expect(list.className).toContain('flex-col');
-    expect(list.className).toContain('md:flex-row');
+    // Whole-token match (not a vacuous `toContain('flex')`, which the base `flex-1` already
+    // satisfies). `flex-none` is load-bearing too: it cancels the base `flex-1` so the inherited
+    // `justify-center` stays inert and the desktop row stays left-packed - guard it so a future
+    // drop re-centers desktop without reddening.
+    expect(list).toHaveClass('flex', 'flex-col', 'flex-none', 'md:flex-row');
     expect(list.className).not.toContain('contents');
   });
 

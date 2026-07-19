@@ -208,7 +208,7 @@ export const TopNavLinks = React.forwardRef<HTMLDivElement, TopNavLinksProps>(
             has no extra room and the desktop links stay left-packed; `items-start` left-aligns the
             mobile sheet and `md:items-center` restores the desktop row's vertical centering.
           */}
-          <NavigationMenuList className="flex w-full flex-none flex-col items-start gap-1 md:w-auto md:flex-row md:items-center md:gap-1">
+          <NavigationMenuList className="flex w-full flex-none flex-col items-start justify-start gap-1 md:w-auto md:flex-row md:items-center md:gap-1">
             {children}
           </NavigationMenuList>
         </div>
