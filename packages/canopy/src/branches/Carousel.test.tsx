@@ -1,10 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRef } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   Carousel,
   CarouselContent,
+  CarouselDots,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
@@ -422,6 +423,76 @@ describe('Carousel', () => {
       );
       expect(screen.getByRole('button', { name: 'Previous slide' })).toHaveClass('custom-prev');
       expect(screen.getByRole('button', { name: 'Next slide' })).toHaveClass('custom-next');
+    });
+  });
+
+  // embla derives the snap list from real layout, which jsdom does not do (all boxes are 0, so
+  // embla reports a single snap). We drive the pager deterministically by spying the embla api the
+  // component reads and firing embla's own `reInit` - exactly the events CarouselDots subscribes to.
+  describe('CarouselDots', () => {
+    function renderWithSnaps(snaps: number[], selected = 0) {
+      let api: CarouselApi;
+      render(
+        <Carousel opts={{ loop: true }} setApi={(a) => (api = a)}>
+          <CarouselContent>
+            <CarouselItem>Slide 1</CarouselItem>
+            <CarouselItem>Slide 2</CarouselItem>
+            <CarouselItem>Slide 3</CarouselItem>
+          </CarouselContent>
+          <CarouselDots />
+        </Carousel>,
+      );
+      vi.spyOn(api!, 'scrollSnapList').mockReturnValue(snaps);
+      vi.spyOn(api!, 'selectedScrollSnap').mockReturnValue(selected);
+      act(() => {
+        api!.reInit();
+      });
+      return api!;
+    }
+
+    it('renders one dot per snap, marking the selected one', () => {
+      renderWithSnaps([0, 0.5, 1], 1);
+      const dots = screen.getAllByRole('button', { name: /^Go to slide/ });
+      expect(dots).toHaveLength(3);
+      expect(dots[0]).not.toHaveAttribute('aria-current');
+      expect(dots[1]).toHaveAttribute('aria-current', 'true');
+      expect(dots[2]).not.toHaveAttribute('aria-current');
+    });
+
+    it('scrolls to a snap when its dot is clicked', async () => {
+      const user = userEvent.setup();
+      const api = renderWithSnaps([0, 0.5, 1], 0);
+      const spy = vi.spyOn(api, 'scrollTo');
+      await user.click(screen.getByRole('button', { name: 'Go to slide 3' }));
+      expect(spy).toHaveBeenCalledWith(2);
+    });
+
+    it('exposes the pager as a labelled group', () => {
+      renderWithSnaps([0, 0.5, 1], 0);
+      expect(screen.getByRole('group', { name: 'Choose slide' })).toBeInTheDocument();
+    });
+
+    it('renders nothing for a single-snap carousel (no pager needed)', () => {
+      renderWithSnaps([0]);
+      expect(screen.queryByRole('button', { name: /^Go to slide/ })).not.toBeInTheDocument();
+    });
+
+    it('merges a caller className onto the pager', () => {
+      let api: CarouselApi;
+      render(
+        <Carousel opts={{ loop: true }} setApi={(a) => (api = a)}>
+          <CarouselContent>
+            <CarouselItem>Slide 1</CarouselItem>
+            <CarouselItem>Slide 2</CarouselItem>
+          </CarouselContent>
+          <CarouselDots className="custom-dots" data-testid="dots" />
+        </Carousel>,
+      );
+      vi.spyOn(api!, 'scrollSnapList').mockReturnValue([0, 1]);
+      act(() => {
+        api!.reInit();
+      });
+      expect(screen.getByTestId('dots')).toHaveClass('custom-dots');
     });
   });
 

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   Carousel,
   CarouselContent,
+  CarouselDots,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
@@ -190,6 +191,27 @@ export const DisabledAtEnds: Story = {
       </CarouselContent>
       <CarouselPrevious />
       <CarouselNext />
+    </Carousel>
+  ),
+};
+
+/**
+ * Dots - `CarouselDots` renders a pager (one dot per snap, the selected one elongated + filled with
+ * `bg-primary`). It reads the snap list and selected index off the embla api and re-derives on
+ * `select` / `reInit`, so it needs no extra wiring - drop it under the content. Each dot has a 44px
+ * hit target and the shared focus-visible ring; clicking a dot scrolls to that slide.
+ */
+export const Dots: Story = {
+  render: () => (
+    <Carousel opts={{ loop: true }} aria-label="Carousel with dots" className="w-64">
+      <CarouselContent>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <CarouselItem key={i}>
+            <SlideFace n={i + 1} />
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      <CarouselDots className="mt-4" />
     </Carousel>
   ),
 };
