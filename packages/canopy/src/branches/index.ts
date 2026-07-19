@@ -1,3 +1,5 @@
+export { Video } from './Video';
+export type { VideoProps, VideoSource, VideoPlayer, VideoJsOptions } from './Video';
 export {
   Dialog,
   DialogTrigger,

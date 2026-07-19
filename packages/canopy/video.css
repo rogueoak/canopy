@@ -1,0 +1,169 @@
+/*
+ * Canopy skin for video.js (spec 0070) - the Video Branch's control-bar skin.
+ *
+ * video.js emits structural `.vjs-*` classes at runtime that the consumer's Tailwind `@source`
+ * scan can never see, so - like the keyframed motion that ships from the Roots preset - this CSS
+ * ships as a file the consumer imports (AFTER video.js's own base CSS so it overrides):
+ *
+ *   import 'video.js/dist/video-js.css';
+ *   import '@rogueoak/canopy/video.css';
+ *
+ * It restyles video.js using ONLY Canopy semantic ROLE tokens (`var(--color-primary)`, ...) - never
+ * a primitive ramp step (`--color-moss-600`) and never a hardcoded value. That is deliberate and
+ * load-bearing: those role vars are the exact seam that `.dark` (on <html>) and a consumer brand
+ * override (`buildBrand()`, spec 0028, or a runtime `:root { --color-*: ... }`) re-point - so this
+ * player themes for light/dark AND adopts a consumer's brand automatically, with zero change here.
+ * Translucent fills use `color-mix(... transparent)` over a role var (never rgba() of a literal) so
+ * the mixed colour still tracks the overridden role. A test guards this file against hex, `.dark`,
+ * and primitive-ramp vars.
+ */
+
+/* ------------------------------------------------------------------------------- base surface */
+
+.video-js {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.video-js .vjs-poster {
+  background-color: var(--color-muted);
+  border-radius: var(--radius-md);
+}
+
+/* --------------------------------------------------------------------------- big play button */
+
+.video-js .vjs-big-play-button {
+  background-color: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.video-js:hover .vjs-big-play-button,
+.video-js .vjs-big-play-button:focus {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-color: var(--color-primary);
+}
+
+/* ------------------------------------------------------------------------------- control bar */
+
+.video-js .vjs-control-bar {
+  background-color: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  color: var(--color-text);
+}
+
+.video-js .vjs-control {
+  color: var(--color-text);
+}
+
+.video-js .vjs-button:hover,
+.video-js .vjs-control:hover {
+  color: var(--color-primary);
+}
+
+/* Focus ring on the Canopy `ring` token, matching every other Canopy control. */
+.video-js .vjs-control:focus,
+.video-js .vjs-control:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: -2px;
+  text-shadow: none;
+}
+
+/* -------------------------------------------------------------------------- progress + time */
+
+.video-js .vjs-progress-holder,
+.video-js .vjs-slider {
+  background-color: color-mix(in srgb, var(--color-text-muted) 24%, transparent);
+  border-radius: var(--radius-full);
+}
+
+.video-js .vjs-load-progress {
+  background-color: color-mix(in srgb, var(--color-text-muted) 36%, transparent);
+}
+
+.video-js .vjs-load-progress div {
+  background-color: color-mix(in srgb, var(--color-text-muted) 44%, transparent);
+}
+
+.video-js .vjs-play-progress,
+.video-js .vjs-volume-level {
+  background-color: var(--color-primary);
+}
+
+/* The scrubber + volume handles video.js draws with a font glyph in `:before`. */
+.video-js .vjs-play-progress:before,
+.video-js .vjs-volume-level:before {
+  color: var(--color-primary);
+}
+
+.video-js .vjs-slider:focus {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.video-js .vjs-time-control,
+.video-js .vjs-current-time,
+.video-js .vjs-duration,
+.video-js .vjs-remaining-time {
+  color: var(--color-text);
+}
+
+.video-js .vjs-time-tooltip,
+.video-js .vjs-mouse-display .vjs-time-tooltip {
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+/* ------------------------------------------------------------------------------------- menus */
+
+.video-js .vjs-menu .vjs-menu-content {
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+}
+
+.video-js .vjs-menu li {
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+}
+
+.video-js .vjs-menu li:hover,
+.video-js .vjs-menu li:focus,
+.video-js .vjs-menu li.vjs-selected:hover {
+  background-color: var(--color-muted-raised);
+  color: var(--color-text);
+}
+
+.video-js .vjs-menu li.vjs-selected {
+  background-color: transparent;
+  color: var(--color-primary);
+}
+
+/* ------------------------------------------------------------------------------ loading spinner */
+
+.video-js .vjs-loading-spinner {
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-top-color: var(--color-primary);
+}
+
+/* --------------------------------------------------------------------------- error / captions */
+
+.video-js .vjs-error-display {
+  background-color: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  color: var(--color-text);
+}
+
+.video-js .vjs-text-track-display {
+  color: var(--color-text-inverted);
+}
