@@ -157,6 +157,15 @@ synthesise must ship from a file the consumer imports.
   resolved at the consumer's install, never bundled - the recipe rule every
   other lib follows). video.js 8 ships its own TypeScript types, so no
   `@types/video.js`.
+- **Dependency footprint (acknowledged).** video.js is the heaviest lib Canopy
+  wraps: it pulls a sizeable transitive tree (http-streaming, mux.js,
+  mpd-parser, `@xmldom/xmldom`, aes-decrypter, vtt.js, ...) for its adaptive-
+  streaming + captions support. This is a deliberate build-vs-buy, matching the
+  embla/recharts precedent - a correct, accessible player is not something to
+  re-implement. The lazy dynamic import keeps the runtime cost out of the
+  initial bundle, but not the install/supply-chain cost; that is the trade for
+  a batteries-included player. (Security review is off in this repo's persona
+  config; the new-dependency surface is called out here in lieu of it.)
 
 ### Testing strategy (jsdom)
 

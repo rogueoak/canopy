@@ -237,7 +237,13 @@ const Video = React.forwardRef<HTMLDivElement, VideoProps>(function Video(props,
       cancelled = true;
       const player = playerRef.current;
       if (player && typeof player.dispose === 'function' && !player.isDisposed()) {
+        // Player exists: dispose() tears down the DOM video.js built around videoEl.
         player.dispose();
+      } else {
+        // Unmounted before the dynamic import resolved (a fast unmount, or React StrictMode's
+        // double-invoke): no player was ever created, so remove the raw <video> we appended - the
+        // still-pending import's own `cancelled` branch would only reach it if/when it resolves.
+        videoEl.remove();
       }
       playerRef.current = null;
     };
@@ -254,6 +260,8 @@ const Video = React.forwardRef<HTMLDivElement, VideoProps>(function Video(props,
     const player = playerRef.current;
     if (!player) return;
     const resolved = resolveSources(src, sources);
+    // Deliberate: we only SET a new source, never unset one - clearing `src`/`sources` to nothing
+    // leaves the current media playing rather than emptying the player (matching a native <video>).
     if (resolved) player.src(resolved);
     // sourcesKey captures src+sources; the raw values are read at run time.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -55,7 +55,9 @@
 /* ------------------------------------------------------------------------------- control bar */
 
 .video-js .vjs-control-bar {
-  background-color: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  /* 92% keeps a hint of the video bleeding through while staying opaque enough that the control
+     text/icons hold AA over a high-contrast frame in either theme. */
+  background-color: color-mix(in srgb, var(--color-surface) 92%, transparent);
   color: var(--color-text);
 }
 
@@ -157,13 +159,16 @@
   border-top-color: var(--color-primary);
 }
 
-/* --------------------------------------------------------------------------- error / captions */
+/* ------------------------------------------------------------------------------------- error */
 
 .video-js .vjs-error-display {
   background-color: color-mix(in srgb, var(--color-surface) 92%, transparent);
   color: var(--color-text);
 }
 
-.video-js .vjs-text-track-display {
-  color: var(--color-text-inverted);
-}
+/*
+ * Captions/subtitles (`.vjs-text-track-display`) are intentionally NOT themed. They render over the
+ * VIDEO layer, not a Canopy surface, so a theme role (esp. the inverted role) would make cue text
+ * near-black over a dark video frame in dark mode - illegible. video.js's own default cue styling
+ * (white text on a translucent black box) stays legible over any frame, so we leave it untouched.
+ */

@@ -80,6 +80,16 @@ describe('buildOptions (the props -> video.js options mapping we own)', () => {
     ).toMatchObject({ poster: 'p.jpg', aspectRatio: '16:9', width: 640, height: 360 });
   });
 
+  it('honours the first-class `fluid={false}` fixed-size path', () => {
+    // The fixed-size acceptance item is driven by the PROP, not only via `options` - a regression
+    // dropping `fluid` from the explicit set would still pass if only the options path were tested.
+    expect(buildOptions({ fluid: false, width: 480, height: 270 })).toMatchObject({
+      fluid: false,
+      width: 480,
+      height: 270,
+    });
+  });
+
   it('lets `options` override a default the caller did not set', () => {
     // no `fluid` prop -> the passthrough wins over the default.
     expect(buildOptions({ options: { fluid: false } }).fluid).toBe(false);
@@ -133,6 +143,20 @@ describe('Video (lifecycle + integration)', () => {
     rerender(<Video src="clip.mp4" poster="b.jpg" />);
     await waitFor(() => expect(player.poster).toHaveBeenCalledWith('b.jpg'));
     expect(mock.videojs).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not create a player, and removes the <video>, if unmounted before video.js loads', async () => {
+    // The dynamic import resolves on a later microtask; unmounting synchronously first must set the
+    // `cancelled` guard so no player is ever constructed and the raw <video> we appended is removed.
+    const { container, unmount } = render(<Video src="clip.mp4" />);
+    expect(container.querySelector('video')).not.toBeNull();
+    unmount();
+    // Flush the pending import().then the guard runs in (a macrotask covers all its microtask hops).
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // The `cancelled` guard means video.js is never constructed into the torn-down container - the
+    // load-bearing assertion (without it, a leaked, never-disposed player would be created).
+    expect(mock.videojs).not.toHaveBeenCalled();
+    expect(container.querySelector('video')).toBeNull();
   });
 
   it('disposes the player on unmount', async () => {
@@ -237,5 +261,14 @@ describe('video.css skin (theming + brand-override guarantee)', () => {
     // If this fails, the listed names are not semantic roles, so a consumer brand override would
     // NOT reach them - the whole point of the skin referencing only roles.
     expect(unknown).toEqual([]);
+  });
+
+  it('actually USES the brand accent role (--color-primary) on the controls', () => {
+    // "Every var is a role" is necessary but not sufficient: a skin that accented everything with
+    // --color-surface/--color-text would pass that AND still leave a consumer's brand `--color-primary`
+    // override invisible. Assert the accent role is genuinely referenced, so the brand override the
+    // acceptance item promises actually reaches the player's controls.
+    const refs = [...css.matchAll(/var\(--color-([a-z-]+)\)/g)].map((m) => m[1]);
+    expect(refs).toContain('primary');
   });
 });

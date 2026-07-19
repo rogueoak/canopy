@@ -679,3 +679,34 @@ asserts every colour var is a known overridable role - that test IS the proof th
 (and dark) reach the wrapped controls, which jsdom can't verify at runtime (no `var()`/`color-mix`
 resolution). And lazy-load a heavy player lib via a dynamic `import()` so, with `sideEffects: false`,
 it code-splits into its own chunk and a consumer who never renders it ships none of it.
+
+## Theme only Canopy surfaces - content over media needs a theme-invariant treatment
+
+The Video skin (0070) coloured video.js caption cue text with the *inverted* role
+(`--color-text-inverted`), so in dark theme captions rendered near-black over a dark video frame -
+illegible (designer persona, feedback 0020). Captions don't sit on a Canopy surface; they float over
+the **video layer**, whose colour is arbitrary and theme-independent. A semantic role token assumes a
+known Canopy background behind the text, and the inverted role assumes the opposite surface - neither
+is true over media, so "flip with the theme" is actively wrong there.
+
+**Apply it:** a semantic role/`text-*` token is correct only for content on a **known Canopy
+surface**. Content drawn over **media or an arbitrary background** (video captions, a label over an
+image/video) needs a **self-contained, theme-invariant** treatment - its own contrasting box (the
+library's default white-on-black cue box is fine) - never a role token, and never the inverted role,
+which inverts to match a surface that isn't there. When skinning a third-party player/canvas, ask per
+element "what is actually behind this?" before reaching for a token.
+
+## A validity guard must also prove the load-bearing value is present, not just allowed
+
+The Video skin's brand-override guard (0070) asserted every `var(--color-*)` in `video.css` *is* a
+role token (no hex/`.dark`/primitive) - necessary, but a skin that accented everything with
+`--color-surface`/`--color-text` and never used `--color-primary` would pass in full while a
+consumer's brand accent override stayed invisible (tester persona, feedback 0021). "All X are valid"
+is silent on whether the one X the feature depends on is present.
+
+**Apply it:** when a guard asserts a *validity* property over a set ("every var is a role", "every
+export is prefixed", "no forbidden value appears"), pair it with a *presence/use* assertion for the
+load-bearing member (`expect(refs).toContain('primary')`) - the value that makes the promise work must
+be shown to be **there**, not merely **allowed**. This is the dual of "test every shipped variant, not
+a representative sample": a whole-set validity check can pass vacuously on a degenerate set that drops
+the element the promise hinges on.

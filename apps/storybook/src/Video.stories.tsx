@@ -103,3 +103,16 @@ export const BrandOverride: Story = {
     </div>
   ),
 };
+
+/**
+ * The dark skin, shown by default (not only via the toolbar) - the `.dark` class re-points the role
+ * vars for this subtree, so the control bar, scrubber, and menus re-theme with no component change.
+ * The toolbar Light / Dark toggle drives the same seam globally.
+ */
+export const Dark: Story = {
+  render: (args) => (
+    <div className="dark w-[640px] max-w-full rounded-md bg-surface p-4">
+      <Video {...args} />
+    </div>
+  ),
+};
