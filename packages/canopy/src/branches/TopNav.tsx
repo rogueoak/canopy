@@ -197,7 +197,20 @@ export const TopNavLinks = React.forwardRef<HTMLDivElement, TopNavLinksProps>(
           )}
           {...props}
         >
-          <NavigationMenuList className="contents md:contents">{children}</NavigationMenuList>
+          {/*
+            The LIST is the flex container - a column on mobile, a row at md+. It does NOT rely on
+            `display:contents` flattening: Radix's NavigationMenu.Root (rendered `asChild` onto the
+            panel div above) injects an unstyled BLOCK wrapper between the panel and this list, which
+            defeats a `contents` flatten and lets the inline `TopNavLink`s flow horizontally. Making
+            the list a real flex column/row blockifies those inline link flex-items so they stack on
+            mobile and sit in a row at md+, independent of the injected wrapper. `flex-none` +
+            `md:w-auto` cancel the NavigationMenuList base's `flex-1`, so its base `justify-center`
+            has no extra room and the desktop links stay left-packed; `items-start` left-aligns the
+            mobile sheet and `md:items-center` restores the desktop row's vertical centering.
+          */}
+          <NavigationMenuList className="flex w-full flex-none flex-col items-start gap-1 md:w-auto md:flex-row md:items-center md:gap-1">
+            {children}
+          </NavigationMenuList>
         </div>
       </NavigationMenu>
     );
