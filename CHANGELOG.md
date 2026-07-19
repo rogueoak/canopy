@@ -4,6 +4,18 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 1.2.0 - 2026-07-19
+
+### Added
+
+- **Carousel** - a new `CarouselDots` part: a slide indicator / pager that renders one dot per snap
+  point (the selected one elongated and filled with `bg-primary`), clicking a dot scrolls to that
+  slide. It reads the snap list and selected index off the embla api and re-derives on embla's
+  `select` / `reInit` events - no extra wiring beyond dropping it inside a `Carousel`. Renders
+  nothing for a single-snap carousel. Each dot carries a 44px hit target and the shared
+  focus-visible ring, and the pip is token-driven so it flips light/dark automatically. Exported
+  from `@rogueoak/canopy/branches` alongside the existing Carousel parts.
+
 ## 1.1.1 - 2026-07-19
 
 ### Fixed

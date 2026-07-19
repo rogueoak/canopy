@@ -110,6 +110,7 @@ export {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  CarouselDots,
   useCarousel,
 } from './Carousel';
 export type {
@@ -117,6 +118,7 @@ export type {
   CarouselContentProps,
   CarouselItemProps,
   CarouselControlProps,
+  CarouselDotsProps,
   CarouselApi,
   CarouselOptions,
   CarouselPlugin,

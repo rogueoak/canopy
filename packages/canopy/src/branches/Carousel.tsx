@@ -340,6 +340,82 @@ export const CarouselNext = React.forwardRef<
 });
 CarouselNext.displayName = 'CarouselNext';
 
+/* ------------------------------------------------------------------------------- dots */
+
+export type CarouselDotsProps = React.HTMLAttributes<HTMLDivElement>;
+
+/**
+ * CarouselDots - a slide indicator / pager: one `<button>` per snap point, the selected one marked
+ * `aria-current="true"`, clicking a dot scrolls to that snap. The context does not carry the snap
+ * list or selected index (they are per-render embla state, not part of the shared value), so this
+ * part reads them straight off the embla `api` and re-derives on embla's `select` / `reInit` events -
+ * the same escape-hatch the root documents for autoplay/dots. Renders nothing until the api exists
+ * (or when there is a single snap - a one-slide carousel needs no pager). Each dot carries a 44px hit
+ * target with the shared focus-visible ring; the visible pip is small and token-driven so it flips
+ * light/dark automatically.
+ */
+export const CarouselDots = React.forwardRef<HTMLDivElement, CarouselDotsProps>(
+  ({ className, ...props }, ref) => {
+    const { api } = useCarousel();
+    const [snaps, setSnaps] = React.useState<number[]>([]);
+    const [selected, setSelected] = React.useState(0);
+
+    React.useEffect(() => {
+      if (!api) {
+        return;
+      }
+      const onSelect = () => setSelected(api.selectedScrollSnap());
+      const onReInit = () => {
+        setSnaps(api.scrollSnapList());
+        onSelect();
+      };
+      onReInit();
+      api.on('reInit', onReInit);
+      api.on('select', onSelect);
+      return () => {
+        api.off('reInit', onReInit);
+        api.off('select', onSelect);
+      };
+    }, [api]);
+
+    if (snaps.length <= 1) {
+      return null;
+    }
+
+    return (
+      <div
+        ref={ref}
+        role="group"
+        aria-label="Choose slide"
+        className={cn('flex items-center justify-center gap-1', className)}
+        {...props}
+      >
+        {snaps.map((_, index) => {
+          const isSelected = index === selected;
+          return (
+            <button
+              key={index}
+              type="button"
+              aria-label={`Go to slide ${index + 1}`}
+              aria-current={isSelected ? 'true' : undefined}
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset"
+              onClick={() => api?.scrollTo(index)}
+            >
+              <span
+                className={cn(
+                  'block h-2 w-2 rounded-full transition-[background-color,width]',
+                  isSelected ? 'w-5 bg-primary' : 'bg-muted hover:bg-border-strong',
+                )}
+              />
+            </button>
+          );
+        })}
+      </div>
+    );
+  },
+);
+CarouselDots.displayName = 'CarouselDots';
+
 /* ------------------------------------------------------------------------------ glyphs */
 /* Inline SVGs, matching the Combobox/Select recipe (no icon dependency). */
 
