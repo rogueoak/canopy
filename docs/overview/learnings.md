@@ -649,3 +649,33 @@ it should (asserted on a captured node, since jsdom/Radix hide the background fr
 the motion fires in the right direction - adding tests for those outcomes if the old suite lacked
 them. A preserved API is not a preserved experience; jsdom's under-modelling of focus makes "tests
 still pass" a weak signal for precisely the properties a primitive swap threatens.
+
+## A CSS-heavy library's skin ships as a stylesheet of ROLE tokens, so brand overrides apply
+
+Most Canopy component styling ships as `className` strings the consumer's Tailwind build emits by
+scanning canopy source (`@source`). But a library that renders its **own** DOM with its **own**
+structural classes - video.js's `.vjs-*` control bar (Video, 0070) - defeats that seam entirely: the
+scanner only emits utilities it sees as literal strings in canopy's source, and those `.vjs-*`
+classes exist only at video.js runtime. This is the same shape as "motion ships from the preset, not
+`@source`": CSS the scanner can't synthesise (keyframes, `@theme` declarations, a third-party lib's
+structural classes) must ship from a **file the consumer imports**. So Video ships Canopy's first
+component stylesheet, `@rogueoak/canopy/video.css` (a new package export + `files` entry, imported
+after the library's own base CSS so it overrides).
+
+The load-bearing rule is **what that stylesheet may reference**: only Canopy's semantic **role** vars
+(`--color-primary`, `--color-surface-raised`, `--color-ring`, ...), never a primitive ramp step
+(`--color-moss-600`) and never a hardcoded value (no hex, no `rgba()` literal - translucency is
+`color-mix(... transparent)` over a role var so the mix still tracks the role). Because the role vars
+are the exact seam `.dark` and a consumer brand (`buildBrand()`, spec 0028, or a runtime `:root`
+override) re-point, a skin built on role vars themes light/dark AND **adopts a consumer's brand
+override for free** - the same guarantee every token-styled component gives, extended to a
+third-party lib's chrome. A hex or a primitive ramp would silently opt the player out of the
+consumer's brand (and out of dark), invisibly.
+
+**Apply it:** when wrapping a library that ships/needs its own CSS, don't try to force its skin
+through `@source` - ship a stylesheet the consumer imports, and author it against **role** tokens
+only. Guard the file with a test that rejects hex / `rgba()` / `.dark` / primitive-ramp vars and
+asserts every colour var is a known overridable role - that test IS the proof that a brand override
+(and dark) reach the wrapped controls, which jsdom can't verify at runtime (no `var()`/`color-mix`
+resolution). And lazy-load a heavy player lib via a dynamic `import()` so, with `sideEffects: false`,
+it code-splits into its own chunk and a consumer who never renders it ships none of it.
