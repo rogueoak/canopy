@@ -710,3 +710,18 @@ load-bearing member (`expect(refs).toContain('primary')`) - the value that makes
 be shown to be **there**, not merely **allowed**. This is the dual of "test every shipped variant, not
 a representative sample": a whole-set validity check can pass vacuously on a degenerate set that drops
 the element the promise hinges on.
+
+## Do not rely on `display:contents` flattening through a Radix primitive
+
+TopNav's mobile disclosure panel (0069 refactor) made the panel `flex flex-col` and set the
+`NavigationMenuList` to `contents md:contents`, expecting the list + items to flatten so the links
+became flex children of the panel. Radix `NavigationMenu.Root` (even with `asChild`) injects an
+unstyled block wrapper `<div>` around its content, which is NOT `display:contents` - so the flatten
+broke and the `inline` links flowed horizontally like text (feedback 0022).
+
+**Apply it:** when a layout needs children to participate in an ancestor's flex/grid, put the
+layout on the element you actually control and render (here, make the *list* the flex container -
+`flex flex-col md:flex-row`), rather than depending on `display:contents` to erase a box a wrapping
+primitive may inject. A Radix (or any third-party) primitive can add DOM you did not write; never
+assume a straight parent-child line through it. Layout can't be unit-tested in jsdom, so pair the
+fix with a class-level regression guard (assert the list carries the flex classes, not `contents`).
