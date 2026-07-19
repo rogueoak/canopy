@@ -4,6 +4,15 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 1.1.1 - 2026-07-19
+
+### Fixed
+
+- **TopNav** - the mobile disclosure panel now stacks its links vertically again. A regression from
+  the NavigationMenu refactor let the links render in a horizontal row on small screens: the panel
+  relied on `display:contents` flattening, which Radix's injected wrapper element defeats. The links
+  list is now a real flex column (a row at `md+`), independent of the wrapper. (feedback 0022)
+
 ## 1.0.0 - 2026-07-18
 
 The first stable release. The component library is feature-complete: every tier is live and

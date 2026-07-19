@@ -109,6 +109,22 @@ describe('TopNav', () => {
     expect(panel).toContainElement(screen.getByRole('link', { name: 'Dashboard' }));
   });
 
+  // Regression guard (feedback 0022): the mobile disclosure panel must stack its links, so the
+  // links list has to be a real flex column (a row at md+), NOT `display:contents`. Radix's
+  // NavigationMenu.Root injects a block wrapper that defeats a `contents` flatten, which let the
+  // inline links flow horizontally. jsdom can't compute flex layout, so this asserts the classes
+  // that drive it - it reddens against the old `contents md:contents`.
+  it('lays the mobile links out as a flex column, not display:contents', () => {
+    render(<Basic />);
+    const list = screen.getByRole('list');
+    // Whole-token match (not a vacuous `toContain('flex')`, which the base `flex-1` already
+    // satisfies). `flex-none` is load-bearing too: it cancels the base `flex-1` so the inherited
+    // `justify-center` stays inert and the desktop row stays left-packed - guard it so a future
+    // drop re-centers desktop without reddening.
+    expect(list).toHaveClass('flex', 'flex-col', 'flex-none', 'md:flex-row');
+    expect(list.className).not.toContain('contents');
+  });
+
   it('closes on Escape and returns focus to the menu button', async () => {
     const user = userEvent.setup();
     render(<Basic />);

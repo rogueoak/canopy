@@ -710,3 +710,20 @@ load-bearing member (`expect(refs).toContain('primary')`) - the value that makes
 be shown to be **there**, not merely **allowed**. This is the dual of "test every shipped variant, not
 a representative sample": a whole-set validity check can pass vacuously on a degenerate set that drops
 the element the promise hinges on.
+
+## Do not rely on `display:contents` flattening through a WRAPPER-INJECTING primitive
+
+TopNav's mobile disclosure panel (0069 refactor) made the panel `flex flex-col` and set the
+`NavigationMenuList` to `contents md:contents`, expecting the list + items to flatten so the links
+became flex children of the panel. Radix `NavigationMenu.Root` (even with `asChild`) injects an
+unstyled block wrapper `<div>` around its content, which is NOT `display:contents` - so the flatten
+broke and the `inline` links flowed horizontally like text (feedback 0022).
+
+**Apply it:** the trap is flattening through a primitive that renders DOM you did not write - a
+*wrapper* like `NavigationMenu.Root`. Flattening through one that renders a bare element you control
+(e.g. `NavigationMenu.Item` -> a single `<li>`, still `contents` here on purpose) is fine. So the
+rule is not "never use `display:contents`", it is: when a layout needs children to participate in an
+ancestor's flex/grid, put the layout on an element you actually control and render (here, make the
+*list* the flex container - `flex flex-col md:flex-row`), and never assume a straight parent-child
+line through a primitive that may inject a box. Layout can't be unit-tested in jsdom, so pair the fix
+with a class-level regression guard (assert the list carries the flex classes, not `contents`).
