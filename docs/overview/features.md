@@ -639,6 +639,35 @@ Consolidates two near-identical app copies (matthewmaynes + rogueoak) into one s
   SVG, no `@rogueoak/icons` dependency); semantic tokens only, both themes automatically. Stories:
   playground (resolving submit), always-show-name, no-heading, and an error state.
 
+## Branches: Video (0070)
+
+The media-player Branch - a [video.js](https://videojs.com) player with a control bar fully skinned
+to the Canopy tokens, and the first component to **ship a stylesheet**.
+
+- **Video** (`@rogueoak/canopy/branches`) - a thin wrapper over video.js (the player state machine,
+  control-bar DOM + a11y, sources, fullscreen). Lean props for the common case - `src` / `sources`,
+  `poster`, `controls`, `autoplay`, `loop`, `muted`, `preload`, `playsInline`, and a **fluid /
+  responsive default** (fills the container, keeps the aspect ratio; `fluid={false}` + `width` /
+  `height` for a fixed player) - plus an `options` passthrough (raw video.js config) and
+  `onReady(player)` (the instance escape hatch). Explicit props win over `options`; `options` fills
+  and may override the defaults for the rest. It owns the lifecycle: creates the player on mount,
+  swaps `src` / `poster` reactively **without** re-creating it, and disposes it on unmount.
+- **Lazy-loaded.** video.js is heavy, so it is pulled via a dynamic `import('video.js')` on mount -
+  it code-splits into its own chunk (out of the initial bundle), and with `sideEffects: false` a
+  consumer who never renders `<Video>` ships none of it. The `poster` renders as a native attribute
+  immediately, so there is a visible frame while the player code loads.
+- **Token-skinned controls that adopt your brand.** video.js's `.vjs-*` control classes can't ride
+  the Tailwind `@source` seam, so the skin ships as **`@rogueoak/canopy/video.css`** (imported after
+  video.js's own base CSS). It uses **only semantic role vars**, so the controls theme light/dark and
+  **re-colour automatically under a consumer brand override** (`buildBrand()` or a runtime `:root`
+  override) with no component change - guarded by a test rejecting hex / `.dark` / primitive-ramp
+  vars. `video.js` is added to `dependencies` + tsup `external`.
+- **Stories** - a `Branches/Video` section: Playground, with-poster, autoplay+muted, fixed-size, and
+  a **brand-override** demo proving the accent follows an overridden `--color-primary`. **Tests** mock
+  video.js and assert the mapping Canopy owns (built options, reactive `src()` / `poster()`, dispose,
+  `onReady`, precedence) per the "test your own mapping, not the library" learning, plus the skin
+  drift / brand-override guards.
+
 ## npm publishing (0023)
 
 Releases now **publish to npm**, driven by git tags - a tag _is_ the release.

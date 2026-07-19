@@ -57,5 +57,9 @@ export default defineConfig({
     'react-day-picker',
     'tailwind-merge',
     'vaul',
+    // video.js is loaded via a DYNAMIC `import('video.js')` inside the Video branch (0070) so it
+    // lands in its own chunk, out of the initial bundle; externalising keeps that a runtime import
+    // resolved at the consumer's install, never bundled - the recipe rule every other lib follows.
+    'video.js',
   ],
 });

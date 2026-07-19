@@ -335,7 +335,9 @@ TanStack Table / react-day-picker / date-fns / input-otp / react-resizable-panel
 Testing Library + `user-event` (jsdom) drive the component tests.
 
 As of **1.0.0** all four tiers are feature-complete: **18 Seeds**, **14 Twigs**, and **26
-Branches** (58 components), each on the same **cva + `cn()` + Radix** recipe below. The Seeds layer
+Branches** (58 components), each on the same **cva + `cn()` + Radix** recipe below. (**Video**, spec
+0070, adds a **27th Branch** post-1.0.0 - the media player wrapping video.js; see the Branches
+recipe.) The Seeds layer
 is the atoms (Button through Keyboard, plus Progress / Slider / Toggle from 0037-0039); two of them
 are **portalled** on `surface-raised` (Select, then Tooltip), establishing the raised-surface
 pattern that introduced the `muted-raised` token above. All refs type with `React.ComponentRef`
@@ -601,6 +603,35 @@ themed by the layers it composes and the tokens already provisioned.
   Seeds), stays **icon-free** (a hand-rolled `currentColor` check SVG, the Dialog-close precedent, so
   Canopy keeps its no-`@rogueoak/icons`-dependency invariant), adds no token and no `dark:`, and
   takes all copy as defaulted props so a consumer reproduces its exact wording.
+
+- **Media-player Branch + the first shipped component stylesheet (Video, spec 0070).** The 27th
+  Branch wraps **video.js** - a third-party behavioural library like embla (Carousel) / recharts
+  (Chart), so it is a Branch that owns the player instance + its create/update/dispose lifecycle. Two
+  things make it structurally new:
+  - **Lazy dynamic import.** video.js is heavy (~700KB), so the component pulls it via
+    `import('video.js')` inside the mount effect rather than a static top-level import. With the
+    package's `sideEffects: false`, that means video.js lands in **its own chunk** (verified: the
+    Storybook build emits a separate `video.es-*.js`), out of the initial bundle, and a consumer who
+    never renders `<Video>` ships neither the component nor video.js. It is still in `dependencies` +
+    tsup `external` so the dynamic import resolves at the consumer's install. video.js 8 self-types
+    (no `@types`); the option/player types are derived from `typeof import('video.js')` so there is no
+    static reference to pull the module in.
+  - **The skin ships as a CSS file - Canopy's first.** video.js renders its control bar with
+    structural `.vjs-*` classes emitted at runtime, which the consumer's Tailwind `@source` scan can
+    **never** see - the same constraint as "keyframed motion ships from the preset, not `@source`."
+    So the skin ships as **`@rogueoak/canopy/video.css`** (a new package export + `files` entry, plain
+    CSS, no build step), which the consumer imports after video.js's own base CSS. It restyles the
+    `.vjs-*` classes using **only Canopy semantic ROLE vars** (`var(--color-primary)`,
+    `--color-surface-raised`, `--color-ring`, ...; translucency via `color-mix(... transparent)` over a
+    role var, never `rgba()` of a literal). Because those role vars are the exact seam `.dark` and a
+    consumer brand (`buildBrand()`, spec 0028, or a runtime `:root` override) re-point, the player
+    themes light/dark AND **adopts a consumer's brand override automatically**, with zero change to the
+    skin or component. A test guards `video.css` against any hex, `.dark` selector, or primitive-ramp
+    var, and asserts every colour var it uses is a known role token - so the brand-override guarantee
+    can't silently regress. The lean props map onto video.js options (explicit props win over the
+    `options` passthrough; `options` fills / can override defaults for the rest); `onReady(player)` is
+    the escape hatch for anything advanced. Storybook is the reference consumer (its `tailwind.css`
+    imports both stylesheets); the README documents the two-import seam.
 
 ## Showcase + theming (Storybook)
 

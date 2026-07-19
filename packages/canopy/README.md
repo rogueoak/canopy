@@ -28,7 +28,7 @@ reverse.
 | `@rogueoak/canopy`          | the package root re-export               |
 | `@rogueoak/canopy/seeds`    | **Seeds** (atoms) - 18 components        |
 | `@rogueoak/canopy/twigs`    | **Twigs** (molecules) - 14 components    |
-| `@rogueoak/canopy/branches` | **Branches** (organisms) - 26 components |
+| `@rogueoak/canopy/branches` | **Branches** (organisms) - 27 components |
 
 ```tsx
 import { Button } from '@rogueoak/canopy/seeds';
@@ -123,6 +123,7 @@ composition + token styling.
 | `Tabs`             | Tab switcher with roving focus and arrow navigation.                 |
 | `Toast`            | Transient notifications with auto-dismiss and a `useToast` hook.     |
 | `TopNav`           | Responsive top navigation bar (composes NavigationMenu).             |
+| `Video`            | video.js player, token-skinned controls (needs two stylesheets).     |
 
 ## Wiring the styles (Tailwind v4)
 
@@ -144,6 +145,33 @@ emits its utilities into _your_ build:
 
 See [`@rogueoak/roots`](https://www.npmjs.com/package/@rogueoak/roots) for the token imports,
 fonts, and the `dark` theming toggle.
+
+### `Video` needs two extra stylesheets
+
+The `Video` Branch wraps [video.js](https://videojs.com), whose control bar is styled by
+structural `.vjs-*` classes that Tailwind's `@source` scan can never see. So - unlike every other
+component - `Video` needs two stylesheets imported once, in this order (video.js's base skin first,
+then the Canopy skin so it overrides):
+
+```css
+@import 'video.js/dist/video-js.css';
+@import '@rogueoak/canopy/video.css';
+```
+
+The Canopy skin references only Canopy's semantic **role** tokens (`--color-primary`,
+`--color-surface-raised`, ...), so the player themes light/dark automatically and **adopts your
+brand override for free** - if you re-point those roles (via `@rogueoak/roots` `buildBrand()` or
+your own `:root { --color-*: ... }`), the video controls re-colour with no further work.
+
+```tsx
+import { Video } from '@rogueoak/canopy/branches';
+
+<Video src="https://example.com/clip.mp4" poster="/poster.jpg" />;
+```
+
+video.js is loaded lazily (a dynamic import on mount), so it stays out of your initial bundle and a
+page that never renders `<Video>` ships none of it. Reach the raw player through `onReady={(player)
+=> ...}` and pass any video.js option through `options={{ ... }}`.
 
 ## License
 
