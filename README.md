@@ -259,8 +259,9 @@ Layout:
 
 ## Roadmap
 
-Built foundation-first, so there's **always working software and working docs** at each step.
-**1.0.0** ships the full component library - Roots, Seeds, Twigs, and Branches - to npm:
+Built foundation-first, so there's **always working software and working docs** at each step. The
+full component library - Roots, Seeds, Twigs, and Branches - shipped in **1.0.0**; **1.3.0** is the
+current release (see the [changelog](CHANGELOG.md)):
 
 - [x] **Roots** - tokens: palette, typography, spacing, radii, elevation, motion; light & dark theming
 - [x] **Seeds** - the atoms; all 18 are live
