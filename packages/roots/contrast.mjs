@@ -153,9 +153,10 @@ export const resolveCanopyDefaults = (tokensCss) => {
  *   Optional: without it, pairs touching an omitted role are simply skipped (no fallback to check
  *   against).
  *
- * Returns `{ failures, missingLight, missingDark, identicalDark }`. Empty `failures` +
- * `identicalDark` == the brand is AA-safe (in both themes, for both its overrides and the effective
- * override/inherited combinations). Resolution chases `var(--x)` references to a hex literal.
+ * Returns `{ failures, missingLight, missingDark, identicalDark }`. Empty `failures` == the brand
+ * is AA-safe (in both themes, for both its overrides and the effective override/inherited
+ * combinations). `identicalDark` is ADVISORY - see below. Resolution chases `var(--x)` references
+ * to a hex literal.
  */
 // The one role deliberately theme-invariant: a near-black accent foreground that reads on the
 // accent fill in BOTH themes, so its dark override legitimately equals its light value. Mirrors
@@ -195,10 +196,12 @@ export const checkBrandCss = (
   const missingLight = requiredRoles.filter((r) => light[r] == null);
   const missingDark = requiredRoles.filter((r) => dark[r] == null);
 
-  // A dark override that resolves to the SAME hex as light is usually a copy-paste slip - the role
-  // would look identical across themes (a light palette rendered in dark mode). Only roles the brand
-  // declares in BOTH blocks are checked; an omitted role inherits its (already-distinct) Canopy
-  // default and is not the brand's to guard.
+  // A dark override that resolves to the SAME hex as light is OFTEN a copy-paste slip - the role
+  // would look identical across themes (a light palette rendered in dark mode). It is reported so
+  // that slip stays visible, but it is ADVISORY, never fatal for a brand: sameness across themes is
+  // a legitimate design choice (a deep status fill that stays deep in dark), and legibility is
+  // already guaranteed by AA_PAIRS. Only roles the brand declares in BOTH blocks are checked; an
+  // omitted role inherits its (already-distinct) Canopy default and is not the brand's to guard.
   const identicalDark = requiredRoles.filter(
     (r) =>
       light[r] != null &&

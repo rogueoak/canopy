@@ -727,3 +727,21 @@ ancestor's flex/grid, put the layout on an element you actually control and rend
 *list* the flex container - `flex flex-col md:flex-row`), and never assume a straight parent-child
 line through a primitive that may inject a box. Layout can't be unit-tested in jsdom, so pair the fix
 with a class-level regression guard (assert the list carries the flex classes, not `contents`).
+
+## Separate correctness gates from smell detectors, and give them different severities
+
+`buildBrand()` failed a consumer brand whose dark status fills equalled its light ones, even though
+every pair passed WCAG AA in both themes (feedback 0023). Two unlike claims had been fused into one
+failure path: contrast is a *correctness* property (objectively wrong when violated), while "dark
+differs from light" is a *heuristic* proxy for intent - usually a copy-paste slip, sometimes a
+deliberate choice, and the tool cannot tell which. Making the heuristic fatal enforced a house style
+as if it were an accessibility standard, and the brand author's only way through was to nudge a
+colour step until the check went quiet - degrading the design while leaving the real smell
+undetected next time.
+
+**Apply it:** put objectively-wrong properties in the failure path and usually-wrong patterns in the
+warning path, where they stay visible without being a veto. The tell that you have fused them is a
+**hardcoded allowlist of exceptions** (here `THEME_INVARIANT_ROLES`): an exception list is evidence
+the rule is heuristic, and a heuristic that ships with known-good exceptions should warn, not block.
+A rule can also be strict in one scope and advisory in another - Canopy's own tokens keep the hard
+version, since there a theme-invariant role really would be a slip; consumer brands get the warning.

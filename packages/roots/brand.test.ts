@@ -152,19 +152,31 @@ describe('Brand pipeline - a broken brand fails the build', () => {
     ).rejects.toThrow(/AA failures/);
   });
 
-  it('rejects a copy-pasted dark theme (dark identical to light)', async () => {
-    // Reusing the LIGHT semantic file as the dark file: full coverage, AA still passes (the light
-    // palette is legible), but it renders the light palette in dark mode - the copy-paste slip the
-    // core guards too (feedback 0004 / 0010).
-    await expect(
-      buildBrand({
-        name: 'sunset',
-        primitives: sunset('primitive.json'),
-        semantic: sunset('semantic.json'),
-        semanticDark: sunset('semantic.json'),
-        outFile: join(brokenDir, 'copy.css'),
-      }),
-    ).rejects.toThrow(/identical to light/);
+  it('allows a dark theme identical to light, but reports it', async () => {
+    // Reusing the LIGHT semantic file as the dark file: full coverage, AA passes (the light palette
+    // is legible in both blocks). Sameness across themes is a design choice, not a legibility
+    // break, so it BUILDS - and is surfaced in `warnings.identicalDark` so a genuine copy-paste
+    // slip stays visible.
+    const res = await buildBrand({
+      name: 'sunset',
+      primitives: sunset('primitive.json'),
+      semantic: sunset('semantic.json'),
+      semanticDark: sunset('semantic.json'),
+      outFile: join(brokenDir, 'copy.css'),
+    });
+    expect(res.warnings.identicalDark).toContain('color-primary');
+    expect(existsSync(join(brokenDir, 'copy.css'))).toBe(true);
+  });
+
+  it('reports no identicalDark warning for a brand that themes properly', async () => {
+    const res = await buildBrand({
+      name: 'sunset',
+      primitives: sunset('primitive.json'),
+      semantic: sunset('semantic.json'),
+      semanticDark: sunset('semantic.dark.json'),
+      outFile: join(brokenDir, 'proper.css'),
+    });
+    expect(res.warnings.identicalDark).toEqual([]);
   });
 
   it('rejects a flat-hex dark override (must reference a primitive)', async () => {

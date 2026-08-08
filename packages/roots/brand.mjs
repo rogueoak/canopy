@@ -139,11 +139,15 @@ export async function buildBrand({
     const css = readFileSync(lightSidecarPath, 'utf8') + readFileSync(darkSidecarPath, 'utf8');
 
     // Validate BEFORE writing: AA in both themes (for the brand's overrides AND the effective
-    // override/inherited-default combinations), and each dark override distinct from its light.
-    // A brand may map any subset of roles - what it omits inherits the Canopy default, so an
-    // omission is fine but a legibility break against that default is NOT. Writing only on success
-    // means a failed build leaves no shippable file behind (the "a broken brand can't ship"
-    // contract).
+    // override/inherited-default combinations). A brand may map any subset of roles - what it
+    // omits inherits the Canopy default, so an omission is fine but a legibility break against
+    // that default is NOT. Writing only on success means a failed build leaves no shippable file
+    // behind (the "a broken brand can't ship" contract).
+    //
+    // Legibility is the ONLY shippability bar. A dark value equal to its light value is reported
+    // as a warning, not a failure: a brand may deliberately want a role to read the same in both
+    // themes (a deep status fill that stays deep in dark, say), and AA already guarantees it is
+    // legible there.
     const { roles, defaults } = canopyContract();
     const { failures, missingLight, missingDark, identicalDark } = checkBrandCss(css, {
       lightSelector,
@@ -152,14 +156,12 @@ export async function buildBrand({
       defaults,
     });
     const problems = [];
-    if (identicalDark.length)
-      problems.push(`dark override identical to light (copy-paste?): ${identicalDark.join(', ')}`);
     if (failures.length) problems.push(`AA failures:\n  ${failures.join('\n  ')}`);
     if (problems.length) {
       throw new Error(
-        `Brand "${name}" is not shippable - each dark override must differ from its light value, ` +
-          `and every role pair must meet WCAG AA in light AND dark (an omitted role is validated ` +
-          `against the Canopy default it inherits):\n${problems.join('\n')}`,
+        `Brand "${name}" is not shippable - every role pair must meet WCAG AA in light AND dark ` +
+          `(an omitted role is validated against the Canopy default it inherits):\n` +
+          `${problems.join('\n')}`,
       );
     }
 
@@ -170,6 +172,11 @@ export async function buildBrand({
       roles,
       inherited: { light: missingLight, dark: missingDark },
       selectors: { light: lightSelector, dark: darkSelector },
+      // Roles whose dark value equals their light value. Reported, never fatal: a brand may
+      // legitimately want a role to read the same in both themes, and legibility is already
+      // guaranteed by the AA guard above. Callers surface it so a real copy-paste slip is still
+      // visible.
+      warnings: { identicalDark },
     };
   } finally {
     // Always drop the sidecars, even on a thrown validation error.
