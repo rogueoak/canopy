@@ -1,0 +1,41 @@
+{
+  "projectId": "786399f5-2306-4a41-b8ef-5a8f7c0b8033",
+  "shape": "storybook",
+  "pkg": "@rogueoak/canopy",
+  "storybookConfigDir": "apps/storybook/.storybook",
+  "storybookStatic": ".design-sync/sb-reference",
+  "buildCmd": "pnpm -F \"@rogueoak/canopy...\" build",
+  "readmeHeader": ".design-sync/conventions.md",
+  "libOverrides": {
+    "dts.mjs": "union component/JSDoc discovery across the exports-map subpath .d.ts entries (seeds/twigs/branches); stock reader sees only the main entry",
+    "css-fallback.mjs": "Vite/Tailwind v4 injects the preview stylesheet via JS (no iframe <link>); fall back to the compiled assets/*.css"
+  },
+  "titleMap": {
+    "Chart": "ChartContainer",
+    "Resizable": "ResizablePanelGroup",
+    "Catalog": null,
+    "Foundations": null
+  },
+  "extraEntries": [
+    "@rogueoak/canopy/seeds",
+    "@rogueoak/canopy/twigs",
+    "@rogueoak/canopy/branches"
+  ],
+  "overrides": {
+    "Accordion": { "cardMode": "column" },
+    "Carousel": { "cardMode": "column" },
+    "ChartContainer": { "cardMode": "column" },
+    "DataTable": { "cardMode": "column" },
+    "ResizablePanelGroup": { "cardMode": "column" },
+    "Table": { "cardMode": "column" },
+    "Tabs": { "cardMode": "column" },
+    "TopNav": { "cardMode": "column" },
+    "Alert": { "cardMode": "column" },
+    "Empty": { "cardMode": "column" },
+    "FieldSet": { "cardMode": "column" },
+    "Item": { "cardMode": "column" },
+    "Pagination": { "cardMode": "column" },
+    "Toast": { "cardMode": "single", "primaryStory": "Playground", "skip": ["branches-toast--variants"] },
+    "Video": { "cardMode": "single", "primaryStory": "WithPoster" }
+  }
+}
