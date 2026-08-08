@@ -14,3 +14,7 @@ docs/
 AGENTS.md
 CLAUDE.md
 GEMINI.md
+
+# design-sync tooling state - config, converter forks, owned previews, and notes
+# regenerated/authored by the /design-sync skill; not subject to Prettier.
+.design-sync/
