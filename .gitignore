@@ -16,3 +16,12 @@ storybook-static/
 *.swp
 
 .playwright-mcp
+
+# design-sync transient artifacts (durable set under .design-sync/ stays tracked)
+.design-sync/sb-reference/
+.design-sync/learnings/
+.design-sync/.cache/
+.design-sync/node_modules
+.design-sync/*.log
+.ds-sync/
+ds-bundle/
