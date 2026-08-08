@@ -47,7 +47,7 @@ const run = async () => {
   const primitives = (
     Array.isArray(config.primitives) ? config.primitives : [config.primitives]
   ).map(rel);
-  const { outFile, roles, inherited } = await buildBrand({
+  const { outFile, roles, inherited, warnings } = await buildBrand({
     name: config.name,
     primitives,
     semantic: rel(config.semantic),
@@ -58,6 +58,13 @@ const run = async () => {
   const mapped = roles.length - inherited.light.length;
   const inheritedNote =
     inherited.light.length > 0 ? `, ${inherited.light.length} inherited from Canopy` : '';
+  if (warnings.identicalDark.length) {
+    console.warn(
+      `roots-brand: note - dark value equals light for: ${warnings.identicalDark.join(', ')}. ` +
+        `Intentional for a role meant to read the same in both themes; otherwise check for a ` +
+        `copy-paste slip.`,
+    );
+  }
   console.log(
     `roots-brand: wrote ${outFile} (${mapped}/${roles.length} semantic roles mapped${inheritedNote}, AA verified in light + dark).`,
   );

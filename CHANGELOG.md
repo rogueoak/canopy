@@ -4,6 +4,19 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 1.3.0 - 2026-08-08
+
+### Changed
+
+- **Brand pipeline** - a dark value that equals its light value no longer fails the build. It is
+  reported instead, as `warnings.identicalDark` on the `buildBrand()` result and as a note printed
+  by the `roots-brand` CLI. WCAG AA remains the only shippability bar (alongside the flat-hex dark
+  check), so a brand can now deliberately keep a role reading the same in both themes - a deep
+  status fill that stays deep in dark, say - as long as it is legible there. Previously such a
+  brand had to shift to a colour step it did not want purely to make the two values unequal.
+  Canopy's own core tokens keep the strict rule, where a theme-invariant role really would be a
+  copy-paste slip. Backwards compatible: every brand that built before still builds. (feedback 0023)
+
 ## 1.2.0 - 2026-07-19
 
 ### Added

@@ -89,10 +89,15 @@ Pass `scope: 'sunset'` to emit `.sunset { ... }` + `.sunset.dark { ... }` instea
 a brand to a subtree (`<div class="sunset">`) rather than the whole document.
 
 The pipeline reuses Canopy's OWN Style Dictionary formats and its WCAG AA guard. `buildBrand()`
-THROWS - failing your build - if any role/state pair breaks AA in either theme, if a dark override
-resolves to the SAME value as its light value (a copy-paste guard), or if a dark override is a flat
-hex instead of a primitive reference. So a brand can't ship an illegible or accidentally
-light-in-dark theme.
+THROWS - failing your build - if any role/state pair breaks AA in either theme, or if a dark
+override is a flat hex instead of a primitive reference. So a brand can't ship an illegible theme.
+
+**Legibility is the only shippability bar.** A dark override that resolves to the same value as its
+light one is _reported_, in `warnings.identicalDark`, but does not fail the build. Sameness across
+themes is a design decision - a deep status fill that stays deep in dark, say - and AA has already
+proven it legible there. The warning exists so a genuine copy-paste slip stays visible; the
+`roots-brand` CLI prints it. (Canopy's own core tokens are held to the stricter rule, since a
+theme-invariant role there really would be a slip.)
 
 **Partial brands.** You do NOT have to map every role. Map only the roles you want to change (a
 brand that re-points just `primary` and the neutrals is common); every role you omit keeps Canopy's
