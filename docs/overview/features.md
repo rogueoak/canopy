@@ -668,6 +668,52 @@ to the Canopy tokens, and the first component to **ship a stylesheet**.
   `onReady`, precedence) per the "test your own mapping, not the library" learning, plus the skin
   drift / brand-override guards.
 
+## Branches: Audio (0071)
+
+The sound-player Branch - a [howler.js](https://howlerjs.com) player built entirely out of Canopy's
+own parts, and the counterpart to Video: where Video ships a stylesheet, Audio **ships nothing
+extra**.
+
+- **Audio** (`@rogueoak/canopy/branches`) - play/pause, skip back, skip forward, and a **scrubbable
+  progress bar**, stacked: the bar on top, elapsed / total time beneath it, transport controls
+  centred below. Lean props for the common case - `src` (a string or howler's fallback array),
+  `format`, `autoplay`, `loop`, `volume`, `preload`, `html5`, and the two **independent** skip
+  intervals `skipBackSeconds` / `skipForwardSeconds` (each defaulting to 10, so the podcast
+  convention of back-15 / forward-30 needs no new component) - plus an `options` passthrough (raw
+  howler config), `onReady(howl)` (the instance escape hatch), and `onPlay` / `onPause` / `onEnd`.
+  Explicit props win over `options`. It owns the lifecycle: creates the `Howl` on mount, rebuilds it
+  when the source changes, applies live `volume` / `loop` changes through the instance rather than
+  by rebuilding, and **unloads it on unmount** - an un-unloaded `Howl` would keep playing with no
+  element left to stop it.
+- **No stylesheet, no extra wiring.** howler is a playback engine with **no DOM and no CSS**, so
+  unlike Video there is nothing to skin: Canopy renders every element itself from the `Button` and
+  `Slider` Seeds plus full-literal token utilities the consumer's existing `@source` already emits.
+  A consumer who has Canopy set up gets `Audio` for free, and it themes light/dark and re-colours
+  under a brand override through the same seam as every other component.
+- **Lazy-loaded.** `import('howler')` on mount - howler touches `window` at module scope, so this
+  keeps it client-only (SSR-safe) as well as out of the initial bundle. `howler` is in
+  `dependencies` + tsup `external`; **`@types/howler` is a dependency too**, because howler ships no
+  bundled types and `Howl` / `HowlOptions` reach the public surface.
+- **Position without a `timeupdate` event.** howler has none, so position is polled on a
+  `requestAnimationFrame` loop that runs **only while playing** - started on `play`, cancelled on
+  `pause` / `stop` / `end` / unmount. The bar renders **disabled** until the duration is known,
+  rather than looking draggable and doing nothing, and a scrub in progress suppresses the loop so
+  the thumb follows the drag instead of being yanked back.
+- **Accessible by construction.** Every control is keyboard operable; each button's label is built
+  from the interval it acts on, so a changed `skipForwardSeconds` can never leave the label lying;
+  and the scrub thumb announces **`aria-valuetext` as formatted time** (`2:22`, not `142`). That
+  added one small backwards-compatible capability to the **`Slider` Seed** - `aria-valuetext` now
+  forwards to a single thumb, alongside the labelling attributes it already forwarded.
+- **Media caveats, documented in the README** - long files want `html5` (the default Web Audio path
+  buffers the whole clip first), and that path fetches by XHR so a cross-origin source needs CORS;
+  `html5` is the fix for both.
+- **Stories** - a `Branches/Audio` section: Playground, podcast skip intervals, long-file streaming,
+  full-width, a **brand-override** demo, and a dark example. **Tests** mock howler and assert the
+  mapping and behaviour Canopy owns (built options and precedence, the seek arithmetic **clamped at
+  both ends**, distinct skip intervals, commit-not-drag seeking, the loop's start/stop, `unload` on
+  unmount, the events, time formatting, and keyboard operation) per the "test your own mapping, not
+  the library" learning.
+
 ## npm publishing (0023)
 
 Releases now **publish to npm**, driven by git tags - a tag _is_ the release.

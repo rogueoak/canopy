@@ -335,9 +335,9 @@ TanStack Table / react-day-picker / date-fns / input-otp / react-resizable-panel
 Testing Library + `user-event` (jsdom) drive the component tests.
 
 As of **1.0.0** all four tiers are feature-complete: **18 Seeds**, **14 Twigs**, and **26
-Branches** (58 components), each on the same **cva + `cn()` + Radix** recipe below. (**Video**, spec
-0070, adds a **27th Branch** post-1.0.0 - the media player wrapping video.js; see the Branches
-recipe.) The Seeds layer
+Branches** (58 components), each on the same **cva + `cn()` + Radix** recipe below. (Two media
+Branches land post-1.0.0: **Video**, spec 0070, the **27th**, wrapping video.js; and **Audio**, spec
+0071, the **28th**, wrapping howler.js. See the Branches recipe.) The Seeds layer
 is the atoms (Button through Keyboard, plus Progress / Slider / Toggle from 0037-0039); two of them
 are **portalled** on `surface-raised` (Select, then Tooltip), establishing the raised-surface
 pattern that introduced the `muted-raised` token above. All refs type with `React.ComponentRef`
@@ -632,6 +632,43 @@ themed by the layers it composes and the tokens already provisioned.
     `options` passthrough; `options` fills / can override defaults for the rest); `onReady(player)` is
     the escape hatch for anything advanced. Storybook is the reference consumer (its `tailwind.css`
     imports both stylesheets); the README documents the two-import seam.
+
+- **The headless-library counterpart (Audio, spec 0071).** The 28th Branch wraps **howler.js**, and
+  it is worth reading directly against Video because the two show the **two shapes a third-party
+  media library can take**, and the boundary they force:
+  - **video.js IS a UI.** It builds a control bar in the DOM, so Canopy's job was a **skin**, and
+    the skin had to ship as a **file** (`video.css`) because Tailwind's scanner can never see
+    classes a library emits at runtime.
+  - **howler renders NOTHING.** It is a pure playback engine (load/play/pause/seek/volume/events)
+    with no DOM and no CSS, so Canopy owns the **entire UI** and builds it from the ordinary
+    recipe - the `Button` and `Slider` Seeds plus full-literal token utilities the consumer's
+    existing `@source` already emits. **No new package export, no stylesheet, no new consumer
+    wiring.**
+
+  So `video.css` stays a **video.js-specific exception, not the media pattern**: a shipped
+  stylesheet is the answer to *a library that renders its own DOM*, not to *media*. The general rule
+  is the one already in learnings - ship CSS only for what the scanner cannot see.
+
+  Three things Canopy owns here that it inherited from video.js in 0070:
+  - **The position clock.** howler has **no `timeupdate` event**, so position is polled on a
+    `requestAnimationFrame` loop. The loop is started by the `play` event and cancelled on `pause`,
+    `stop`, `end`, and unmount, so an idle player burns no frames - guarded by a test, since an
+    always-on rAF is the easy mistake and is invisible until a page embeds several players.
+  - **The accessibility.** Labels are built from the values they act on (`Skip back 10 seconds`
+    derives from `skipBackSeconds`), and the scrub thumb carries **`aria-valuetext` as formatted
+    time** - a seek bar's raw `aria-valuenow` announces "one hundred forty two" for 2:22. That
+    required a small additive change to the **`Slider` Seed**: forward `aria-valuetext` to the
+    single thumb alongside the `aria-label` / `aria-labelledby` it already forwards (Radix forwards
+    no native props to thumbs). It stays single-thumb only for the same reason the label does - a
+    range's two thumbs hold two values, so one shared text would misreport one of them.
+  - **Teardown that actually matters.** An un-unloaded `Howl` keeps **playing after the component is
+    gone**, with no visible element left to stop it, so cleanup calls `off()` then `unload()`.
+
+  `howler` is in `dependencies` + tsup `external` and loaded by a dynamic `import('howler')` (it
+  touches `window` at module scope, so it must stay client-only). **`@types/howler` is in
+  `dependencies`, not `devDependencies`** - howler ships no bundled types (where it differs from
+  video.js) and the public surface leaks `Howl` / `HowlOptions` into the emitted `.d.ts`, so a
+  consumer needs them to typecheck.
 
 ## Showcase + theming (Storybook)
 

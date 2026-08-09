@@ -4,6 +4,39 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 1.5.0 - 2026-08-09
+
+### Added
+
+- **Audio** - a new Branch: a basic audio player with play/pause, skip back, skip forward, and a
+  scrubbable progress bar, stacked with the bar over the elapsed / total time and the transport
+  controls below. It wraps [howler.js](https://howlerjs.com) for playback and is built from Canopy's
+  own `Button` and `Slider` Seeds, so - unlike `Video` - it needs **no stylesheet and no extra
+  wiring**: if Canopy is set up, `Audio` works, themes light/dark, and adopts a brand override like
+  every other component. The two skip intervals are independent props (`skipBackSeconds`,
+  `skipForwardSeconds`, both defaulting to 10), so the podcast convention of back-15 / forward-30
+  needs no new component. Keyboard operable throughout, and the scrub bar announces its position as
+  a time (`2:22`) rather than a raw second count. Reach the `Howl` through `onReady` and pass any
+  howler option through `options`. Note two things about the media: long files want `html5` (the
+  default Web Audio path buffers the whole clip first), and that path needs CORS on a cross-origin
+  source - `html5` fixes both. (spec 0071)
+- **Video** - the media-player Branch, a [video.js](https://videojs.com) player with its control bar
+  fully skinned to the Canopy tokens, shipped as `@rogueoak/canopy/video.css`. Lean props for the
+  common case plus an `options` passthrough and `onReady(player)`; fluid and responsive by default;
+  video.js is loaded lazily so it stays out of your initial bundle. The skin references only
+  semantic role tokens, so the controls theme light/dark and re-colour under a brand override with
+  no component change. Wiring is two stylesheet imports, documented in the package README. (spec
+  0070 - shipped earlier but missed in the release notes at the time, recorded here)
+
+### Changed
+
+- **Slider** - `aria-valuetext` now forwards to the thumb on a single-value slider, alongside the
+  `aria-label` / `aria-labelledby` that already did. Radix puts a raw `aria-valuenow` on the thumb,
+  which is the wrong announcement whenever the value maps to something else - a media position, a
+  rating, a named step - so a caller that knows the human form of its value can now supply it.
+  Additive and backwards compatible; range sliders are unchanged, since their two thumbs hold two
+  values and one shared text would misreport one of them.
+
 ## 1.4.0 - 2026-08-09
 
 ### Removed

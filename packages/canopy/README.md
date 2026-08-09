@@ -28,7 +28,7 @@ reverse.
 | `@rogueoak/canopy`          | the package root re-export               |
 | `@rogueoak/canopy/seeds`    | **Seeds** (atoms) - 18 components        |
 | `@rogueoak/canopy/twigs`    | **Twigs** (molecules) - 14 components    |
-| `@rogueoak/canopy/branches` | **Branches** (organisms) - 27 components |
+| `@rogueoak/canopy/branches` | **Branches** (organisms) - 28 components |
 
 ```tsx
 import { Button } from '@rogueoak/canopy/seeds';
@@ -99,6 +99,7 @@ composition + token styling.
 | ------------------ | -------------------------------------------------------------------- |
 | `Accordion`        | Multi-section inline disclosure (single/multiple expansion).         |
 | `AlertDialog`      | Blocking confirmation modal for destructive actions.                 |
+| `Audio`            | howler.js player - play/pause, skip, scrubbable progress bar.        |
 | `Calendar`         | Month grid with single/range/multiple selection and keyboard nav.    |
 | `Carousel`         | Draggable, snapping item carousel with prev/next controls.           |
 | `Chart`            | recharts wrapper with token-driven colours and styled tooltip.       |
@@ -172,6 +173,32 @@ import { Video } from '@rogueoak/canopy/branches';
 video.js is loaded lazily (a dynamic import on mount), so it stays out of your initial bundle and a
 page that never renders `<Video>` ships none of it. Reach the raw player through `onReady={(player)
 => ...}` and pass any video.js option through `options={{ ... }}`.
+
+### `Audio` needs nothing extra
+
+Worth stating, because the neighbouring `Video` section might suggest otherwise: `Audio` needs **no
+stylesheet and no extra wiring**. It wraps [howler.js](https://howlerjs.com), which is a playback
+engine with no DOM of its own, so Canopy renders every element itself out of the same Seeds and
+token utilities as the rest of the library. The `@source` line above is all it needs.
+
+```tsx
+import { Audio } from '@rogueoak/canopy/branches';
+
+<Audio src="https://example.com/episode.mp3" skipBackSeconds={15} skipForwardSeconds={30} />;
+```
+
+Play/pause, skip back, skip forward, and a scrubbable progress bar, keyboard operable throughout.
+The two skip intervals default to 10 seconds and are set independently. Reach the raw `Howl`
+through `onReady={(howl) => ...}` and pass any howler option through `options={{ ... }}`.
+
+Two things to know about the media itself:
+
+- **Long files want `html5`.** howler's default Web Audio path buffers the whole clip before it
+  plays, so anything podcast-length should set `html5` to stream through an HTML5 Audio element
+  instead.
+- **The default path needs CORS.** Web Audio fetches the media by XHR, so a cross-origin source
+  must send `Access-Control-Allow-Origin`. `html5` does not go through XHR, so it is also the fix
+  for a cross-origin file that refuses to load.
 
 ## License
 
