@@ -43,7 +43,7 @@ describe('SubscribeForm', () => {
     expect(screen.getByRole('textbox', { name: 'Name (optional)' })).toBeInTheDocument();
   });
 
-  it('collects { email, name, company } and calls onSubscribe once on submit', async () => {
+  it('collects { email, name } and calls onSubscribe once on submit', async () => {
     const user = userEvent.setup();
     const onSubscribe = vi.fn().mockResolvedValue(undefined);
     render(<SubscribeForm source="blog_index" alwaysShowName onSubscribe={onSubscribe} />);
@@ -56,7 +56,6 @@ describe('SubscribeForm', () => {
     expect(onSubscribe).toHaveBeenCalledWith({
       email: 'reader@example.com',
       name: 'Ada Lovelace',
-      company: '',
     });
   });
 

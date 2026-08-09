@@ -622,7 +622,7 @@ Consolidates two near-identical app copies (matthewmaynes + rogueoak) into one s
   focused then animates open (horizontal grow at `sm+`, vertical below, `motion-reduce`-safe, out of
   the tab order + a11y tree while collapsed; `alwaysShowName` starts it revealed). It owns a
   `Status` state machine (`idle | submitting | success | error`): on submit it collects
-  `{ email, name, company }` (the last is the honeypot), calls `onSubscribe(values)`, and reflects
+  `{ email, name }`, calls `onSubscribe(values)`, and reflects
   the result - a resolve renders a success `Card` (a confirmation badge with an inline
   `currentColor` check SVG + a copy slot), a reject renders an inline `role="alert"` with the
   rejected error's `.message`. Composes the `Card` / `FormField` Twigs and `Button` / `Input` Seeds.

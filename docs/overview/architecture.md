@@ -592,7 +592,7 @@ themed by the layers it composes and the tokens already provisioned.
   + prop-type unions; the internal parts are not exported.
 - **Transport-agnostic-by-injection Branch (SubscribeForm, spec 0035).** The first Branch that does
   **I/O by injection**: an email-capture box that owns the UI, a `submit/success/error` state machine,
-  the progressive optional-Name reveal, the honeypot, and the a11y wiring - but does **no** network
+  the progressive optional-Name reveal, and the a11y wiring - but does **no** network
   I/O and imports **no** analytics SDK. The consumer passes `onSubscribe(values) => Promise<void>`
   (the submit; resolve = success, reject = failure, whose `.message` is shown and `.reason` fed to
   analytics) and an optional `onEvent(phase, props)` (analytics phases `submitted`/`succeeded`/

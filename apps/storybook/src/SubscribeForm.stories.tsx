@@ -3,8 +3,8 @@ import { SubscribeForm } from '@rogueoak/canopy/branches';
 
 /**
  * Branches/SubscribeForm - an email-capture Branch (spec 0035): a themed subscribe box with an
- * optional Name field that reveals on email focus, a submit/success/error state machine, a
- * honeypot, and a success card. It is the first **transport-agnostic by injection** Branch -
+ * optional Name field that reveals on email focus, a submit/success/error state machine, and a
+ * success card. It is the first **transport-agnostic by injection** Branch -
  * Canopy owns the UI, state, and a11y, but does no network I/O and knows nothing about any
  * analytics SDK: the consumer supplies `onSubscribe` (the submit) and, optionally, `onEvent`
  * (analytics).
