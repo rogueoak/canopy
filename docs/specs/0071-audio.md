@@ -266,6 +266,24 @@ reach for, the parallel with `Video` is the whole point, and a module that impor
 - **Footprint:** howler is a single dependency-free file, roughly 10x lighter than video.js and
   with no transitive tree at all. The dependency cost is genuinely small; the lazy import is for
   SSR safety and initial-bundle hygiene rather than weight.
+- **Build-vs-buy, stated rather than assumed.** Every capability in this spec's In-scope list is
+  reachable from the native `HTMLMediaElement` - including a real `timeupdate` event, which would
+  delete the `requestAnimationFrame` loop this spec calls the easy mistake. What howler buys is the
+  Web Audio path, format fallback, sprites, fades, and pooling, and most of that sits in the Out
+  list today. howler was the developer's explicit choice, and it is a defensible one for a
+  component expected to grow (rate control, fades, and multi-clip work are where a raw `<audio>`
+  starts costing), but the trade is worth naming.
+  It is not free to reverse: `Howl` and `HowlOptions` are part of the published `AudioProps`, so
+  swapping engines later is a **breaking major**. If that risk is unwanted, the exit is to stop
+  exposing howler's types - replace `onReady(howl)` and the `options` passthrough with a
+  Canopy-owned surface - and that is cheaper to do now than after consumers depend on them.
+- **Upstream maintenance (worth knowing).** `howler@2.2.4` is the current latest and was published
+  **2023-09-19** - no release in nearly three years, in a design system's runtime `dependencies`.
+  The library is small, dependency-free, and feature-stable, so quiet is not the same as abandoned,
+  and the lack of a transitive tree keeps the supply-chain surface near zero. But it means no
+  upstream fix should be assumed: a browser-behaviour regression would need a patch from us. Recorded
+  here rather than treated as a blocker, since the security persona is disabled in this repo and the
+  dependency accounting is this spec's job in its place.
 
 ### Testing strategy (jsdom)
 
