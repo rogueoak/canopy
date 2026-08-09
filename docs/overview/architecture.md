@@ -335,9 +335,10 @@ TanStack Table / react-day-picker / date-fns / input-otp / react-resizable-panel
 Testing Library + `user-event` (jsdom) drive the component tests.
 
 As of **1.0.0** all four tiers are feature-complete: **18 Seeds**, **14 Twigs**, and **26
-Branches** (58 components), each on the same **cva + `cn()` + Radix** recipe below. (Two media
-Branches land post-1.0.0: **Video**, spec 0070, the **27th**, wrapping video.js; and **Audio**, spec
-0071, the **28th**, wrapping howler.js. See the Branches recipe.) The Seeds layer
+Branches** (58 components), each on the same **cva + `cn()` + Radix** recipe below. (Three media
+Branches land post-1.0.0: **Video**, spec 0070, the **27th**, wrapping video.js; **Audio**, spec
+0071, the **28th**, wrapping howler.js; and **AudioRecorder**, spec 0072, the **29th**, on the
+platform's own capture APIs with no library at all. See the Branches recipe.) The Seeds layer
 is the atoms (Button through Keyboard, plus Progress / Slider / Toggle from 0037-0039); two of them
 are **portalled** on `surface-raised` (Select, then Tooltip), establishing the raised-surface
 pattern that introduced the `muted-raised` token above. All refs type with `React.ComponentRef`
@@ -689,6 +690,42 @@ themed by the layers it composes and the tokens already provisioned.
   may still *name* the engine while explaining why it is not exposed. `test` depends on `build` in
   `turbo.json`, so the file is present and current. This is the same shape as the `video.css` drift
   guard: state the invariant, then make it a build failure.
+
+- **Capture, and the boundary a device permission draws (AudioRecorder, spec 0072).** The 29th
+  Branch completes the media set, and it is structurally different from both of its neighbours:
+  there is **no third-party library at all**. `MediaRecorder`, `getUserMedia`, and `AudioContext`
+  are platform APIs, so nothing entered `dependencies` and nothing entered tsup's `external`.
+
+  That removes the supply-chain question and, deliberately, **not** the encapsulation one. The
+  0071 rule is applied to a platform API rather than a library: an `onReady(mediaRecorder)` or a
+  raw `MediaRecorderOptions` passthrough would put the browser's vocabulary in Canopy's published
+  API, and every consumer reaching through it would bind to an API whose support matrix is still
+  moving. So the surface is **`AudioRecorderHandle`** (`start` / `stop` / `cancel` / `isRecording`
+  / `getDurationMs`), **`AudioRecording`** (`{ blob, mimeType, durationMs }`), and
+  **`RecordingError`** with an engine-independent `reason` - each implementable on any capture
+  engine - and the 0071 built-artifact guard is extended to reject every `MediaRecorder`-shaped
+  name in `dist/branches/index.d.ts`, with a presence half so it cannot pass on a surface that
+  dropped the types it guards.
+
+  Three boundaries this Branch draws that the players did not:
+  - **A device permission is asked for on press, never on mount.** `getUserMedia` at mount time
+    fires a browser prompt at someone who has not asked to record anything. That is a UX rule with
+    an architectural consequence: nothing in the component's mount path may touch a capability API,
+    so support detection is a post-mount effect (also the SSR-safe placement) and `onReady` hands
+    over a handle that has opened nothing.
+  - **Teardown is a privacy obligation, not a tidiness one.** An un-stopped `MediaStreamTrack`
+    keeps the browser's recording indicator lit after the component unmounts, with nothing left on
+    the page to switch it off. Every exit path funnels through one `releaseCapture()`, including
+    the async race where the reader grants permission *after* the component is gone.
+  - **The component measures what the artifact cannot tell it.** WebM out of a `MediaRecorder`
+    carries no duration, so the duration is timed rather than read. The general shape: when the
+    platform hands back an artifact missing a property the contract promises, the component owns
+    producing it - do not push the derivation onto the consumer who has even less to work with.
+
+  The waveform stays inside the `@source` seam by being **DOM elements with literal token
+  utilities** rather than a canvas. A canvas would need the token values read back out of computed
+  styles at runtime and re-read on a theme change - which is exactly the failure mode `video.css`
+  exists to avoid, arrived at from the other direction.
 
 ## Showcase + theming (Storybook)
 

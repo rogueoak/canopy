@@ -812,3 +812,45 @@ subscription, a timer), capture the callback and invoke it - registration is not
 the input path that can **separate** the behaviours under test, not the one easiest to drive. And
 assert the positive: "still running" rather than "was not cancelled", since the negative also
 passes for something that never ran.
+
+## One live region, not a visible message plus an `sr-only` echo of it
+
+`AudioRecorder` (0072) first shipped two regions: a visible `<p>` for a failure message and a
+separate `sr-only` `role="status"` that announced everything, including that same message. The
+words were then in the accessibility tree **twice** - read once as the live announcement and again
+when the reader navigated the component - and a `getByText` for the copy matched two elements,
+which is how the duplication surfaced at all. The instinct behind it is sound (decoration should
+not compete with announcements) but the conclusion was wrong: a message a sighted reader can see
+and a message a screen-reader user hears are the **same** message, so they must be the **same
+element**.
+
+The fix is one always-mounted `role="status"` whose class switches: `sr-only` while it carries a
+transport announcement, and the visible caption class while it carries a failure message
+(`sr-only` is `position: absolute`, so it takes no space in a flex column and the layout does not
+move). Always-mounted matters independently - a live region that only mounts when it has something
+to say is announced unreliably, because some screen readers only watch regions that existed before
+the change.
+
+**Apply it:** give a component **one** live region and let its content and styling change, rather
+than pairing a visible message with an `sr-only` copy of it. Mount it unconditionally (empty and
+`sr-only` when there is nothing to say) so the announcement fires on a content change, not on an
+insertion. The tell that you have it wrong is a `getByText` for user-facing copy matching two
+elements.
+
+## Fake timers do not fake `performance.now()` - a measured duration under them measures nothing
+
+`AudioRecorder` times a take from `performance.now()` (a monotonic clock, deliberately, since a
+`Date`-based one moves when the system clock does). Vitest's `vi.useFakeTimers()` fakes
+`setTimeout` / `setInterval` / `Date` but **not** `performance` by default, so a test that advanced
+the clock by 2500ms and stopped the recording got a duration of ~4ms: the real elapsed time of the
+test body. The interval fired on fake time while the measurement ran on real time, and the two
+disagreed silently. Here it failed loudly only because the assertion named a range; an assertion
+like `toBeGreaterThan(0)` would have passed on 4ms and proved nothing.
+
+The fix is to name it: `vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval',
+'clearInterval', 'Date', 'performance'] })`.
+
+**Apply it:** when a component measures elapsed time, check which clock it reads and make sure the
+test fakes **that** clock, not just the scheduler. And assert a duration against a **range** the
+real elapsed time cannot satisfy - a lower bound of zero, or a `toBeGreaterThan(0)`, is satisfied by
+the test's own runtime and hides exactly this mismatch.

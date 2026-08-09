@@ -8,6 +8,33 @@ publish in lockstep at the tag version.
 
 ### Added
 
+- **AudioRecorder** - a new Branch: capture audio from a microphone with one obvious control,
+  record then stop, and a **live waveform** beside it so a dead or muted input is visible in the
+  first second rather than at playback. It hands you an `AudioRecording` -
+  `{ blob, mimeType, durationMs }` - and **knows nothing about what happens next**: no upload, no
+  URL, no transport. To play a take back, compose it with `Audio`
+  (`URL.createObjectURL(blob)` into `<Audio src={...} />`); building a second player in here would
+  be two players to keep in step. The microphone is requested **when record is pressed**, never on
+  mount, and refusal is a recoverable state with copy and a disabled control rather than a dead
+  button - `onError` reports a `RecordingError` whose `reason` is `permission` / `unsupported` /
+  `device` / `engine`. The container is chosen rather than assumed: `mimeTypes` defaults to
+  `['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm']` and the first supported entry wins, which
+  is what makes it record in Safari, and the chosen type comes back on the recording. The duration
+  is **measured by the component**, because WebM out of a `MediaRecorder` routinely carries no
+  duration in its metadata and reads back as `Infinity`. Every exit path - stop, cancel,
+  `maxDurationSeconds` (default 600, and it completes normally rather than erroring), an error, and
+  unmount - stops every microphone track and closes the `AudioContext`, so the browser's recording
+  indicator goes out when the component says it has. Keyboard operable throughout (Escape discards
+  the take), with a polite live region that announces the transitions and the elapsed time without
+  turning a screen reader into a metronome. The waveform is DOM elements carrying token utilities,
+  not a canvas, so it re-themes light/dark and under a brand override for free; under
+  `prefers-reduced-motion` it reduces to a single level meter rather than disappearing, since it
+  carries the information that the microphone is hearing you. `onReady` hands over an
+  `AudioRecorderHandle` - `start`, `stop`, `cancel`, `isRecording`, `getDurationMs` - which, like
+  `Audio`'s, is **Canopy's own interface, not the browser's recorder**: there is deliberately no
+  `MediaRecorder` and no raw options passthrough in the published API, guarded by a test against
+  the built type declarations. Every string is a defaulted prop. Needs no stylesheet and no extra
+  wiring. (spec 0072)
 - **Audio** - a new Branch: a basic audio player with play/pause, skip back, skip forward, and a
   scrubbable progress bar, stacked with the bar over the elapsed / total time and the transport
   controls below. It wraps [howler.js](https://howlerjs.com) for playback and is built from Canopy's

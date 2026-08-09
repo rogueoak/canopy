@@ -2,6 +2,14 @@ export { Video } from './Video';
 export type { VideoProps, VideoSource, VideoPlayer, VideoJsOptions } from './Video';
 export { Audio } from './Audio';
 export type { AudioProps, AudioHandle, AudioStatus, AudioLoadError } from './Audio';
+export { AudioRecorder } from './AudioRecorder';
+export type {
+  AudioRecorderProps,
+  AudioRecorderHandle,
+  AudioRecorderStatus,
+  AudioRecording,
+  RecordingError,
+} from './AudioRecorder';
 export {
   Dialog,
   DialogTrigger,

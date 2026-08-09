@@ -58,9 +58,13 @@ Ships in Canopy **1.5.0**, alongside the `Audio` Branch already merged for 0071.
   - `mimeTypes?: string[]` - the container preference order, defaulting to
     `['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm']`, first supported wins.
   - `showWaveform?: boolean` (default `true`), `barCount?: number` (default `48`).
-  - `startLabel?`, `stopLabel?`, `cancelLabel?`, `recordingLabel?`, `permissionDeniedLabel?`,
-    `unsupportedLabel?` - copy as defaulted props, per the "copy as defaulted props" learning, so a
-    consumer can reword or translate.
+  - `startLabel?`, `stopLabel?`, `cancelLabel?`, `recordingLabel?`, `requestingLabel?`,
+    `stoppedLabel?`, `cancelledLabel?`, `permissionDeniedLabel?`, `unsupportedLabel?`,
+    `deviceErrorLabel?` - copy as defaulted props, per the "copy as defaulted props" learning, so a
+    consumer can reword or translate. Every state below has copy and every announcement is words a
+    reader hears, so each one is a prop; the three beyond the original list
+    (`requestingLabel` / `stoppedLabel` / `cancelledLabel` / `deviceErrorLabel`) are the same rule
+    applied to the states and announcements the spec already required.
   - `className` / `style` / native div props merged via `cn()` onto the wrapper.
 - **Layout (developer's call): centred row.** The record/stop control is visually dominant
   (`primary`, `icon` size), the waveform fills the space beside it, and the elapsed time sits at
@@ -202,36 +206,39 @@ publishes `Audio` as well, which merged after 1.4.0 and has been unreleased sinc
 
 ## Acceptance
 
-- [ ] `AudioRecorder` exports from `@rogueoak/canopy/branches` and renders with no props.
-- [ ] Pressing record requests the microphone at that moment, and not on mount.
-- [ ] Recording then stopping calls `onComplete` with a non-empty `Blob`, its `mimeType`, and a
+- [x] `AudioRecorder` exports from `@rogueoak/canopy/branches` and renders with no props.
+- [x] Pressing record requests the microphone at that moment, and not on mount.
+- [x] Recording then stopping calls `onComplete` with a non-empty `Blob`, its `mimeType`, and a
       `durationMs` within tolerance of the real elapsed time.
-- [ ] The reported `mimeType` is one the browser supports, chosen from `mimeTypes` in order.
-- [ ] With no supported container, the unsupported state renders and nothing throws.
-- [ ] A denied permission renders the permission-denied state, calls `onError` with
+- [x] The reported `mimeType` is one the browser supports, chosen from `mimeTypes` in order.
+- [x] With no supported container, the unsupported state renders and nothing throws.
+- [x] A denied permission renders the permission-denied state, calls `onError` with
       `reason: 'permission'`, and leaves the control disabled rather than hidden.
-- [ ] A device error mid-recording calls `onError` with `reason: 'device'` and stops cleanly.
-- [ ] Every `MediaStreamTrack` is stopped on stop, on cancel, on `maxDurationSeconds`, on error, and
+- [x] A device error mid-recording calls `onError` with `reason: 'device'` and stops cleanly.
+- [x] Every `MediaStreamTrack` is stopped on stop, on cancel, on `maxDurationSeconds`, on error, and
       on unmount while recording.
-- [ ] The `AudioContext` is closed on each of those paths.
-- [ ] `maxDurationSeconds` stops the recording and completes normally rather than erroring.
-- [ ] Cancel discards the take: `onCancel` fires and `onComplete` does not.
-- [ ] The waveform animates in response to input level while recording, verified in flight rather
+- [x] The `AudioContext` is closed on each of those paths.
+- [x] `maxDurationSeconds` stops the recording and completes normally rather than erroring.
+- [x] Cancel discards the take: `onCancel` fires and `onComplete` does not.
+- [x] The waveform animates in response to input level while recording, verified in flight rather
       than at rest.
-- [ ] The animation loop is cancelled on stop, cancel, error, and unmount.
-- [ ] Under `prefers-reduced-motion` the bars collapse to a single level meter that still responds
+- [x] The animation loop is cancelled on stop, cancel, error, and unmount.
+- [x] Under `prefers-reduced-motion` the bars collapse to a single level meter that still responds
       to input.
-- [ ] The waveform subtree is `aria-hidden` and contains nothing focusable and no `sr-only` text.
-- [ ] The control's accessible name changes between idle and recording, and focus stays on it
+- [x] The waveform subtree is `aria-hidden` and contains nothing focusable and no `sr-only` text.
+- [x] The control's accessible name changes between idle and recording, and focus stays on it
       across the change.
-- [ ] A live region announces start, stop, and elapsed time, throttled rather than per second.
-- [ ] Escape cancels while recording; Space and Enter operate the control.
-- [ ] `onReady` hands over a handle whose `start`, `stop`, `cancel`, `isRecording`, and
+- [x] A live region announces start, stop, and elapsed time, throttled rather than per second.
+- [x] Escape cancels while recording; Space and Enter operate the control.
+- [x] `onReady` hands over a handle whose `start`, `stop`, `cancel`, `isRecording`, and
       `getDurationMs` all agree with the rendered state.
-- [ ] The built `dist/branches/index.d.ts` contains no `MediaRecorder`-typed public surface.
+- [x] The built `dist/branches/index.d.ts` contains no `MediaRecorder`-typed public surface.
 - [ ] Light and dark both render correctly, and a brand override re-themes the waveform with no
-      per-app work.
-- [ ] Real recording verified by hand in Chrome, Safari, and Firefox, and on iOS Safari.
-- [ ] A recording made here plays back in `Audio` without conversion.
-- [ ] Storybook story, README entry, living-docs update, and CHANGELOG entry all present.
-- [ ] The full turbo build gates green before release, Storybook app included.
+      per-app work. *(Storybook `Dark` / `BrandOverride` stories exist and the token utilities are
+      present in the built CSS; the visual check is by hand.)*
+- [ ] Real recording verified by hand in Chrome, Safari, and Firefox, and on iOS Safari. *(Cannot
+      be automated - jsdom has no microphone and no codecs.)*
+- [ ] A recording made here plays back in `Audio` without conversion. *(The `RecordAndPlay` story
+      is the harness; the check itself needs a real browser.)*
+- [x] Storybook story, README entry, living-docs update, and CHANGELOG entry all present.
+- [x] The full turbo build gates green before release, Storybook app included.
