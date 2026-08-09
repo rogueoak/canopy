@@ -668,6 +668,70 @@ to the Canopy tokens, and the first component to **ship a stylesheet**.
   `onReady`, precedence) per the "test your own mapping, not the library" learning, plus the skin
   drift / brand-override guards.
 
+## Branches: Audio (0071)
+
+The sound-player Branch - a [howler.js](https://howlerjs.com) player built entirely out of Canopy's
+own parts, and the counterpart to Video: where Video ships a stylesheet, Audio **ships nothing
+extra**.
+
+- **Audio** (`@rogueoak/canopy/branches`) - play/pause, skip back, skip forward, and a **scrubbable
+  progress bar**, stacked: the bar on top, elapsed / total time beneath it, transport controls
+  centred below. Lean props for the common case - `src` (a string or howler's fallback array),
+  `format`, `autoplay`, `loop`, `volume`, `preload`, `stream`, and the two **independent** skip
+  intervals `skipBackSeconds` / `skipForwardSeconds` (each defaulting to 10, so the podcast
+  convention of back-15 / forward-30 needs no new component) - plus `onReady(audio)` handing over
+  Canopy's own `AudioHandle`, and `onPlay` / `onPause` / `onEnd`. It owns the lifecycle: creates the `Howl` on mount, rebuilds it
+  when the source changes, applies live `volume` / `loop` changes through the instance rather than
+  by rebuilding, and **unloads it on unmount** - an un-unloaded `Howl` would keep playing with no
+  element left to stop it.
+- **No stylesheet, no extra wiring.** howler is a playback engine with **no DOM and no CSS**, so
+  unlike Video there is nothing to skin: Canopy renders every element itself from the `Button` and
+  `Slider` Seeds plus full-literal token utilities the consumer's existing `@source` already emits.
+  A consumer who has Canopy set up gets `Audio` for free, and it themes light/dark and re-colours
+  under a brand override through the same seam as every other component.
+- **Lazy-loaded.** `import('howler')` on mount - howler touches `window` at module scope, so this
+  keeps it client-only (SSR-safe) as well as out of the initial bundle. `howler` is in
+  `dependencies` + tsup `external`; **`@types/howler` is a dependency too**, because howler ships no
+  bundled types and `Howl` / `HowlOptions` reach the public surface.
+- **Position without a `timeupdate` event.** howler has none, so position is polled on a
+  `requestAnimationFrame` loop that runs **only while playing** - started on `play`, cancelled on
+  `pause` / `stop` / `end` / unmount. A scrub in progress suppresses the loop so the thumb follows
+  the drag instead of being yanked back.
+- **Loading and failure are different states, not both "disabled".** Media arrives asynchronously
+  and can fail, and with only an enabled/disabled distinction those two render identically - inert
+  controls - so a reader cannot tell a slow network from a URL that will never load. Instead:
+  `idle` (nothing fetched yet, under `preload={false}`), `loading` (a spinner on the play button
+  plus `aria-busy`, since a spinner alone says nothing to a screen reader), `ready`, and `error`
+  (an announced message, controls inert). An unknown duration reads `--:--` rather than `0:00`,
+  which would claim a zero-length clip. `loadingLabel` / `errorLabel` are defaulted props, and
+  `onLoadError` reports the failure.
+- **`startAtSeconds`** - begin at a position, for resuming an episode or deep-linking a timestamp.
+  Applied on load and clamped to the media; a *starting* position rather than a controlled one, so
+  a later change does not yank a listener who has scrubbed elsewhere, though a new `src` starts
+  fresh.
+- **Accessible by construction.** Every control is keyboard operable; each button's label is built
+  from the interval it acts on, so a changed `skipForwardSeconds` can never leave the label lying;
+  and the scrub thumb announces **`aria-valuetext` as formatted time** (`2:22`, not `142`). That
+  added one small backwards-compatible capability to the **`Slider` Seed** - `aria-valuetext` now
+  forwards to a single thumb, alongside the labelling attributes it already forwarded.
+- **The public interface is Canopy's, not the engine's.** `onReady` hands over an **`AudioHandle`**
+  (`play` / `pause` / `stop` / `seek` / `getPosition` / `getDuration` / `setVolume` / `isPlaying`),
+  and there is deliberately **no raw-options passthrough and no access to the `Howl`**. Props name
+  intent rather than mechanism - `stream`, not `html5` - and failures arrive as an `AudioLoadError`
+  with an engine-independent `reason` (`media` / `engine`). howler is therefore an implementation
+  detail that can be replaced (with the native `HTMLMediaElement`, say) without breaking a single
+  consumer. A test guards this against the **built** `dist/branches/index.d.ts`, since a type can
+  leak through inference without being written down in the source.
+- **Media caveats, documented in the README** - long files want `stream` (by default the whole clip
+  is buffered first), and the default path fetches by XHR so a cross-origin source needs CORS;
+  `stream` is the fix for both.
+- **Stories** - a `Branches/Audio` section: Playground, podcast skip intervals, long-file streaming,
+  full-width, a **brand-override** demo, and a dark example. **Tests** mock howler and assert the
+  mapping and behaviour Canopy owns (built options and precedence, the seek arithmetic **clamped at
+  both ends**, distinct skip intervals, commit-not-drag seeking, the loop's start/stop, `unload` on
+  unmount, the events, time formatting, and keyboard operation) per the "test your own mapping, not
+  the library" learning.
+
 ## npm publishing (0023)
 
 Releases now **publish to npm**, driven by git tags - a tag _is_ the release.

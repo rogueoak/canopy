@@ -61,5 +61,9 @@ export default defineConfig({
     // lands in its own chunk, out of the initial bundle; externalising keeps that a runtime import
     // resolved at the consumer's install, never bundled - the recipe rule every other lib follows.
     'video.js',
+    // howler, same rule: the Audio branch (0071) reaches it through a DYNAMIC `import('howler')`
+    // (it touches `window` at module scope, so it must stay client-only), and externalising keeps
+    // that a runtime import resolved at the consumer's install.
+    'howler',
   ],
 });

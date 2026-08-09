@@ -159,6 +159,27 @@ describe('Slider', () => {
     }
   });
 
+  it('forwards aria-valuetext to a single thumb, so a mapped value announces its human form', () => {
+    // Radix puts `aria-valuenow` on the thumb, but a raw number is the wrong announcement whenever
+    // the value maps to something else (a media position, a rating, a named step). Assistive tech
+    // reads `aria-valuetext` in preference, so a caller that knows the human form can supply it.
+    render(<Slider defaultValue={[142]} max={180} aria-label="Seek" aria-valuetext="2:22" />);
+    const thumb = screen.getByRole('slider');
+    expect(thumb).toHaveAttribute('aria-valuetext', '2:22');
+    expect(thumb).toHaveAttribute('aria-valuenow', '142');
+  });
+
+  it('does not share one aria-valuetext across range thumbs (they hold different values)', () => {
+    // Same gate as the shared-name case above: two thumbs hold two values, so one shared text
+    // would misreport at least one of them.
+    render(<Slider defaultValue={[20, 80]} aria-label="Range" aria-valuetext="20 to 80" />);
+    const thumbs = screen.getAllByRole('slider');
+    expect(thumbs).toHaveLength(2);
+    for (const thumb of thumbs) {
+      expect(thumb).not.toHaveAttribute('aria-valuetext');
+    }
+  });
+
   it('applies aria-invalid and the danger ring to every thumb (range)', () => {
     render(<Slider aria-invalid defaultValue={[20, 80]} aria-label="Range" />);
     const thumbs = screen.getAllByRole('slider');

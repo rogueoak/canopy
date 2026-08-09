@@ -28,7 +28,7 @@ reverse.
 | `@rogueoak/canopy`          | the package root re-export               |
 | `@rogueoak/canopy/seeds`    | **Seeds** (atoms) - 18 components        |
 | `@rogueoak/canopy/twigs`    | **Twigs** (molecules) - 14 components    |
-| `@rogueoak/canopy/branches` | **Branches** (organisms) - 27 components |
+| `@rogueoak/canopy/branches` | **Branches** (organisms) - 28 components |
 
 ```tsx
 import { Button } from '@rogueoak/canopy/seeds';
@@ -99,6 +99,7 @@ composition + token styling.
 | ------------------ | -------------------------------------------------------------------- |
 | `Accordion`        | Multi-section inline disclosure (single/multiple expansion).         |
 | `AlertDialog`      | Blocking confirmation modal for destructive actions.                 |
+| `Audio`            | Audio player - play/pause, skip, scrubbable progress bar.            |
 | `Calendar`         | Month grid with single/range/multiple selection and keyboard nav.    |
 | `Carousel`         | Draggable, snapping item carousel with prev/next controls.           |
 | `Chart`            | recharts wrapper with token-driven colours and styled tooltip.       |
@@ -172,6 +173,57 @@ import { Video } from '@rogueoak/canopy/branches';
 video.js is loaded lazily (a dynamic import on mount), so it stays out of your initial bundle and a
 page that never renders `<Video>` ships none of it. Reach the raw player through `onReady={(player)
 => ...}` and pass any video.js option through `options={{ ... }}`.
+
+### `Audio` needs nothing extra
+
+Worth stating, because the neighbouring `Video` section might suggest otherwise: `Audio` needs **no
+stylesheet and no extra wiring**. It wraps [howler.js](https://howlerjs.com), which is a playback
+engine with no DOM of its own, so Canopy renders every element itself out of the same Seeds and
+token utilities as the rest of the library. The `@source` line above is all it needs.
+
+```tsx
+import { Audio } from '@rogueoak/canopy/branches';
+
+<Audio src="https://example.com/episode.mp3" skipBackSeconds={15} skipForwardSeconds={30} />;
+```
+
+Play/pause, skip back, skip forward, and a scrubbable progress bar, keyboard operable throughout.
+The two skip intervals default to 10 seconds and are set independently.
+
+To drive playback from outside the component, take the handle `onReady` gives you:
+
+```tsx
+<Audio src="/episode-12.mp3" onReady={(audio) => audio.seek(120)} />
+```
+
+`AudioHandle` is `play` / `pause` / `stop` / `seek` / `getPosition` / `getDuration` /
+`setVolume` / `isPlaying` - **Canopy's own interface, not the playback engine's**. There is
+deliberately no raw-options passthrough and no access to the underlying library: both would publish
+the implementation and make replacing it a breaking change for you. Anything the handle cannot
+express is a missing prop - ask for it.
+
+To resume an episode or deep-link a timestamp, set `startAtSeconds`:
+
+```tsx
+<Audio src="/episode-12.mp3" startAtSeconds={825} />
+```
+
+It applies once the media loads and is clamped to its length. It is a _starting_ position, not a
+controlled one: changing it later will not yank a listener who has scrubbed somewhere else, though
+it does apply again if `src` changes. For continuous control, use the `Howl` from `onReady`.
+
+The player shows what it is doing while media is in flight - a spinner on the play button with
+`aria-busy` set - and, if the media fails to load, says so and stays inert rather than looking
+merely slow. Both strings are props (`loadingLabel`, `errorLabel`), and `onLoadError` reports the
+failure.
+
+Two things to know about the media itself:
+
+- **Long files want `stream`.** By default the whole clip is buffered before playback starts, which
+  is fine for a short clip and wrong for anything podcast-length.
+- **The default path needs CORS.** It fetches the media by XHR, so a cross-origin source must send
+  `Access-Control-Allow-Origin`. `stream` does not go through XHR, so it is also the fix for a
+  cross-origin file that refuses to load.
 
 ## License
 

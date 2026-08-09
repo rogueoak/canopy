@@ -762,3 +762,53 @@ ever fills it - which you cannot guarantee across browsers and password managers
 that does not hinge on a field staying empty for every real user: per-IP rate limiting, body-size
 caps, and double-opt-in confirmation (an unconfirmed bot signup never becomes a subscriber). When a
 capture path matters more than perfect spam rejection, bias to capturing.
+
+## An imperative action reads the library; React state only renders
+
+`Audio`'s play/pause branched on its own `playing` state, and pressing play twice quickly started
+**two overlapping copies** of the clip (feedback 0025). howler sets its playing flag synchronously
+but emits `play` asynchronously - a `setTimeout(0)` on the Web Audio path, and the `node.play()`
+promise on the `html5` path, which is hundreds of milliseconds while a stream buffers. Through that
+window React state says "not playing" while the player is playing, so the handler decided from the
+past. What made it plausible was a rule that is genuinely right on the other side of the seam:
+render from state (or the UI cannot re-render), but **act** from the instance.
+
+**Apply it:** when a third-party instance owns a piece of state, read it from the instance to act
+and from React to render. The tell is a handler branching on state it does not itself set. In
+tests, the mock must reproduce the library's **asynchrony**, not just its API - a stand-in that
+emits synchronously deletes the whole class of bug that lives in the gap, which is how this shipped
+with a passing suite.
+
+## Composing on a raised surface means re-pointing the Seeds' canvas defaults
+
+Seeds are tuned for the page canvas: `Button`'s `hover:bg-muted` is one step up from `bg-bg`, and
+its ring offset matches the page. Drop those onto a `surface-raised` card and the step goes the
+wrong way - `Audio`'s skip buttons visibly **sank into a recess** on hover in dark, the focus ring
+drew a near-black halo, and the disabled fill matched the card exactly (feedback 0026). Learnings 20
+and 21 already say a raised surface is its own design context; the missing half is that the
+**composing component**, not the Seed, owns the correction - the Seed cannot know where it was
+dropped.
+
+**Apply it:** after setting a non-canvas surface, list the Seeds inside it and re-point every token
+defined *relative to the background* - interaction fills (`muted-raised`), ring offsets
+(`ring-offset-surface-raised`), disabled fills. And match the original's **variant prefix exactly**
+when overriding: tailwind-merge keys on variant + property, so a bare `ring-offset-*` does not
+replace a `focus-visible:ring-offset-*` - both survive and the override loses precisely when it is
+needed, looking applied the whole time.
+
+## A test double must be steppable, not merely countable
+
+`Audio`'s position loop had five passing tests and zero coverage of its body: the
+`requestAnimationFrame` stub recorded the call and never invoked the callback, so deleting the
+entire loop body shipped green (feedback 0027). Two companions surfaced in the same review. The
+"does not seek until the scrub commits" test drove the keyboard, where Radix commits on the same
+keydown that changes the value - the one input path that **cannot** distinguish the two behaviours -
+so moving the seek into the change handler also shipped green. And
+`expect(cancel).not.toHaveBeenCalled()` passed equally whether the loop was correctly kept alive or
+had never started.
+
+**Apply it:** if a double stands in for something that calls back (rAF, an observer, a
+subscription, a timer), capture the callback and invoke it - registration is not behaviour. Choose
+the input path that can **separate** the behaviours under test, not the one easiest to drive. And
+assert the positive: "still running" rather than "was not cancelled", since the negative also
+passes for something that never ran.

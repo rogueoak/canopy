@@ -59,6 +59,14 @@ export const Slider = React.forwardRef<
   const singleThumb = thumbCount === 1;
   const thumbAriaLabel = singleThumb ? props['aria-label'] : undefined;
   const thumbAriaLabelledBy = singleThumb ? props['aria-labelledby'] : undefined;
+  // `aria-valuetext` rides the same single-thumb path, and for the same reason: Radix puts
+  // `aria-valuenow` on the thumb, but a raw number is the wrong announcement whenever the value
+  // maps to something else - a media position ("142" should read "2:22"), a rating, a named step.
+  // Assistive tech reads `aria-valuetext` in preference to `aria-valuenow`, so a caller that knows
+  // the human form of its value can supply it. A range's two thumbs hold two different values, so
+  // one shared text would misreport at least one of them - it stays single-thumb only, exactly
+  // like the labelling attributes above.
+  const thumbAriaValueText = singleThumb ? props['aria-valuetext'] : undefined;
 
   return (
     <SliderPrimitive.Root
@@ -82,6 +90,7 @@ export const Slider = React.forwardRef<
           aria-invalid={ariaInvalid}
           aria-label={thumbAriaLabel}
           aria-labelledby={thumbAriaLabelledBy}
+          aria-valuetext={thumbAriaValueText}
           className="block h-5 w-5 rounded-full border border-border bg-surface shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset aria-invalid:ring-2 aria-invalid:ring-danger"
         />
       ))}

@@ -4,6 +4,48 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 1.5.0 - 2026-08-09
+
+### Added
+
+- **Audio** - a new Branch: a basic audio player with play/pause, skip back, skip forward, and a
+  scrubbable progress bar, stacked with the bar over the elapsed / total time and the transport
+  controls below. It wraps [howler.js](https://howlerjs.com) for playback and is built from Canopy's
+  own `Button` and `Slider` Seeds, so - unlike `Video` - it needs **no stylesheet and no extra
+  wiring**: if Canopy is set up, `Audio` works, themes light/dark, and adopts a brand override like
+  every other component. The two skip intervals are independent props (`skipBackSeconds`,
+  `skipForwardSeconds`, both defaulting to 10), so the podcast convention of back-15 / forward-30
+  needs no new component. `startAtSeconds` begins at a position, for resuming an episode or
+  deep-linking a timestamp. Keyboard operable throughout, and the scrub bar announces its position
+  as a time (`2:22`) rather than a raw second count. While media is in flight the play button holds
+  a spinner and the player sets `aria-busy`; if it fails to load, the player says so and stays inert
+  rather than looking merely slow, with `loadingLabel` / `errorLabel` as props and `onLoadError` for
+  the callback. To drive playback yourself, `onReady` hands you an `AudioHandle` - `play`, `pause`,
+  `stop`, `seek`, `getPosition`, `getDuration`, `setVolume`, `isPlaying`. That handle is
+  **Canopy's own interface, not the playback library's**: there is deliberately no raw-options
+  passthrough and no access to the engine, so which library plays the audio stays an implementation
+  detail we can change without breaking you. For the same reason the props name intent rather than
+  mechanism - `stream` for "do not download the whole file first" - and load failures arrive as an
+  `AudioLoadError` with a `reason` of `media` or `engine`. Note two things about the media itself:
+  long files want `stream` (by default the whole clip is buffered before playback starts), and the
+  default path needs CORS on a cross-origin source - `stream` fixes both. (spec 0071)
+- **Video** - the media-player Branch, a [video.js](https://videojs.com) player with its control bar
+  fully skinned to the Canopy tokens, shipped as `@rogueoak/canopy/video.css`. Lean props for the
+  common case plus an `options` passthrough and `onReady(player)`; fluid and responsive by default;
+  video.js is loaded lazily so it stays out of your initial bundle. The skin references only
+  semantic role tokens, so the controls theme light/dark and re-colour under a brand override with
+  no component change. Wiring is two stylesheet imports, documented in the package README. (spec
+  0070 - shipped earlier but missed in the release notes at the time, recorded here)
+
+### Changed
+
+- **Slider** - `aria-valuetext` now forwards to the thumb on a single-value slider, alongside the
+  `aria-label` / `aria-labelledby` that already did. Radix puts a raw `aria-valuenow` on the thumb,
+  which is the wrong announcement whenever the value maps to something else - a media position, a
+  rating, a named step - so a caller that knows the human form of its value can now supply it.
+  Additive and backwards compatible; range sliders are unchanged, since their two thumbs hold two
+  values and one shared text would misreport one of them.
+
 ## 1.4.0 - 2026-08-09
 
 ### Removed
