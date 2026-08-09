@@ -23,7 +23,7 @@ When done:
 
 - `@rogueoak/canopy/branches` exports an accessible, themed `SubscribeForm`.
 - The component is **presentational + stateful**: it owns the layout, the submit/success/error
-  state machine, the animated optional-Name reveal, the honeypot field, and the a11y wiring - but
+  state machine, the animated optional-Name reveal, and the a11y wiring - but
   it does **no** network I/O and knows **nothing** about PostHog or any specific endpoint. The
   consumer supplies the submit via `onSubscribe` and (optionally) analytics via `onEvent`.
 - Both apps replace their local `SubscribeForm` with a thin wrapper around the Canopy component,
@@ -40,7 +40,7 @@ When done:
     until the email is focused, then animates open (horizontal grow at `sm+`, vertical below),
     `motion-reduce`-safe, and is out of the tab order + a11y tree while collapsed.
   - Owns a `Status` state machine (`idle | submitting | success | error`). On submit it collects
-    `{ email, name, company }` (the last being the honeypot), calls `onSubscribe(values)`, and
+    `{ email, name }`, calls `onSubscribe(values)`, and
     reflects the result: on resolve it renders a **success `Card`** (a confirmation badge with an
     inline check glyph + a copy slot); on reject it renders an inline `role="alert"` message using
     the rejected error's `.message`.
@@ -63,8 +63,8 @@ When done:
 ### Out
 
 - **Network / transport** - no `fetch`, no endpoint knowledge; the consumer's `onSubscribe` owns
-  it (Constant Contact, list ids, the honeypot drop decision, the test-domain short-circuit all
-  stay in each app's server code).
+  it (Constant Contact, list ids, the test-domain short-circuit all stay in each app's server
+  code).
 - **Analytics SDK** - no PostHog dependency; the consumer wires `onEvent` to its own analytics.
 - **The server `subscribe.ts` core** (OAuth, sign_up_form, CRM/unsubscribed path) - stays in each
   app; it is app-specific and holds secrets-adjacent logic.
@@ -83,7 +83,7 @@ When done:
   `dark:` on the common path.
 - **Same Branches rules** - `cn()` merge, **full-literal** class strings, `forwardRef` + native
   prop spread, semantic tokens only. The `<section>` is the ref/className/native-prop surface.
-- **onSubscribe contract.** `onSubscribe(values: { email: string; name: string; company: string })
+- **onSubscribe contract.** `onSubscribe(values: { email: string; name: string })
   => Promise<void>`; it resolves on success and **rejects to signal failure**. Canopy displays the
   rejected error's `.message` (falling back to a default) and forwards its `.reason` to
   `onEvent('failed', ...)`, so an app that throws `Object.assign(new Error(msg), { reason:
@@ -94,14 +94,19 @@ When done:
 
 ### Decision (locked) - presentational, not transport-owning
 Considered a variant where Canopy owns the `fetch` to a configurable `action` URL. Rejected:
-baking an endpoint + body shape + honeypot semantics into a design-system component couples it to
-one app's server contract. Injecting `onSubscribe`/`onEvent` keeps Canopy a pure UI library and
-lets each app keep its own transport, list handling, and analytics unchanged.
+baking an endpoint + body shape into a design-system component couples it to one app's server
+contract. Injecting `onSubscribe`/`onEvent` keeps Canopy a pure UI library and lets each app keep
+its own transport, list handling, and analytics unchanged.
 
-### Decision (locked) - honeypot stays rendered by Canopy
-Canopy renders the hidden `company` honeypot (it is a form-UI concern) and reports its value in
-the `onSubscribe` payload; the app forwards it and makes the server-side drop decision. This keeps
-the anti-bot affordance a reusable part of the component while leaving the policy to the app.
+### Decision (revised, feedback 0024) - honeypot removed
+Originally Canopy rendered a hidden `company` honeypot and forwarded its value so each app's server
+could drop bot submissions. That was **reversed**: the hidden field is a false-negative risk -
+browser/password-manager autofill can fill a hidden `company`/organization field, which then trips
+the server-side drop and silently loses a real subscriber. Since the drop favours suppressing over
+capturing, and the apps keep other anti-abuse layers (per-IP rate limiting, body-size caps,
+double-opt-in via Constant Contact), the honeypot is removed entirely: `SubscribeValues` is now
+`{ email, name }` with no `company`, and each app drops its server-side honeypot check. See
+`docs/feedback/0024-honeypot-autofill-false-negative.md`.
 
 ## Acceptance
 
@@ -110,7 +115,7 @@ the anti-bot affordance a reusable part of the component while leaving the polic
 - [ ] The optional Name field is collapsed initially, reveals (animated, `motion-reduce`-safe) on
       email focus, and is out of the tab order + a11y tree while collapsed; `alwaysShowName` starts
       it revealed.
-- [ ] Submitting calls `onSubscribe` once with `{ email, name, company }`; a resolve renders the
+- [ ] Submitting calls `onSubscribe` once with `{ email, name }`; a resolve renders the
       success `Card`; a reject renders an inline `role="alert"` with the rejected error's message.
 - [ ] `onEvent` fires `submitted` before the call, then `succeeded` or `failed` - each with
       `{ source, has_name }` (and `failed` a `reason`); `has_name` is a boolean, never the name.

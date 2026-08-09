@@ -5,7 +5,7 @@ import { Card, CardContent, FormField, FormFieldControl, FormFieldLabel } from '
 
 /**
  * SubscribeForm - an email-capture Branch (spec 0035): a themed subscribe box with an optional
- * Name field, a submit/success/error state machine, a honeypot, and a success card. It is a
+ * Name field, a submit/success/error state machine, and a success card. It is a
  * Branch because it owns interaction state (the submit state machine + the progressive Name
  * reveal) and composes lower layers (the `Card` / `FormField` Twigs, the `Button` / `Input`
  * Seeds).
@@ -22,12 +22,10 @@ import { Card, CardContent, FormField, FormFieldControl, FormFieldLabel } from '
  * depend on `@rogueoak/icons`.
  */
 
-/** The values SubscribeForm collects and hands to `onSubscribe`. `company` is the honeypot. */
+/** The values SubscribeForm collects and hands to `onSubscribe`. */
 export interface SubscribeValues {
   email: string;
   name: string;
-  /** Honeypot value - a naive bot fills it; forward it so the server can drop the request. */
-  company: string;
 }
 
 /** The analytics phase SubscribeForm reports through `onEvent`. */
@@ -53,9 +51,9 @@ export interface SubscribeFormProps extends Omit<
   'onSubmit' | 'title'
 > {
   /**
-   * Perform the subscription. Receives the collected `{ email, name, company }` (company is the
-   * honeypot) and returns a promise: resolve on success, reject to signal failure. Canopy shows
-   * the rejected error's `.message` (or a default) and forwards its `.reason` to `onEvent`.
+   * Perform the subscription. Receives the collected `{ email, name }` and returns a promise:
+   * resolve on success, reject to signal failure. Canopy shows the rejected error's `.message`
+   * (or a default) and forwards its `.reason` to `onEvent`.
    */
   onSubscribe: (values: SubscribeValues) => Promise<void>;
   /**
@@ -124,7 +122,6 @@ export const SubscribeForm = React.forwardRef<HTMLElement, SubscribeFormProps>(
       const data = new FormData(form);
       const email = String(data.get('email') ?? '');
       const name = String(data.get('name') ?? '');
-      const company = String(data.get('company') ?? '');
       // `has_name` is PII-free (a boolean, never the name itself) so a consumer can see how often
       // the optional field is used without capturing what was typed.
       const hasName = name.trim() !== '';
@@ -132,7 +129,7 @@ export const SubscribeForm = React.forwardRef<HTMLElement, SubscribeFormProps>(
       setStatus({ kind: 'submitting' });
       onEvent?.('submitted', { source, has_name: hasName });
       try {
-        await onSubscribe({ email, name, company });
+        await onSubscribe({ email, name });
         form.reset();
         setStatus({ kind: 'success' });
         onEvent?.('succeeded', { source, has_name: hasName });
@@ -244,15 +241,6 @@ export const SubscribeForm = React.forwardRef<HTMLElement, SubscribeFormProps>(
               </Button>
             </div>
           )}
-
-          {/* Honeypot: hidden from users and assistive tech; a naive bot that fills every input
-              trips it and (via the value forwarded in onSubscribe) the server drops the request. */}
-          <div className="hidden" aria-hidden>
-            <label>
-              Company
-              <input type="text" name="company" tabIndex={-1} autoComplete="off" />
-            </label>
-          </div>
 
           {status.kind === 'error' && (
             <p role="alert" className="mt-3 text-body text-danger">

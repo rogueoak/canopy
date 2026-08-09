@@ -4,6 +4,19 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 1.4.0 - 2026-08-09
+
+### Removed
+
+- **SubscribeForm honeypot (breaking)** - `SubscribeForm` no longer renders the hidden `company`
+  honeypot input, and `SubscribeValues` drops its `company` field: the payload handed to
+  `onSubscribe` is now `{ email, name }`. The hidden field was a false-negative risk - browser and
+  password-manager autofill can populate a hidden `company`/organization input the reader never
+  sees, which tripped each app's server-side drop and silently lost a real subscriber. Anti-abuse
+  now rests on the layers that do not depend on a field staying empty (per-IP rate limiting,
+  body-size caps, double-opt-in). Migration: a consumer whose `onSubscribe` destructured `company`
+  should remove it and delete its server-side honeypot check; no other change is needed. (feedback 0024)
+
 ## 1.3.0 - 2026-08-08
 
 ### Changed

@@ -43,7 +43,7 @@ describe('SubscribeForm', () => {
     expect(screen.getByRole('textbox', { name: 'Name (optional)' })).toBeInTheDocument();
   });
 
-  it('collects { email, name, company } and calls onSubscribe once on submit', async () => {
+  it('collects { email, name } and calls onSubscribe once on submit', async () => {
     const user = userEvent.setup();
     const onSubscribe = vi.fn().mockResolvedValue(undefined);
     render(<SubscribeForm source="blog_index" alwaysShowName onSubscribe={onSubscribe} />);
@@ -56,8 +56,16 @@ describe('SubscribeForm', () => {
     expect(onSubscribe).toHaveBeenCalledWith({
       email: 'reader@example.com',
       name: 'Ada Lovelace',
-      company: '',
     });
+  });
+
+  it('renders no hidden honeypot field (feedback 0024)', () => {
+    // The honeypot was removed because browser/password-manager autofill could fill the hidden
+    // `company` input and trip each app's server-side drop, silently losing a real subscriber.
+    const { container } = render(
+      <SubscribeForm source="test" onSubscribe={vi.fn().mockResolvedValue(undefined)} />,
+    );
+    expect(container.querySelector('input[name="company"]')).toBeNull();
   });
 
   it('renders the success card after a resolved submit', async () => {

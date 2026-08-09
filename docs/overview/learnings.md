@@ -529,7 +529,7 @@ shared root is testing the happy representative instead of the whole contract.
 carried its own event names + copy. A design-system component can't own any of that - a different
 consumer has a different endpoint, a different (or no) analytics SDK, and different wording. The fix
 is **injection**: Canopy owns the UI, the `submit/success/error` state machine, the optional-Name
-reveal, the honeypot, and the a11y wiring, while the consumer passes `onSubscribe(values) =>
+reveal, and the a11y wiring, while the consumer passes `onSubscribe(values) =>
 Promise<void>` (the network I/O) and an optional `onEvent(phase, props)` (analytics). To preserve the
 fidelity the apps had when they owned the `fetch`, the contract carries the failure detail *back out*:
 `onSubscribe` rejects, and Canopy shows the rejected error's `.message` and forwards its `.reason` to
@@ -745,3 +745,20 @@ warning path, where they stay visible without being a veto. The tell that you ha
 the rule is heuristic, and a heuristic that ships with known-good exceptions should warn, not block.
 A rule can also be strict in one scope and advisory in another - Canopy's own tokens keep the hard
 version, since there a theme-invariant role really would be a slip; consumer brands get the warning.
+
+## A hidden honeypot field is a false-negative risk when autofill can fill it
+
+SubscribeForm shipped a hidden `company` honeypot (feedback 0024): a bot that fills every input
+trips it, and the app server silently drops the submission. The flaw is that browser and
+password-manager autofill do **not** reliably respect a hidden field or `autocomplete="off"` - an
+organization/company profile can populate a `company` input the human never sees, which then trips
+the drop and loses a **real** subscriber with no error shown. A silent-drop anti-bot check is
+exactly the kind of guard whose failures are invisible, so a false positive on it is the most
+expensive kind: you never hear about the users you lost.
+
+**Apply it:** weigh a spam control by its false-negative cost, not just its spam-catching. A
+hidden-field honeypot that gates a silent drop is only safe if you are certain no autofill/agent
+ever fills it - which you cannot guarantee across browsers and password managers. Prefer anti-abuse
+that does not hinge on a field staying empty for every real user: per-IP rate limiting, body-size
+caps, and double-opt-in confirmation (an unconfirmed bot signup never becomes a subscriber). When a
+capture path matters more than perfect spam rejection, bias to capturing.
