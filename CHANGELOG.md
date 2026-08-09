@@ -16,8 +16,10 @@ publish in lockstep at the tag version.
   (`URL.createObjectURL(blob)` into `<Audio src={...} />`); building a second player in here would
   be two players to keep in step. The microphone is requested **when record is pressed**, never on
   mount, and refusal is a recoverable state with copy and a disabled control rather than a dead
-  button - `onError` reports a `RecordingError` whose `reason` is `permission` / `unsupported` /
-  `device` / `engine`. The container is chosen rather than assumed: `mimeTypes` defaults to
+  button - `onRecordingError` reports an `AudioRecordingError` whose `reason` is `permission` /
+  `unsupported` / `device` / `engine`. (Named for what failed rather than taking the generic
+  `onError`, the same way `Audio` names `onLoadError`, so the native handler on the wrapper is left
+  alone.) The container is chosen rather than assumed: `mimeTypes` defaults to
   `['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm']` and the first supported entry wins, which
   is what makes it record in Safari, and the chosen type comes back on the recording. The duration
   is **measured by the component**, because WebM out of a `MediaRecorder` routinely carries no
@@ -30,11 +32,11 @@ publish in lockstep at the tag version.
   not a canvas, so it re-themes light/dark and under a brand override for free; under
   `prefers-reduced-motion` it reduces to a single level meter rather than disappearing, since it
   carries the information that the microphone is hearing you. `onReady` hands over an
-  `AudioRecorderHandle` - `start`, `stop`, `cancel`, `isRecording`, `getDurationMs` - which, like
-  `Audio`'s, is **Canopy's own interface, not the browser's recorder**: there is deliberately no
-  `MediaRecorder` and no raw options passthrough in the published API, guarded by a test against
-  the built type declarations. Every string is a defaulted prop. Needs no stylesheet and no extra
-  wiring. (spec 0072)
+  `AudioRecorderHandle` - `start`, `stop`, `cancel`, `isRecording`, `getStatus`, `getDurationMs` -
+  which, like `Audio`'s, is **Canopy's own interface, not the browser's recorder**: there is
+  deliberately no `MediaRecorder` and no raw options passthrough in the published API, held to a
+  committed snapshot of the built type declarations. Every string is a defaulted prop. Needs no
+  stylesheet and no extra wiring. (spec 0072)
 - **Audio** - a new Branch: a basic audio player with play/pause, skip back, skip forward, and a
   scrubbable progress bar, stacked with the bar over the elapsed / total time and the transport
   controls below. It wraps [howler.js](https://howlerjs.com) for playback and is built from Canopy's

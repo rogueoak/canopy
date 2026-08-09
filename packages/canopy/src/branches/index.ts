@@ -8,7 +8,7 @@ export type {
   AudioRecorderHandle,
   AudioRecorderStatus,
   AudioRecording,
-  RecordingError,
+  AudioRecordingError,
 } from './AudioRecorder';
 export {
   Dialog,

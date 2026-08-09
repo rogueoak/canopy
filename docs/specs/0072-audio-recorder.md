@@ -1,5 +1,10 @@
 # 0072 - AudioRecorder
 
+> **Amendments after approval.** Everything below the original approved text is marked. There are
+> two rounds: **A1 (2026-08-09, implementation)** completed the copy-prop list and the merged live
+> region; **A2 (2026-08-09, persona review)** carries the API and accessibility corrections the
+> review found. Anything not marked is as approved.
+
 ## Problem
 
 Canopy can play sound (`Audio`, spec 0071) and cannot capture any. A consumer who wants a voice
@@ -48,28 +53,43 @@ Ships in Canopy **1.5.0**, alongside the `Audio` Branch already merged for 0071.
     is `{ blob: Blob; mimeType: string; durationMs: number }`. Canopy's own type; nothing
     `MediaRecorder`-shaped.
   - `onStart?: () => void`, `onStop?: () => void`, `onCancel?: () => void`.
-  - `onError?: (error: RecordingError) => void` - a real `Error` carrying an engine-independent
-    `reason` (`permission` / `unsupported` / `device` / `engine`), following the `SubscribeError`
-    and `AudioLoadError` precedent.
+  - `onRecordingError?: (error: AudioRecordingError) => void` - a real `Error` carrying an
+    engine-independent `reason` (`permission` / `unsupported` / `device` / `engine`), following the
+    `SubscribeError` and `AudioLoadError` precedent. **(A2:** approved as `onError` /
+    `RecordingError`. Renamed before publish: `Audio` deliberately chose `onLoadError` over
+    `onError` to leave the native handler alone, and the two media Branches must not answer that
+    question in opposite directions; and `RecordingError` was the only unnamespaced error name in a
+    flat barrel where every other one is owner-named, which a video or screen recorder would want.
+    Free now, a breaking change after 1.5.0 publishes.**)**
   - `onReady?: (recorder: AudioRecorderHandle) => void` - Canopy's own handle
-    (`start` / `stop` / `cancel` / `isRecording` / `getDurationMs`), so a consumer can drive the
-    recorder from its own chrome.
+    (`start` / `stop` / `cancel` / `isRecording` / `getStatus` / `getDurationMs`), so a consumer can
+    drive the recorder from its own chrome. **(A2:** `getStatus()` added. `AudioRecorderStatus` was
+    exported with no prop, callback, or method that could hand a consumer one - a published type
+    with no way to obtain a value of it is a compatibility commitment bought for nothing.**)**
   - `maxDurationSeconds?: number` (default `600`) - stops automatically and completes normally.
-  - `mimeTypes?: string[]` - the container preference order, defaulting to
-    `['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm']`, first supported wins.
+  - `mimeTypes?: readonly string[]` - the container preference order, defaulting to
+    `['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm']`, first supported wins. **(A2:** widened
+    from `string[]`; the component only reads it, and a hoisted `as const` array could not be passed
+    without a spread.**)**
   - `showWaveform?: boolean` (default `true`), `barCount?: number` (default `48`).
   - `startLabel?`, `stopLabel?`, `cancelLabel?`, `recordingLabel?`, `requestingLabel?`,
     `stoppedLabel?`, `cancelledLabel?`, `permissionDeniedLabel?`, `unsupportedLabel?`,
     `deviceErrorLabel?` - copy as defaulted props, per the "copy as defaulted props" learning, so a
-    consumer can reword or translate. Every state below has copy and every announcement is words a
-    reader hears, so each one is a prop; the three beyond the original list
-    (`requestingLabel` / `stoppedLabel` / `cancelledLabel` / `deviceErrorLabel`) are the same rule
-    applied to the states and announcements the spec already required.
+    consumer can reword or translate. **(A1:** the four beyond the originally approved list -
+    `requestingLabel`, `stoppedLabel`, `cancelledLabel`, `deviceErrorLabel` - are the "copy as
+    defaulted props" rule this spec already stated, applied to the states this spec already
+    enumerated below. Every state has copy and every announcement is words a reader hears, so each
+    one is a prop.**)**
   - `className` / `style` / native div props merged via `cn()` onto the wrapper.
 - **Layout (developer's call): centred row.** The record/stop control is visually dominant
   (`primary`, `icon` size), the waveform fills the space beside it, and the elapsed time sits at
   the trailing edge in tabular figures. Cancel appears only while recording, as a `ghost` icon
-  button.
+  button. **(A2:** cancel sits **past** the waveform with its slot reserved when absent. Beside the
+  control, an irreversible discard was a 40px target 12px from the most-tapped one; and mounting it
+  on demand took 52px off the waveform at the moment the reader is watching the bars. A `danger`
+  dot in the row marks a live take, because idle and recording were otherwise the same `primary`
+  circle with a different 16px glyph - and with `showWaveform={false}` that glyph was the entire
+  signal that a microphone is open.**)**
 - **Live waveform** - `AnalyserNode` time-domain data rendered as token-styled bars.
 - **Elapsed time** - `m:ss`, measured by the component rather than read from the blob.
 - **States** - idle, requesting permission, recording, stopping, permission denied, unsupported,
@@ -112,9 +132,16 @@ browser API whose support matrix is still moving.
 
 So the same rule as 0071 applies. `AudioRecorderHandle` and `RecordingError` are Canopy's own,
 small enough to reimplement on anything, and the translation between vocabularies lives in one
-place. The build-artifact guard from 0071 extends to this component: a test asserts the built
-`dist/branches/index.d.ts` contains no `MediaRecorder`-typed surface, checked against the artifact
-rather than the source, because a type leaks through inference without ever being written down.
+place. The build-artifact guard from 0071 extends to this component, checked against the artifact rather
+than the source, because a type leaks through inference without ever being written down.
+
+**(A2:** the guard is a committed **snapshot** of this component's declarations in the built
+`dist/branches/index.d.ts`, not the list of banned platform names it was written as. A denylist
+only rejects what someone remembered to ban - the device selection and gain deferred under **Out**
+below would arrive as `MediaTrackConstraints`, `MediaDeviceInfo` and the `Constrain*` family, none
+of which such a list contained. Inverted, every new type reference in the published surface is a
+reviewed diff, and the snapshot subsumes the presence half: a dropped type fails the extraction
+instead of passing vacuously.**)**
 
 ### Permission is requested on press, and refusal is a state
 
@@ -124,7 +151,9 @@ re-prompted from inside the page. So the call happens in the record handler.
 
 Refusal renders the `permissionDenied` state: the copy explains that the browser is blocking the
 microphone and that it is changed in the site settings, with the control disabled rather than
-hidden. Hiding it leaves someone staring at a component that has vanished. The component does not
+hidden. **(A2:** "disabled" means `aria-disabled` plus an ignored activation, never the `disabled`
+attribute - see the accessibility section - and the control dims its own fill rather than falling
+through to the `disabled` role, which in dark is the same value as the card it sits on.**)** Hiding it leaves someone staring at a component that has vanished. The component does not
 attempt to name a browser or draw a menu path, because that copy is wrong within a release and it
 is the consumer's to write if they want it.
 
@@ -165,7 +194,10 @@ A canvas would be cheaper at high bar counts and would need the token values rea
 computed styles at runtime, then re-read on a theme change - which is how a component ends up with
 a waveform that stays light-mode blue after the page goes dark. Forty-eight elements updated at
 roughly 30fps is comfortably within budget, and it keeps the component inside the "components ship
-class names" rule.
+class names" rule. **(A2:** the 30fps is a real frame budget in the code, not an assumption. The
+loop runs at the compositor's cadence, but only a due frame reaches React - untrottled it asked for
+a full re-render on every animation frame, which is 120Hz on a ProMotion display and three times
+over on a page embedding three recorders.**)**
 
 **The loop runs only while recording.** It starts on `start`, stops on `stop`, `cancel`, error, and
 unmount, exactly as `Audio`'s position loop does, and for the same reason: an always-on
@@ -175,7 +207,9 @@ three of them. A test asserts the loop is cancelled.
 **Reduced motion reduces it rather than removing it.** The waveform carries information - the
 microphone is hearing you - so deleting it under `prefers-reduced-motion` would remove the one
 signal that a muted input is muted. The bars collapse to a single smoothed level meter with a
-slower update instead.
+slower update instead. **(A2:** the meter keeps the bars' row height and their trackless form, so
+the two presentations of one idea read as relatives rather than as a waveform and a progress
+bar.**)**
 
 ### Accessibility: the waveform is decoration, the timer is the information
 
@@ -187,7 +221,12 @@ slower update instead.
   ten seconds while recording. Announcing every second turns a screen reader into a metronome.
 - Escape cancels while recording, discarding the take. Space and Enter operate the control.
 - Focus stays on the control across the state change, so a keyboard user is not dropped to the
-  document.
+  document. **(A2:** this is why the control is never given the `disabled` **attribute**. All four
+  blocked states - `requesting`, `stopping`, `permission-denied`, `unsupported` - are entered by
+  pressing that very control, and a browser that disables the focused element runs the unfocusing
+  steps and drops focus to `<body>`; jsdom does not, which is why the first implementation looked
+  correct under test. The control carries `aria-disabled` (and `aria-busy` while working) and the
+  handlers ignore the press.**)**
 
 ### Testing without asserting the browser's internals
 
@@ -227,15 +266,29 @@ publishes `Audio` as well, which merged after 1.4.0 and has been unreleased sinc
       to input.
 - [x] The waveform subtree is `aria-hidden` and contains nothing focusable and no `sr-only` text.
 - [x] The control's accessible name changes between idle and recording, and focus stays on it
-      across the change.
+      across the change. *(A2: this was first ticked on a jsdom test that could not have failed -
+      jsdom keeps focus on an element that becomes disabled and browsers do not. The shipped
+      behaviour is fixed and the test now asserts the CAUSE: the control never carries the
+      `disabled` attribute, in any state.)*
+- [x] A denied or unsupported control stays visible on the card in dark, rather than resolving to
+      the same value as the surface behind it. *(A2)*
+- [x] A live take is marked by something other than the glyph, so `showWaveform={false}` still says
+      the microphone is open. *(A2)*
+- [x] Every state is rendered under an assertion, `requesting` and `stopping` included. *(A2)*
+- [x] Each documented `AudioRecordingError.reason` is reachable and has a test. *(A2)*
+- [x] A full take is driven inside `<StrictMode>`, where setup runs twice. *(A2)*
 - [x] A live region announces start, stop, and elapsed time, throttled rather than per second.
 - [x] Escape cancels while recording; Space and Enter operate the control.
 - [x] `onReady` hands over a handle whose `start`, `stop`, `cancel`, `isRecording`, and
       `getDurationMs` all agree with the rendered state.
-- [x] The built `dist/branches/index.d.ts` contains no `MediaRecorder`-typed public surface.
+- [x] The built `dist/branches/index.d.ts` matches a committed snapshot of this component's public
+      declarations, and that snapshot names no platform type.
 - [ ] Light and dark both render correctly, and a brand override re-themes the waveform with no
-      per-app work. *(Storybook `Dark` / `BrandOverride` stories exist and the token utilities are
-      present in the built CSS; the visual check is by hand.)*
+      per-app work. *(Storybook `Dark` / `UnsupportedDark` / `BrandOverride` stories exist and the
+      token utilities are present in the built CSS; the visual check is by hand. Still open for
+      eyes: how loud the recording dot needs to be, whether `text-subtle` idle bars are too loud at
+      rest, the waveform at 320px with the default 48 bars, and the reduced-motion meter - the
+      `ReducedMotion` story now gives that last one somewhere to stand.)*
 - [ ] Real recording verified by hand in Chrome, Safari, and Firefox, and on iOS Safari. *(Cannot
       be automated - jsdom has no microphone and no codecs.)*
 - [ ] A recording made here plays back in `Audio` without conversion. *(The `RecordAndPlay` story

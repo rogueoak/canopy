@@ -251,8 +251,9 @@ Four things worth knowing:
 - **The microphone is requested when record is pressed**, never on mount. A prompt fired at someone
   who has not asked to record anything is usually denied by reflex, and a denied microphone cannot
   be re-prompted from inside the page. Refusal renders a message and disables the control rather
-  than hiding it; `onError` reports a `RecordingError` whose `reason` is `permission`,
-  `unsupported`, `device`, or `engine`.
+  than hiding it; `onRecordingError` reports an `AudioRecordingError` whose `reason` is
+  `permission`, `unsupported`, `device`, or `engine`. It is named for what failed, the same way
+  `Audio` names `onLoadError`, so the native `onError` on the wrapper is left alone.
 - **The container is chosen, not assumed.** `mimeTypes` defaults to
   `['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm']` and the first one the browser supports
   wins - Safari does not do WebM, so the mp4 entry is what makes it record at all. The chosen type
@@ -269,8 +270,8 @@ To drive it from your own chrome, take the handle:
 <AudioRecorder onReady={(recorder) => (recorderRef.current = recorder)} />
 ```
 
-`AudioRecorderHandle` is `start` / `stop` / `cancel` / `isRecording` / `getDurationMs` - **Canopy's
-own interface, not the browser's recorder**. There is deliberately no `MediaRecorder` and no raw
+`AudioRecorderHandle` is `start` / `stop` / `cancel` / `isRecording` / `getStatus` /
+`getDurationMs` - **Canopy's own interface, not the browser's recorder**. There is deliberately no `MediaRecorder` and no raw
 options passthrough: both would publish a platform API whose support matrix is still moving.
 
 Every string is a defaulted prop (`startLabel`, `stopLabel`, `cancelLabel`, `recordingLabel`,

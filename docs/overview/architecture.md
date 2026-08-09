@@ -701,11 +701,18 @@ themed by the layers it composes and the tokens already provisioned.
   raw `MediaRecorderOptions` passthrough would put the browser's vocabulary in Canopy's published
   API, and every consumer reaching through it would bind to an API whose support matrix is still
   moving. So the surface is **`AudioRecorderHandle`** (`start` / `stop` / `cancel` / `isRecording`
-  / `getDurationMs`), **`AudioRecording`** (`{ blob, mimeType, durationMs }`), and
-  **`RecordingError`** with an engine-independent `reason` - each implementable on any capture
-  engine - and the 0071 built-artifact guard is extended to reject every `MediaRecorder`-shaped
-  name in `dist/branches/index.d.ts`, with a presence half so it cannot pass on a surface that
-  dropped the types it guards.
+  / `getStatus` / `getDurationMs`), **`AudioRecording`** (`{ blob, mimeType, durationMs }`), and
+  **`AudioRecordingError`** with an engine-independent `reason` - each implementable on any capture
+  engine.
+
+  The 0071 built-artifact guard is **inverted** here rather than merely extended. 0071 listed the
+  engine names to reject, which only works while someone remembers to add to the list: the
+  device-selection and gain props 0072 defers would arrive as `MediaTrackConstraints`,
+  `MediaDeviceInfo` and the `Constrain*` family, none of which a denylist written in 2026 contains.
+  0072 instead pins this component's declarations in `dist/branches/index.d.ts` against a
+  **committed snapshot**, so any new type reference in the published surface is a reviewed diff -
+  and the snapshot subsumes the presence half, because a dropped type fails the extraction rather
+  than passing vacuously. Extending that shape to the whole barrel is recorded as feedback 0029.
 
   Three boundaries this Branch draws that the players did not:
   - **A device permission is asked for on press, never on mount.** `getUserMedia` at mount time

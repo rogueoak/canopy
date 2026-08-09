@@ -5,14 +5,14 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AudioRecorder, canCaptureMicrophone, formatElapsed, pickMimeType } from './AudioRecorder';
-import type { AudioRecorderHandle, AudioRecording, RecordingError } from './AudioRecorder';
+import type { AudioRecorderHandle, AudioRecording, AudioRecordingError } from './AudioRecorder';
 
 /**
  * jsdom implements none of the three platform APIs this component drives - `MediaRecorder`,
  * `navigator.mediaDevices.getUserMedia`, and `AudioContext`. Per the "do not assert a third-party
  * library's browser internals in jsdom" learning, nothing below asserts what a browser would do
  * with them. What is asserted is the mapping Canopy owns: the states rendered, the handle's
- * behaviour, the `RecordingError.reason` produced, the tracks stopped, and the loop cancelled.
+ * behaviour, the `AudioRecordingError.reason` produced, the tracks stopped, and the loop cancelled.
  *
  * The stand-ins are STEPPABLE, not merely countable (learning 49): each one can be advanced
  * through a data event, a stop, an error, and a permission rejection on demand, and the analyser
@@ -252,10 +252,20 @@ async function pressStop() {
   return recorder;
 }
 
-/** The waveform wrapper: the only `aria-hidden` element that is a direct child of the control row. */
+/**
+ * The waveform wrapper: the `flex-1` decoration in the control row. The row holds other
+ * `aria-hidden` children - the reserved cancel slot and the recording dot - and neither of those
+ * grows, so `flex-1` is what identifies the waveform.
+ */
 function waveform(container: HTMLElement): HTMLElement | null {
   const row = container.firstElementChild?.firstElementChild;
-  return row?.querySelector(':scope > [aria-hidden="true"]') ?? null;
+  return row?.querySelector(':scope > [aria-hidden="true"].flex-1') ?? null;
+}
+
+/** The recording dot: `bg-danger` while a take is live, and a transparent reserved slot at rest. */
+function recordingDot(container: HTMLElement): HTMLElement {
+  const row = container.firstElementChild!.firstElementChild!;
+  return row.querySelector(':scope > [aria-hidden="true"].rounded-full.w-2\\.5')!;
 }
 
 function barHeights(container: HTMLElement): number[] {
@@ -368,6 +378,9 @@ describe('recording a take', () => {
     const recording = onComplete.mock.calls[0]![0] as AudioRecording;
     expect(recording.blob.size).toBeGreaterThan(0);
     expect(recording.mimeType).toBe('audio/webm;codecs=opus');
+    // The BLOB is the object a consumer uploads, and a blob built without its type reports `''` -
+    // no Content-Type to send and no way to recover one. Asserting `mimeType` alone misses that.
+    expect(recording.blob.type).toBe('audio/webm;codecs=opus');
     // Measured by the component from a monotonic clock, NOT read back from the blob: WebM out of
     // MediaRecorder routinely carries no duration and yields Infinity.
     expect(recording.durationMs).toBeGreaterThanOrEqual(2400);
@@ -475,6 +488,39 @@ describe('cancel', () => {
     expect(screen.getByText('0:00')).toBeInTheDocument();
   });
 
+  it('abandons a permission prompt that is still open', async () => {
+    // The window in which a reader is most likely to change their mind. `cancel()` used to be a
+    // silent no-op here, and the microphone then opened anyway once they answered.
+    let grant: (stream: FakeMediaStream) => void = () => {};
+    getUserMedia.mockImplementation(
+      () =>
+        new Promise<FakeMediaStream>((resolve_) => {
+          grant = resolve_;
+        }),
+    );
+    const onCancel = vi.fn();
+    const onReady = vi.fn();
+    render(<AudioRecorder onCancel={onCancel} onReady={onReady} />);
+    const handle = onReady.mock.calls[0]![0] as AudioRecorderHandle;
+
+    await act(async () => {
+      fireEvent.click(recordButton());
+    });
+    await act(async () => {
+      handle.cancel();
+    });
+    expect(handle.getStatus()).toBe('idle');
+
+    await act(async () => {
+      grant(currentStream);
+    });
+
+    expect(currentStream.tracks.every((track) => track.readyState === 'ended')).toBe(true);
+    expect(FakeMediaRecorder.instances).toHaveLength(0);
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(recordButton()).toBeEnabled();
+  });
+
   it('offers the discard control only while recording', async () => {
     render(<AudioRecorder />);
 
@@ -492,7 +538,9 @@ describe('maxDurationSeconds', () => {
   it('stops the recording and completes normally rather than erroring', async () => {
     const onComplete = vi.fn();
     const onError = vi.fn();
-    render(<AudioRecorder maxDurationSeconds={2} onComplete={onComplete} onError={onError} />);
+    render(
+      <AudioRecorder maxDurationSeconds={2} onComplete={onComplete} onRecordingError={onError} />,
+    );
 
     const recorder = await pressRecord();
     advance(2000);
@@ -617,6 +665,27 @@ describe('releasing the microphone', () => {
 
     expect(FakeAudioContext.instances).toHaveLength(0);
   });
+
+  it('closes an AudioContext whose analyser could not be built', async () => {
+    // The waveform is decoration and its failure is swallowed on purpose - but the resource it
+    // allocated is not decoration. A context published to the ref only AFTER the analyser succeeds
+    // is unreachable when the analyser throws: never closed, never closable, and it outlives the
+    // component. Browsers cap concurrent contexts (Chrome at six).
+    class RefusingContext extends FakeAudioContext {
+      createMediaStreamSource = vi.fn(() => {
+        throw new Error('no source for you');
+      }) as unknown as FakeAudioContext['createMediaStreamSource'];
+    }
+    vi.stubGlobal('AudioContext', RefusingContext);
+    render(<AudioRecorder />);
+
+    await pressRecord();
+    // The recording continues regardless - that is the point of swallowing it.
+    expect(stopButton()).toBeInTheDocument();
+    await pressStop();
+
+    expect(lastContext().close).toHaveBeenCalled();
+  });
 });
 
 /* ------------------------------------------------------------------------------- failures */
@@ -633,39 +702,52 @@ describe('permission refused', () => {
   it('renders the permission-denied state and reports reason: permission', async () => {
     denyPermission();
     const onError = vi.fn();
-    render(<AudioRecorder onError={onError} />);
+    render(<AudioRecorder onRecordingError={onError} />);
 
     await pressRecord();
 
     expect(screen.getByText(/blocking the microphone/i)).toBeInTheDocument();
-    const error = onError.mock.calls[0]![0] as RecordingError;
+    const error = onError.mock.calls[0]![0] as AudioRecordingError;
     expect(error).toBeInstanceOf(Error);
     expect(error.reason).toBe('permission');
   });
 
-  it('leaves the control disabled rather than hidden', async () => {
-    // A denied microphone cannot be re-prompted from inside the page, so an enabled button would
-    // lie - and a hidden one would leave the reader staring at a component that vanished.
+  it('leaves the control disabled rather than hidden, and still focusable', async () => {
+    // A denied microphone cannot be re-prompted from inside the page, so a live button would lie -
+    // and a hidden one would leave the reader staring at a component that vanished. It says so with
+    // `aria-disabled` rather than the attribute, because the attribute would take focus off the
+    // control the reader just pressed (see the focus test below).
     denyPermission();
     render(<AudioRecorder />);
 
     await pressRecord();
 
     expect(recordButton()).toBeInTheDocument();
-    expect(recordButton()).toBeDisabled();
+    expect(recordButton()).toHaveAttribute('aria-disabled', 'true');
+    expect(recordButton()).not.toBeDisabled();
   });
 
-  it('does not re-prompt once refused', async () => {
+  it('does not re-prompt once refused, even when driven from the handle', async () => {
+    // Driven through the HANDLE on purpose: React does not dispatch `onClick` to a disabled button,
+    // so a click-based version of this test passes on a component with no guard at all. `start()`
+    // reaches the guard directly.
     denyPermission();
-    render(<AudioRecorder onReady={() => {}} />);
-    await pressRecord();
+    const onReady = vi.fn();
+    render(<AudioRecorder onReady={onReady} />);
+    const handle = onReady.mock.calls[0]![0] as AudioRecorderHandle;
+
+    await act(async () => {
+      handle.start();
+    });
+    expect(handle.getStatus()).toBe('permission-denied');
     getUserMedia.mockClear();
 
     await act(async () => {
-      fireEvent.click(recordButton());
+      handle.start();
     });
 
     expect(getUserMedia).not.toHaveBeenCalled();
+    expect(handle.isRecording()).toBe(false);
   });
 
   it('takes its copy from a prop, so it can be reworded or translated', async () => {
@@ -680,23 +762,25 @@ describe('permission refused', () => {
   it('treats a missing device as the DEVICE, not as a refusal', async () => {
     denyPermission('NotFoundError');
     const onError = vi.fn();
-    render(<AudioRecorder onError={onError} />);
+    render(<AudioRecorder onRecordingError={onError} />);
 
     await pressRecord();
 
-    expect((onError.mock.calls[0]![0] as RecordingError).reason).toBe('device');
+    expect((onError.mock.calls[0]![0] as AudioRecordingError).reason).toBe('device');
     // Recoverable - plug a microphone in and press again.
     expect(recordButton()).toBeEnabled();
   });
 });
 
 describe('unsupported browser', () => {
+  const blockedControl = () => screen.getByRole('button', { name: 'Record' });
+
   it('renders the unsupported state when no container is supported, and throws nothing', () => {
     FakeMediaRecorder.supported = [];
 
     expect(() => render(<AudioRecorder />)).not.toThrow();
     expect(screen.getByText(/not supported/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Record' })).toBeDisabled();
+    expect(blockedControl()).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('renders the unsupported state when the browser has no recorder', () => {
@@ -704,7 +788,7 @@ describe('unsupported browser', () => {
 
     render(<AudioRecorder />);
 
-    expect(screen.getByRole('button', { name: 'Record' })).toBeDisabled();
+    expect(blockedControl()).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('renders the unsupported state when the browser cannot open a microphone', () => {
@@ -712,7 +796,7 @@ describe('unsupported browser', () => {
 
     render(<AudioRecorder />);
 
-    expect(screen.getByRole('button', { name: 'Record' })).toBeDisabled();
+    expect(blockedControl()).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('never asks for the microphone in the unsupported state', async () => {
@@ -720,10 +804,45 @@ describe('unsupported browser', () => {
     render(<AudioRecorder />);
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Record' }));
+      fireEvent.click(blockedControl());
     });
 
     expect(getUserMedia).not.toHaveBeenCalled();
+    expect(FakeMediaRecorder.instances).toHaveLength(0);
+  });
+
+  it('reports reason: unsupported when something tries to record anyway', async () => {
+    // The documented reason has to be REACHABLE. The mount effect sets the status before anything
+    // can be pressed, so an early return for `unsupported` in the record handler made this line
+    // dead code and a consumer branching on it never received the value.
+    FakeMediaRecorder.supported = [];
+    const onError = vi.fn();
+    const onReady = vi.fn();
+    render(<AudioRecorder onRecordingError={onError} onReady={onReady} />);
+    const handle = onReady.mock.calls[0]![0] as AudioRecorderHandle;
+
+    await act(async () => {
+      handle.start();
+    });
+
+    expect((onError.mock.calls[0]![0] as AudioRecordingError).reason).toBe('unsupported');
+    expect(handle.getStatus()).toBe('unsupported');
+    expect(getUserMedia).not.toHaveBeenCalled();
+  });
+
+  it('does not flip a LIVE recording to unsupported when `mimeTypes` changes', async () => {
+    // Nothing is released on that path, so the stream, the recorder and both loops would keep
+    // running behind a control `requestStop` no longer acts on - the microphone open, the browser's
+    // indicator lit, until unmount.
+    const { rerender } = render(<AudioRecorder />);
+    await pressRecord();
+
+    FakeMediaRecorder.supported = [];
+    rerender(<AudioRecorder mimeTypes={['audio/x-nope']} />);
+    await act(async () => {});
+
+    expect(stopButton()).toBeInTheDocument();
+    expect(currentStream.tracks.every((track) => track.readyState === 'live')).toBe(true);
   });
 });
 
@@ -731,14 +850,14 @@ describe('a device error mid-recording', () => {
   it('reports reason: device and stops cleanly', async () => {
     const onError = vi.fn();
     const onComplete = vi.fn();
-    render(<AudioRecorder onError={onError} onComplete={onComplete} />);
+    render(<AudioRecorder onRecordingError={onError} onComplete={onComplete} />);
     const recorder = await pressRecord();
 
     await act(async () => {
       recorder!.emitError();
     });
 
-    const error = onError.mock.calls[0]![0] as RecordingError;
+    const error = onError.mock.calls[0]![0] as AudioRecordingError;
     expect(error.reason).toBe('device');
     expect(onComplete).not.toHaveBeenCalled();
     expect(screen.getByText(/microphone is unavailable/i)).toBeInTheDocument();
@@ -753,6 +872,51 @@ describe('a device error mid-recording', () => {
     });
 
     expect(recordButton()).toBeEnabled();
+    expect(recordButton()).toHaveAttribute('aria-disabled', 'false');
+  });
+});
+
+describe('a recorder that will not start', () => {
+  it('reports reason: engine when the recorder will not construct, and releases the stream', async () => {
+    // The release on this path is the load-bearing half: without it the constructor's failure ships
+    // a LIVE microphone, with the browser's indicator lit and nothing on the page to switch it off.
+    class RefusingRecorder {
+      static isTypeSupported = () => true;
+      constructor() {
+        throw new Error('cannot construct');
+      }
+    }
+    vi.stubGlobal('MediaRecorder', RefusingRecorder);
+    const onError = vi.fn();
+    render(<AudioRecorder onRecordingError={onError} />);
+
+    await act(async () => {
+      fireEvent.click(recordButton());
+    });
+
+    expect((onError.mock.calls[0]![0] as AudioRecordingError).reason).toBe('engine');
+    expect(currentStream.tracks.every((track) => track.readyState === 'ended')).toBe(true);
+    expect(screen.getByText(/microphone is unavailable/i)).toBeInTheDocument();
+  });
+
+  it('reports reason: engine when `start()` throws, and releases everything', async () => {
+    class UnstartableRecorder extends FakeMediaRecorder {
+      start = vi.fn(() => {
+        throw new Error('will not start');
+      });
+    }
+    vi.stubGlobal('MediaRecorder', UnstartableRecorder);
+    const onError = vi.fn();
+    render(<AudioRecorder onRecordingError={onError} />);
+
+    await act(async () => {
+      fireEvent.click(recordButton());
+    });
+
+    expect((onError.mock.calls[0]![0] as AudioRecordingError).reason).toBe('engine');
+    expect(currentStream.tracks.every((track) => track.readyState === 'ended')).toBe(true);
+    expect(lastContext().close).toHaveBeenCalled();
+    expect(loopIsRunning()).toBe(false);
   });
 });
 
@@ -764,7 +928,11 @@ describe('the waveform', () => {
 
     expect(container.querySelector('canvas')).toBeNull();
     expect(barHeights(container)).toHaveLength(12);
-    expect(waveform(container)!.firstElementChild).toHaveClass('bg-border');
+    // `bg-border` is 1.46:1 on this card in light and 1.31:1 in dark, so a resting bar had already
+    // vanished - the thing MIN_BAR_LEVEL exists to prevent. `text-subtle` clears the 3:1 non-text
+    // floor in both themes. `min-w-px` keeps a bar from collapsing in a narrow container.
+    expect(waveform(container)!.firstElementChild).toHaveClass('bg-text-subtle');
+    expect(waveform(container)!.firstElementChild).toHaveClass('min-w-px');
   });
 
   it('responds to the input level in flight, not merely at rest', async () => {
@@ -780,6 +948,7 @@ describe('the waveform', () => {
     const loud = barHeights(container);
 
     analyser().level = 0;
+    advance(50);
     act(() => {
       stepFrame();
     });
@@ -787,6 +956,28 @@ describe('the waveform', () => {
 
     expect(Math.max(...loud)).toBeGreaterThan(50);
     expect(Math.max(...silent)).toBe(8);
+  });
+
+  it('re-renders at the ~30fps budget rather than once per animation frame', async () => {
+    // Forty-eight inline heights and a full component re-render, at the display's refresh rate, is
+    // four reconciliations per painted change on a 120Hz panel. The loop still runs every frame -
+    // it stays tied to the compositor - but only the due ones reach React.
+    const { container } = render(<AudioRecorder barCount={8} />);
+    await pressRecord();
+
+    analyser().level = 0.9;
+    act(() => {
+      stepFrame();
+    });
+    const painted = barHeights(container);
+
+    analyser().level = 0;
+    act(() => {
+      stepFrame();
+    });
+
+    expect(barHeights(container)).toEqual(painted);
+    expect(loopIsRunning()).toBe(true);
   });
 
   it('paints the bars with the active role while recording', async () => {
@@ -819,6 +1010,60 @@ describe('the waveform', () => {
   it('can be turned off entirely', () => {
     const { container } = render(<AudioRecorder showWaveform={false} />);
     expect(waveform(container)).toBeNull();
+  });
+});
+
+describe('the recording state is visible, not only glyph-deep', () => {
+  it('marks a live microphone with the danger role, and clears it when the take ends', async () => {
+    // Idle and recording were otherwise the same `primary` circle with a different 16px glyph.
+    // This is the one state in the component where being wrong has a privacy cost.
+    const { container } = render(<AudioRecorder />);
+
+    expect(recordingDot(container)).toHaveClass('bg-transparent');
+
+    await pressRecord();
+    expect(recordingDot(container)).toHaveClass('bg-danger');
+
+    await pressStop();
+    expect(recordingDot(container)).toHaveClass('bg-transparent');
+  });
+
+  it('survives showWaveform={false}, where the glyph would be the whole signal', async () => {
+    const { container } = render(<AudioRecorder showWaveform={false} />);
+
+    await pressRecord();
+
+    expect(waveform(container)).toBeNull();
+    expect(recordingDot(container)).toHaveClass('bg-danger');
+  });
+
+  it('brightens the clock while a take runs and calms it again afterwards', async () => {
+    // The clock is the only quantitative readout on the card. Colour, not size, so it cannot reflow.
+    render(<AudioRecorder />);
+    const clock = () => screen.getByText(/^\d+:\d\d$/);
+
+    expect(clock()).toHaveClass('text-text-muted');
+    await pressRecord();
+    expect(clock()).toHaveClass('text-text');
+    await pressStop();
+    expect(clock()).toHaveClass('text-text-muted');
+  });
+
+  it('keeps the row from reflowing when the discard control appears', async () => {
+    // Cancel is mounted on demand, so its slot is reserved: without it the waveform lost 52px at
+    // exactly the moment the reader is watching the bars to see whether the microphone works.
+    const { container } = render(<AudioRecorder />);
+    const row = () => container.firstElementChild!.firstElementChild!;
+    const idleChildren = row().children.length;
+
+    await pressRecord();
+
+    expect(row().children.length).toBe(idleChildren);
+    // And it sits past the waveform, not 12px from the control it undoes.
+    const order = [...row().children];
+    expect(
+      order.indexOf(screen.getByRole('button', { name: 'Discard recording' })),
+    ).toBeGreaterThan(order.indexOf(waveform(container)!));
   });
 });
 
@@ -900,6 +1145,19 @@ describe('under prefers-reduced-motion', () => {
     const meter = waveform(container)!;
     expect(meter.children).toHaveLength(1);
     expect((meter.firstElementChild as HTMLElement).style.width).toBeTruthy();
+    // The same row height and the same trackless form as the bars, so the two presentations of one
+    // idea read as relatives. The old `bg-border` fill inside a `bg-muted-raised` track resolved to
+    // the same value in dark - an empty track with no indicator in it at all.
+    expect(meter).toHaveClass('h-10');
+    expect(meter).not.toHaveClass('bg-muted-raised');
+    expect(meter.firstElementChild).toHaveClass('bg-primary');
+  });
+
+  it('draws a visible resting meter before anything is recorded', () => {
+    stubReducedMotion(true);
+    const { container } = render(<AudioRecorder />);
+
+    expect(waveform(container)!.firstElementChild).toHaveClass('bg-text-subtle');
   });
 
   it('still responds to input, on a slower cadence', async () => {
@@ -968,6 +1226,97 @@ describe('accessibility', () => {
     expect(stopButton()).toHaveFocus();
   });
 
+  it('never puts the `disabled` ATTRIBUTE on the control it just took a press from', async () => {
+    // jsdom keeps focus on an element that becomes disabled; Chrome, Firefox and Safari run the
+    // unfocusing steps and drop it to `<body>`. So the blur itself is not observable here - what is
+    // observable is its CAUSE, and this is the assertion that holds the shipped behaviour to the
+    // spec's "focus stays on the control across the state change".
+    //
+    // The states are entered by pressing this control: `requesting` on the way in, `stopping` on
+    // the way out, and `permission-denied` / `unsupported` when it fails. The re-entry guards on
+    // `statusRef` already ignore the press, so `aria-disabled` says the same thing to assistive
+    // tech without taking the element out of the focus order.
+    let grant: (stream: FakeMediaStream) => void = () => {};
+    getUserMedia.mockImplementation(
+      () =>
+        new Promise<FakeMediaStream>((resolve_) => {
+          grant = resolve_;
+        }),
+    );
+    render(<AudioRecorder />);
+
+    await act(async () => {
+      fireEvent.click(recordButton());
+    });
+    const waiting = screen.getByRole('button', { name: 'Waiting for microphone access' });
+    expect(waiting).not.toBeDisabled();
+    expect(waiting).toHaveAttribute('aria-disabled', 'true');
+
+    await act(async () => {
+      grant(currentStream);
+    });
+    const recorder = lastRecorder();
+    await act(async () => {
+      fireEvent.click(stopButton());
+    });
+
+    expect(stopButton()).not.toBeDisabled();
+    expect(stopButton()).toHaveAttribute('aria-disabled', 'true');
+
+    await act(async () => {
+      recorder.emitData();
+      recorder.emitStop();
+    });
+    expect(recordButton()).not.toBeDisabled();
+  });
+
+  it('renders the requesting state while the browser prompt is open', async () => {
+    let grant: (stream: FakeMediaStream) => void = () => {};
+    getUserMedia.mockImplementation(
+      () =>
+        new Promise<FakeMediaStream>((resolve_) => {
+          grant = resolve_;
+        }),
+    );
+    render(<AudioRecorder />);
+
+    await act(async () => {
+      fireEvent.click(recordButton());
+    });
+
+    const waiting = screen.getByRole('button', { name: 'Waiting for microphone access' });
+    expect(waiting).toHaveAttribute('aria-busy', 'true');
+    expect(waiting.querySelector('.animate-spin')).not.toBeNull();
+    // The Spinner's own `role="status"` must not announce a second, competing message.
+    expect(waiting.querySelector('[role="status"]')).toHaveAttribute('aria-hidden', 'true');
+    expect(liveRegion()).toHaveTextContent('Waiting for microphone access');
+
+    await act(async () => {
+      grant(currentStream);
+    });
+    expect(stopButton()).toBeInTheDocument();
+  });
+
+  it('renders the stopping state while the engine finalises the take', async () => {
+    // Between `recorder.stop()` and the engine's `onstop` a second press would land on a take that
+    // is still finalising, and cancel would offer to discard one that is already kept.
+    render(<AudioRecorder />);
+    const recorder = await pressRecord();
+
+    await act(async () => {
+      fireEvent.click(stopButton());
+    });
+
+    expect(stopButton()).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByRole('button', { name: 'Discard recording' })).not.toBeInTheDocument();
+
+    await act(async () => {
+      recorder!.emitData();
+      recorder!.emitStop();
+    });
+    expect(recordButton()).toBeInTheDocument();
+  });
+
   it('takes its copy from props throughout', async () => {
     render(<AudioRecorder startLabel="Start note" stopLabel="Finish note" cancelLabel="Bin it" />);
 
@@ -979,14 +1328,39 @@ describe('accessibility', () => {
     expect(screen.getByRole('button', { name: 'Bin it' })).toBeInTheDocument();
   });
 
-  it('announces the transitions in a polite live region', async () => {
+  it('announces the transitions in a polite live region, without putting them on the page', async () => {
     render(<AudioRecorder />);
 
     await pressRecord();
     expect(liveRegion()).toHaveTextContent('Recording');
+    // The class switch is the half that makes ONE region work for both jobs. Without it every
+    // announcement - "Recording 0:10", "Recording discarded" - becomes visible text under the
+    // control, flickering on each change.
+    expect(liveRegion()).toHaveClass('sr-only');
 
     await pressStop();
     expect(liveRegion()).toHaveTextContent('Recording stopped');
+    expect(liveRegion()).toHaveClass('sr-only');
+  });
+
+  it('shows the failure message as visible copy in the SAME region, exactly once', async () => {
+    getUserMedia.mockImplementation(async () => {
+      const error = new Error('Permission denied');
+      error.name = 'NotAllowedError';
+      throw error;
+    });
+    render(<AudioRecorder />);
+
+    await pressRecord();
+
+    expect(liveRegion()).not.toHaveClass('sr-only');
+    // The duplication tell the merged-live-region learning names: two regions would match twice.
+    expect(screen.getAllByText(/blocking the microphone/i)).toHaveLength(1);
+    // The copy is `text-text`, not `text-danger`: `danger` as a foreground measures 3.42:1 on this
+    // card in dark, under the AA floor for 12px. The danger role marks it with a glyph instead,
+    // where the 3:1 non-text floor applies - so the failure is not signalled by colour alone.
+    expect(liveRegion()).toHaveClass('text-text');
+    expect(liveRegion().querySelector('.text-danger')).not.toBeNull();
   });
 
   it('throttles the elapsed announcement rather than reading every second', async () => {
@@ -1062,39 +1436,178 @@ describe('keyboard operation', () => {
 
     expect(onKeyDown).toHaveBeenCalled();
   });
+
+  it('lets a caller suppress Escape with preventDefault', async () => {
+    // A consumer that owns Escape for its own dialog must not lose the take underneath it. The
+    // previous test proves the handler RUNS; this one proves its `preventDefault()` is honoured.
+    const onCancel = vi.fn();
+    render(<AudioRecorder onCancel={onCancel} onKeyDown={(event) => event.preventDefault()} />);
+    await pressRecord();
+
+    fireEvent.keyDown(stopButton(), { key: 'Escape' });
+
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(lastRecorder().stop).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Discard recording' })).toBeInTheDocument();
+  });
+});
+
+/* ------------------------------------------------------------------------------- StrictMode */
+
+describe('under React StrictMode', () => {
+  /**
+   * StrictMode runs setup, cleanup, setup on mount - a remount of the same instance - and it is on
+   * by default in Next.js, which is where consumers live. Every other test in this file uses a
+   * plain render, so the whole class of mount-scoped state that does not survive a remount was
+   * invisible to the suite. These drive a full take through it.
+   */
+  it('records a complete take', async () => {
+    const onComplete = vi.fn();
+    render(
+      <React.StrictMode>
+        <AudioRecorder onComplete={onComplete} />
+      </React.StrictMode>,
+    );
+
+    await pressRecord();
+    // The tell for the latched-unmount bug: the stream is granted and then immediately discarded,
+    // so no recorder is ever constructed and the control sits on a spinner that never resolves.
+    expect(FakeMediaRecorder.instances).toHaveLength(1);
+    expect(stopButton()).toBeInTheDocument();
+    expect(currentStream.tracks.every((track) => track.readyState === 'live')).toBe(true);
+
+    advance(1500);
+    await pressStop();
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect((onComplete.mock.calls[0]![0] as AudioRecording).blob.size).toBeGreaterThan(0);
+    expect(recordButton()).toBeInTheDocument();
+  });
+
+  it('still releases the microphone on unmount', async () => {
+    const { unmount } = render(
+      <React.StrictMode>
+        <AudioRecorder />
+      </React.StrictMode>,
+    );
+    await pressRecord();
+
+    unmount();
+
+    expect(currentStream.tracks.every((track) => track.readyState === 'ended')).toBe(true);
+    expect(lastContext().close).toHaveBeenCalled();
+  });
 });
 
 /* --------------------------------------------------------- the owned interface (spec 0072) */
 
-describe("the public interface is Canopy's, not the platform's", () => {
-  it('does not name the recording engine anywhere in the published types', () => {
-    // THE swappability guard, and the reason `onReady` hands over a handle rather than a
-    // `MediaRecorder`. Asserted against the BUILT artifact - that is what a consumer installs, and
-    // a platform type leaks through inference without ever being written down in the source.
-    // `test` depends on `build` in turbo.json, so this file is present and current.
-    const declarations = readFileSync(resolve(__dirname, '../../dist/branches/index.d.ts'), 'utf8');
-    // Comments are stripped first: the doc comments legitimately NAME the platform API when
-    // explaining why it is not exposed, and prose is not a contract.
-    const types = declarations.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+/** Every name this component publishes. A new one has to be added here to be snapshotted. */
+const PUBLISHED_NAMES = [
+  'AudioRecorderStatus',
+  'AudioRecording',
+  'AudioRecorderHandle',
+  'AudioRecordingError',
+  'AudioRecorderProps',
+  'AudioRecorder',
+] as const;
 
-    // The presence half, per learning 57: a validity check passes vacuously on a surface that
-    // dropped the thing it was guarding.
-    expect(types).toContain('AudioRecorderHandle');
-    expect(types).toContain('AudioRecording');
-    expect(types).toContain('RecordingError');
-    expect(types).toMatch(/blob:\s*Blob/);
-
-    for (const platformType of [
-      'MediaRecorder',
-      'MediaRecorderOptions',
-      'MediaStream',
-      'MediaStreamTrack',
-      'BlobEvent',
-      'AudioContext',
-      'AnalyserNode',
-    ]) {
-      expect(types).not.toContain(platformType);
+/**
+ * Cut this component's declarations out of the built `.d.ts`, comments stripped, in a fixed order.
+ *
+ * Comments go first because the doc comments legitimately NAME the platform API when explaining why
+ * it is not exposed, and prose is not a contract. Whitespace is normalised so the snapshot pins the
+ * TYPES and not tsup's formatting. A missing name throws rather than snapshotting an empty string -
+ * a guard that passes vacuously on a surface which dropped the thing it was guarding is worse than
+ * no guard (learning 57).
+ */
+function publicDeclarations(source: string): string {
+  const types = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  return PUBLISHED_NAMES.map((name) => {
+    const start = new RegExp(
+      `^(?:declare )?(?:const|function|class|interface|type) ${name}\\b`,
+      'm',
+    ).exec(types);
+    if (!start) throw new Error(`the built declarations no longer publish ${name}`);
+    let depth = 0;
+    let index = start.index;
+    for (; index < types.length; index += 1) {
+      const char = types[index];
+      if (char === '{') depth += 1;
+      else if (char === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          index += 1;
+          break;
+        }
+      } else if (char === ';' && depth === 0) {
+        index += 1;
+        break;
+      }
     }
+    return types
+      .slice(start.index, index)
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n\s*\n/g, '\n')
+      .trim();
+  }).join('\n');
+}
+
+describe("the public interface is Canopy's, not the platform's", () => {
+  it('publishes exactly this declaration surface, and nothing else', () => {
+    // THE swappability guard, and the reason `onReady` hands over a handle rather than a
+    // `MediaRecorder`. Read from the BUILT artifact - that is what a consumer installs, and a
+    // platform type leaks through INFERENCE without ever being written down in the source.
+    // `test` depends on `build` in turbo.json, so this file is present and current.
+    //
+    // It is a SNAPSHOT rather than a list of banned names. A denylist only rejects what someone
+    // remembered to ban: `MediaTrackConstraints`, `MediaDeviceInfo` and the whole `Constrain*`
+    // family are the natural way to write the device-selection and gain props this spec defers, and
+    // none of them would have been caught. Inverted, every new type reference in the published
+    // surface is a reviewed diff instead.
+    const declarations = readFileSync(resolve(__dirname, '../../dist/branches/index.d.ts'), 'utf8');
+
+    expect(publicDeclarations(declarations)).toMatchInlineSnapshot(`
+      "type AudioRecorderStatus = 'idle' | 'requesting' | 'recording' | 'stopping' | 'permission-denied' | 'unsupported' | 'device-error';
+      interface AudioRecording {
+       blob: Blob;
+       mimeType: string;
+       durationMs: number;
+      }
+      interface AudioRecorderHandle {
+       start(): void;
+       stop(): void;
+       cancel(): void;
+       isRecording(): boolean;
+       getStatus(): AudioRecorderStatus;
+       getDurationMs(): number;
+      }
+      interface AudioRecordingError extends Error {
+       reason: 'permission' | 'unsupported' | 'device' | 'engine';
+      }
+      interface AudioRecorderProps extends React.HTMLAttributes<HTMLDivElement> {
+       onComplete?: (recording: AudioRecording) => void;
+       onStart?: () => void;
+       onStop?: () => void;
+       onCancel?: () => void;
+       onRecordingError?: (error: AudioRecordingError) => void;
+       onReady?: (recorder: AudioRecorderHandle) => void;
+       maxDurationSeconds?: number;
+       mimeTypes?: readonly string[];
+       showWaveform?: boolean;
+       barCount?: number;
+       startLabel?: string;
+       stopLabel?: string;
+       cancelLabel?: string;
+       recordingLabel?: string;
+       requestingLabel?: string;
+       stoppedLabel?: string;
+       cancelledLabel?: string;
+       permissionDeniedLabel?: string;
+       unsupportedLabel?: string;
+       deviceErrorLabel?: string;
+      }
+      declare const AudioRecorder: React.ForwardRefExoticComponent<AudioRecorderProps & React.RefAttributes<HTMLDivElement>>;"
+    `);
   });
 
   it('hands `onReady` a handle on mount, without asking for the microphone', () => {
@@ -1176,6 +1689,27 @@ describe("the public interface is Canopy's, not the platform's", () => {
 
     expect(getUserMedia).toHaveBeenCalledTimes(1);
     expect(FakeMediaRecorder.instances).toHaveLength(1);
+  });
+
+  it('reports its status through the handle, so the type is reachable at all', async () => {
+    const onReady = vi.fn();
+    render(<AudioRecorder onReady={onReady} />);
+    const handle = onReady.mock.calls[0]![0] as AudioRecorderHandle;
+
+    expect(handle.getStatus()).toBe('idle');
+    const recorder = await pressRecord();
+    expect(handle.getStatus()).toBe('recording');
+
+    await act(async () => {
+      fireEvent.click(stopButton());
+    });
+    expect(handle.getStatus()).toBe('stopping');
+
+    await act(async () => {
+      recorder!.emitData();
+      recorder!.emitStop();
+    });
+    expect(handle.getStatus()).toBe('idle');
   });
 
   it('does not rebuild anything when an inline callback identity changes', async () => {

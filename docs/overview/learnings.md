@@ -854,3 +854,81 @@ The fix is to name it: `vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'
 test fakes **that** clock, not just the scheduler. And assert a duration against a **range** the
 real elapsed time cannot satisfy - a lower bound of zero, or a `toBeGreaterThan(0)`, is satisfied by
 the test's own runtime and hides exactly this mismatch.
+
+## `disabled` on the control the reader is standing on drops their focus, and jsdom will not say so
+
+`AudioRecorder` (0072) put the `disabled` attribute on its record/stop control in four states -
+`requesting`, `stopping`, `permission-denied`, `unsupported`. All four are entered **by pressing
+that control**, so the element being disabled is always the one holding focus. Browsers run the
+unfocusing steps and focus falls to `<body>`; the shipped keyboard flow was Space, focus lost, then
+Space scrolls the page. jsdom keeps focus on an element that becomes disabled, so the test asserting
+"focus stays on the control" could not have failed - the acceptance item was ticked on evidence the
+environment cannot give.
+
+`aria-disabled` plus an ignored activation says the same thing to assistive tech and keeps the
+element focusable. It usually costs nothing to implement, because a component that can enter these
+states already has the re-entry guard that makes the press safe - the attribute was doing
+double duty as a guard nobody needed it to be.
+
+A related tell: React does not dispatch `onClick` to a disabled `<button>`, so any test shaped
+"press it again and assert nothing happened" is satisfied by the attribute rather than by the guard
+it names. Delete the guard and those tests stay green.
+
+**Apply it:** before adding `disabled`, ask whether the state is entered by pressing that same
+control. If it is, use `aria-disabled` and ignore the activation. And when the environment cannot
+exhibit a failure, assert its **cause** instead of its effect - "the control is never disabled" is
+checkable in jsdom; "focus did not move" is not.
+
+## A ref the cleanup writes must be re-established by the setup that pairs with it
+
+An effect whose cleanup sets `ref.current = true` and whose setup sets nothing has not created
+mount-scoped state - it has created component-lifetime state with a one-way door. React 19
+`<StrictMode>` runs setup, cleanup, setup on every mount, so the first cleanup latches the flag and
+every mount afterwards starts poisoned. In `AudioRecorder` (0072) that made the component unable to
+record **at all** under StrictMode: the post-`await` guard read the latched "unmounted" flag,
+stopped the microphone it had just been granted, and left a spinner that never resolved. Next.js
+enables StrictMode by default, so this shipped broken for most consumers with 74 tests green.
+
+The related gap is the reason it survived review: **every render in the suite was a plain one**. A
+suite with no `<StrictMode>` render is blind to the whole class of "does not survive a remount",
+which is precisely the class StrictMode exists to surface.
+
+**Apply it:** whenever an effect's cleanup writes a ref, write the opposite value at the top of the
+effect body. And give any component that holds refs across an `await`, subscribes, or owns an engine
+instance one test that drives its main flow inside `<StrictMode>` - three lines, and it covers a
+class nothing else in the suite can see.
+
+## A published value must be reachable and a published type must be obtainable
+
+`AudioRecorder` (0072) documented `reason: 'unsupported'` on its error type and exported an
+`AudioRecorderStatus` union. Neither could be reached: the mount effect set the unsupported
+**status** before anything could be pressed and the handler returned early for it, so the line
+producing that reason was dead code; and no prop, callback, or handle method ever handed a consumer
+a status value. A consumer branching on a value the component cannot emit is writing dead code
+against a false API, and an exported type with no way to obtain one is a compatibility commitment
+bought for nothing - it pins the union, so adding a member internally becomes a published change.
+
+**Apply it:** two mechanical passes over any API before it ships. For every member of a documented
+union, name the input that produces it and write that test; if you cannot, remove it from the union.
+For every exported type, name the prop, callback, or method that hands a consumer a value of it; if
+there is none, drop it from the barrel or add the accessor. Do not export "for completeness".
+
+## Guard the invariant with a snapshot, not with a list of names you remembered to ban
+
+0071's encapsulation guard - "the engine must not appear in the published types" - was written as a
+denylist of engine names checked against the built `.d.ts`, and 0072 copied it. A denylist only
+rejects what its author thought of: the device-selection and gain props 0072 explicitly **defers**
+would arrive as `MediaTrackConstraints`, `MediaDeviceInfo` and the `Constrain*` family, none of
+which was listed, and the same barrel already published a raw `VideoJsOptions` passthrough that
+neither component's list caught. The invariant is a statement about the whole surface; a list of
+names is a statement about seven strings, and the two only agree while someone keeps adding to it -
+with the guard green either way, so the failure mode is silence.
+
+Inverted to a **committed snapshot** of the built declarations, every new type in the published
+surface becomes a reviewed diff, and the snapshot subsumes the "presence half" of learning 57: a
+type that disappears fails the extraction rather than passing vacuously.
+
+**Apply it:** when guarding "nothing but ours is published", snapshot or allowlist - fail closed.
+The test for whether you wrote the wrong one: name a future, reasonable change to the code and ask
+whether the guard would catch it. If the answer is in the same spec's deferred-work list, it will
+not.

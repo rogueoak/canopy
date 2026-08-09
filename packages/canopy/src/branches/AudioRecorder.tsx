@@ -15,8 +15,9 @@ import { useMediaQuery } from '../lib/useMediaQuery';
  *    changes nothing about the encapsulation. A raw-options passthrough or an
  *    `onReady(mediaRecorder)` would publish a browser API whose support matrix is still moving,
  *    and every consumer reaching through it would bind to it. So the surface is Canopy's own
- *    ({@link AudioRecorderHandle}, {@link AudioRecording}, {@link RecordingError}), and a test
- *    asserts the BUILT `dist/branches/index.d.ts` carries no `MediaRecorder`-typed surface.
+ *    ({@link AudioRecorderHandle}, {@link AudioRecording}, {@link AudioRecordingError}), and a test
+ *    pins the BUILT `dist/branches/index.d.ts` declarations for this component against a committed
+ *    snapshot, so a platform type arriving through inference is a reviewed diff.
  *
  * 2. **It knows nothing about where the audio goes.** The component hands back a `Blob`, a
  *    `mimeType`, and a duration. Upload, storage, and URLs are the application's, per the "a
@@ -45,6 +46,14 @@ const DEFAULT_MAX_DURATION_SECONDS = 600;
 
 /** Bars in the waveform. Forty-eight elements at ~30fps is comfortably within budget. */
 const DEFAULT_BAR_COUNT = 48;
+
+/**
+ * The waveform's render budget, ~30fps - the rate the spec costs forty-eight updated elements at.
+ * The rAF loop still runs at the compositor's cadence (so it pauses in a background tab), but it
+ * only asks React to reconcile this often: on a 120Hz display the untrottled version re-rendered
+ * the whole component, both `Button`s included, four times per painted change.
+ */
+const FRAME_INTERVAL_MS = 33;
 
 /**
  * The analyser window. 1024 samples is ~21ms at 48kHz - short enough that the bars track speech
@@ -84,17 +93,36 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
  * `focus-visible:ring-offset-ring-offset`, and tailwind-merge keys on variant + property, so the
  * override MUST carry the `focus-visible:` prefix or both survive and the override loses exactly
  * when it is needed (learning 43).
+ *
+ * NOTE the states below never set the `disabled` ATTRIBUTE, and that is deliberate. A browser that
+ * disables the element which currently holds focus runs the unfocusing steps and drops focus to
+ * `<body>`; jsdom does not, so a plain render cannot see it. Since every one of these states is
+ * entered by pressing this very control, `disabled` would drop a keyboard user to the document
+ * twice per take, and the spec requires focus to stay on the control across the state change. The
+ * control stays focusable, says `aria-disabled`, and the handlers ignore the activation - the
+ * re-entry guards on `statusRef` were already doing that work.
  */
 const CONTROL_BUTTON_CLASS = 'rounded-full focus-visible:ring-offset-surface-raised';
 
 /**
- * The control while the permission prompt is open. Button's disabled treatment swaps in the
- * `bg-disabled` pair, which would bleach the spinner into near-invisibility - the one element whose
- * whole job is to say something is happening. `cursor-wait` rather than not-allowed: this state
- * resolves itself as soon as the reader answers the browser.
+ * The control while the permission prompt is open, or while a take is finalising. It keeps the
+ * primary fill: Button's disabled treatment swaps in the `bg-disabled` pair, which would bleach the
+ * spinner into near-invisibility - the one element whose whole job is to say something is
+ * happening. `cursor-wait` rather than not-allowed: these states resolve themselves.
  */
-const CONTROL_BUTTON_WAITING_CLASS =
-  'rounded-full focus-visible:ring-offset-surface-raised disabled:bg-primary disabled:text-primary-foreground disabled:cursor-wait';
+const CONTROL_BUTTON_BUSY_CLASS =
+  'rounded-full focus-visible:ring-offset-surface-raised cursor-wait hover:bg-primary active:bg-primary';
+
+/**
+ * The control once the microphone is refused or the browser cannot record. It DIMS the primary fill
+ * rather than falling through to Button's `bg-disabled`, because in dark `disabled` and
+ * `surface-raised` are the same value (`stone.800`, 1.0:1): the control would read as a hole in the
+ * card instead of "disabled rather than hidden", which is what the spec asks for here. Per
+ * learning 26 a control whose filled state carries meaning dims; it does not flatten to a neutral
+ * surface. The durable fix is a raised-surface disabled fill at the token layer (feedback 0028).
+ */
+const CONTROL_BUTTON_BLOCKED_CLASS =
+  'rounded-full focus-visible:ring-offset-surface-raised opacity-50 cursor-not-allowed hover:bg-primary active:bg-primary';
 
 /**
  * Cancel. `ghost` so the dominant control stays dominant, with the raised-surface highlight:
@@ -112,11 +140,29 @@ const CANCEL_BUTTON_CLASS =
  * up with a waveform that stays light-mode blue after the page goes dark. Ordinary elements theme
  * like everything else, and the consumer's existing `@source` already emits these classes
  * (learning 8: the scanner only sees literals, so these are never interpolated).
+ *
+ * `text-subtle` rather than `border` for the resting state: `border` on this card measures 1.46:1
+ * in light and 1.31:1 in dark, so a 3px resting bar had already vanished - the exact thing
+ * {@link MIN_BAR_LEVEL} exists to prevent. `text-subtle` clears the 3:1 non-text floor in both
+ * themes (4.12:1 / 3.91:1) and still sits below the active `primary` bars, so the idle-to-active
+ * jump reads. `min-w-px` keeps a bar from collapsing entirely in a narrow container.
  */
-const BAR_IDLE_CLASS = 'flex-1 rounded-full bg-border';
-const BAR_ACTIVE_CLASS = 'flex-1 rounded-full bg-primary';
-const METER_FILL_IDLE_CLASS = 'h-full rounded-full bg-border';
-const METER_FILL_ACTIVE_CLASS = 'h-full rounded-full bg-primary';
+const BAR_IDLE_CLASS = 'min-w-px flex-1 rounded-full bg-text-subtle';
+const BAR_ACTIVE_CLASS = 'min-w-px flex-1 rounded-full bg-primary';
+const METER_FILL_IDLE_CLASS = 'h-2.5 rounded-full bg-text-subtle';
+const METER_FILL_ACTIVE_CLASS = 'h-2.5 rounded-full bg-primary';
+
+/**
+ * The recording indicator. Idle and recording were otherwise the same `primary` circle with a
+ * different 16px glyph, and with `showWaveform={false}` that glyph was the WHOLE signal that a
+ * microphone is live - the one state in this component where being wrong has a privacy cost. So the
+ * system's `danger` role marks it, which is the convention everywhere else in Canopy and is 3.42:1
+ * against the card in dark / 8.17:1 in light, above the 3:1 non-text floor in both.
+ *
+ * The slot is reserved (rendered transparent at rest) rather than mounted on demand, so nothing in
+ * the row reflows at the moment recording starts.
+ */
+const RECORDING_DOT_CLASS = 'h-2.5 w-2.5 shrink-0 rounded-full';
 
 /* ------------------------------------------------------------------------------------- types */
 
@@ -176,6 +222,12 @@ export interface AudioRecorderHandle {
   cancel(): void;
   /** Whether audio is being captured right now. */
   isRecording(): boolean;
+  /**
+   * The recorder's current {@link AudioRecorderStatus}. `isRecording()` answers the common
+   * question; this one is what a consumer driving from its own chrome needs to render a refusal or
+   * an unsupported browser in ITS chrome rather than only in ours.
+   */
+  getStatus(): AudioRecorderStatus;
   /** Elapsed milliseconds of the take in progress, or of the last completed one. */
   getDurationMs(): number;
 }
@@ -185,6 +237,10 @@ export interface AudioRecorderHandle {
  * (so it reads normally when logged or thrown) carrying a machine-readable `reason` beside the
  * human `message`.
  *
+ * Named for its owner, like every other error type in the flat `branches` barrel: "recording" is
+ * not this component's word, and a screen or video recorder wants exactly that name for an error
+ * whose `reason` union is not audio-specific.
+ *
  * - `permission`  - the reader refused the microphone, or the page is not allowed to ask.
  * - `unsupported` - the browser cannot record, or supports none of the requested containers.
  * - `device`      - there is no usable microphone, or it failed mid-recording.
@@ -193,15 +249,11 @@ export interface AudioRecorderHandle {
  * `reason` is the engine-independent part, which is the point: a consumer branches on it without
  * knowing what captured the audio.
  */
-export interface RecordingError extends Error {
+export interface AudioRecordingError extends Error {
   reason: 'permission' | 'unsupported' | 'device' | 'engine';
 }
 
-export interface AudioRecorderProps
-  // The native `onError` is a media/resource error handler with a different signature, and our
-  // prop of the same name means something else. Per learning 15 the component's own meaning wins,
-  // so the native one is omitted rather than silently conflicting.
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onError'> {
+export interface AudioRecorderProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * The recording finished. The component hands back a `Blob` and knows nothing about what happens
    * next - no upload, no URL, no transport. That is the application's, not the design system's.
@@ -213,8 +265,15 @@ export interface AudioRecorderProps
   onStop?: () => void;
   /** Recording was discarded. `onComplete` does not fire. */
   onCancel?: () => void;
-  /** Something failed. The {@link RecordingError} carries an engine-independent `reason`. */
-  onError?: (error: RecordingError) => void;
+  /**
+   * Something failed. The {@link AudioRecordingError} carries an engine-independent `reason`.
+   *
+   * Named `onRecordingError` rather than `onError` for the reason `Audio` names its own
+   * `onLoadError`: it is the error the component is ABOUT, namespaced by what failed, and it leaves
+   * the native `onError` handler on the wrapper alone. The two media Branches answer this the same
+   * way, so a consumer wiring both does not have to remember which is which.
+   */
+  onRecordingError?: (error: AudioRecordingError) => void;
   /**
    * Called once on mount with Canopy's own {@link AudioRecorderHandle}, so a consumer can drive the
    * recorder from its own chrome. It does NOT request the microphone - nothing does until record
@@ -231,10 +290,16 @@ export interface AudioRecorderProps
    * entry is what makes it record at all. With none of them supported the recorder renders its
    * unsupported state rather than throwing.
    */
-  mimeTypes?: string[];
+  mimeTypes?: readonly string[];
   /** Show the live waveform. Default `true`. */
   showWaveform?: boolean;
-  /** How many bars the waveform draws. Default `48`. */
+  /**
+   * How many bars the waveform draws. Default `48`.
+   *
+   * The bars share the space left over in the row, so this wants tuning to the container: at the
+   * default count a recorder narrower than about 400px gives each bar under 2px and the waveform
+   * reads as a smear of gaps. Sixteen is a good count for a narrow column.
+   */
   barCount?: number;
   /** Accessible name of the control while idle. Default `'Record'`. */
   startLabel?: string;
@@ -333,13 +398,16 @@ export function pickMimeType(candidates: readonly string[]): string | null {
   return null;
 }
 
-/** Build a {@link RecordingError}: a real `Error` plus the machine-readable, engine-free `reason`. */
+/**
+ * Build an {@link AudioRecordingError}: a real `Error` plus the machine-readable, engine-free
+ * `reason`.
+ */
 function makeRecordingError(
-  reason: RecordingError['reason'],
+  reason: AudioRecordingError['reason'],
   message: string,
   cause?: unknown,
-): RecordingError {
-  const error = new Error(message) as RecordingError;
+): AudioRecordingError {
+  const error = new Error(message) as AudioRecordingError;
   error.reason = reason;
   if (cause !== undefined) error.cause = cause;
   return error;
@@ -407,6 +475,11 @@ function StopGlyph() {
   );
 }
 
+/**
+ * A bin, not an X. Beside a stop button an X reads "dismiss" or "close", and this button discards
+ * the take permanently with no undo and no confirmation - the `aria-label` said so and the only
+ * thing a sighted reader could see said something else.
+ */
 function DiscardGlyph() {
   return (
     <svg
@@ -416,9 +489,40 @@ function DiscardGlyph() {
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
+      strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M6 6l12 12M18 6L6 18" />
+      <path d="M4 7h16" />
+      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      <path d="M6.5 7l.8 12a1 1 0 0 0 1 .9h7.4a1 1 0 0 0 1-.9l.8-12" />
+      <path d="M10.5 11v5M13.5 11v5" />
+    </svg>
+  );
+}
+
+/**
+ * The failure marker. The message itself is `text-text` rather than `text-danger`, because
+ * `danger` as a foreground is tuned for the page canvas and measures 3.42:1 on this card in dark -
+ * under the AA floor for 12px copy, and this paragraph is the only thing a reader whose microphone
+ * was refused has to go on. The `danger` role marks the message with this glyph instead, where the
+ * 3:1 non-text floor applies and it passes in both themes. It also means the failure is not
+ * signalled by colour alone. The durable fix is at the token layer (feedback 0028).
+ */
+function AlertGlyph() {
+  return (
+    <svg
+      className="mt-0.5 h-3.5 w-3.5 shrink-0 text-danger"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M10.3 4 2 18.4A2 2 0 0 0 3.7 21.4h16.6a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0z" />
+      <path d="M12 9.5v4" />
+      <path d="M12 17.2h.01" />
     </svg>
   );
 }
@@ -432,7 +536,7 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
       onStart,
       onStop,
       onCancel,
-      onError,
+      onRecordingError,
       onReady,
       maxDurationSeconds = DEFAULT_MAX_DURATION_SECONDS,
       mimeTypes = DEFAULT_MIME_TYPES,
@@ -473,7 +577,7 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
       onStart,
       onStop,
       onCancel,
-      onError,
+      onRecordingError,
       onReady,
       recordingLabel,
       requestingLabel,
@@ -545,7 +649,11 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
 
         const slow = configRef.current.reducedMotion;
         const now = performance.now();
-        const due = !slow || now - levelAtRef.current >= REDUCED_MOTION_INTERVAL_MS;
+        // BOTH paths carry a frame budget. The loop stays tied to the compositor either way; what
+        // is throttled is how often React is asked to reconcile forty-eight inline heights, which
+        // untrottled ran at the display's refresh rate rather than the ~30fps the spec costs it at.
+        const interval = slow ? REDUCED_MOTION_INTERVAL_MS : FRAME_INTERVAL_MS;
+        const due = now - levelAtRef.current >= interval;
         if (due) {
           levelAtRef.current = now;
           const bars = slow ? 1 : Math.max(1, Math.floor(configRef.current.barCount));
@@ -638,11 +746,15 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
       if (!Ctor) return;
       try {
         const context = new Ctor();
+        // Published BEFORE anything else can throw. A context that exists but is not in the ref is
+        // unreachable: never closed, never closable, and it outlives the component. Browsers cap
+        // concurrent `AudioContext`s (Chrome at six), so a repeatedly failing analyser would
+        // eventually poison the path that does work.
+        contextRef.current = context;
         const source = context.createMediaStreamSource(stream);
         const analyser = context.createAnalyser();
         analyser.fftSize = ANALYSER_FFT_SIZE;
         source.connect(analyser);
-        contextRef.current = context;
         analyserRef.current = analyser;
         bufferRef.current = new Uint8Array(analyser.fftSize);
         // Safari hands back a suspended context outside a gesture; a suspended analyser reads
@@ -659,16 +771,21 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
       const cfg = configRef.current;
       const current = statusRef.current;
       if (current === 'requesting' || current === 'recording' || current === 'stopping') return;
-      // A denied microphone cannot be re-prompted from inside the page, so pressing again would
-      // do nothing at all and look broken.
-      if (current === 'permission-denied' || current === 'unsupported') return;
+      // A denied microphone cannot be re-prompted from inside the page: asking again is a no-op the
+      // browser refuses silently. The consumer can read the refusal off `handle.getStatus()`.
+      if (current === 'permission-denied') return;
+      // `unsupported` deliberately falls THROUGH to the support probe below. Returning here made
+      // the documented `reason: 'unsupported'` unreachable - the mount effect sets the status
+      // before anything can be pressed - so a consumer branching on it never received it.
 
       const Ctor = getMediaRecorderCtor();
       const mimeType = pickMimeType(cfg.mimeTypes);
       if (!Ctor || !canCaptureMicrophone() || mimeType === null) {
         applyStatus('unsupported');
         setAnnouncement(cfg.unsupportedLabel);
-        cfg.onError?.(makeRecordingError('unsupported', 'This browser cannot record audio.'));
+        cfg.onRecordingError?.(
+          makeRecordingError('unsupported', 'This browser cannot record audio.'),
+        );
         return;
       }
 
@@ -689,7 +806,9 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
           applyStatus('device-error');
           setAnnouncement(cfg.deviceErrorLabel);
         }
-        cfg.onError?.(makeRecordingError(reason, 'The microphone could not be opened.', cause));
+        cfg.onRecordingError?.(
+          makeRecordingError(reason, 'The microphone could not be opened.', cause),
+        );
         return;
       }
 
@@ -707,7 +826,9 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
         for (const track of stream.getTracks()) track.stop();
         applyStatus('device-error');
         setAnnouncement(cfg.deviceErrorLabel);
-        cfg.onError?.(makeRecordingError('engine', 'The recorder could not be created.', cause));
+        cfg.onRecordingError?.(
+          makeRecordingError('engine', 'The recorder could not be created.', cause),
+        );
         return;
       }
 
@@ -740,7 +861,9 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
         releaseCapture();
         applyStatus('device-error');
         setAnnouncement(cfg.deviceErrorLabel);
-        cfg.onError?.(makeRecordingError('engine', 'The recorder could not be started.', cause));
+        cfg.onRecordingError?.(
+          makeRecordingError('engine', 'The recorder could not be started.', cause),
+        );
         return;
       }
 
@@ -763,6 +886,18 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
      */
     const requestStop = React.useCallback(
       (outcome: 'stop' | 'cancel') => {
+        // Cancelling while the browser's permission prompt is still open. There is no engine to
+        // tear down yet, so this is a status flip - and it is the flip the awaited `getUserMedia`
+        // below checks for, which is what stops the tracks if the reader then grants. Without it
+        // `handle.cancel()` was a silent no-op for exactly the window in which a reader is most
+        // likely to change their mind, and the microphone opened anyway.
+        if (statusRef.current === 'requesting') {
+          if (outcome !== 'cancel') return;
+          applyStatus('idle');
+          setAnnouncement(configRef.current.cancelledLabel);
+          configRef.current.onCancel?.();
+          return;
+        }
         if (statusRef.current !== 'recording') return;
         outcomeRef.current = outcome;
         // Measured at the moment stop was ASKED for, so the engine's own finalisation latency does
@@ -823,7 +958,9 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
         setLevels([]);
         setElapsedMs(0);
         setAnnouncement(cfg.deviceErrorLabel);
-        cfg.onError?.(makeRecordingError('device', 'The recording stopped unexpectedly.', cause));
+        cfg.onRecordingError?.(
+          makeRecordingError('device', 'The recording stopped unexpectedly.', cause),
+        );
       },
       [applyStatus, releaseCapture],
     );
@@ -840,6 +977,16 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
     // Keyed on the mime VALUES - an inline `mimeTypes={[...]}` is a new array every render.
     const mimeKey = mimeTypes.join('|');
     React.useEffect(() => {
+      // Support is a mount-time / idle-time question. Applied mid-flight it would flip a LIVE
+      // recording to `unsupported` without releasing anything - the stream, the recorder, the clock
+      // and the rAF loop would all keep running behind a control that `requestStop` then refuses to
+      // act on, leaving the microphone open with the browser's indicator lit. Abandoning a take
+      // because a prop changed is the worse of the two behaviours, so it simply does not apply.
+      const busy =
+        statusRef.current === 'requesting' ||
+        statusRef.current === 'recording' ||
+        statusRef.current === 'stopping';
+      if (busy) return;
       const supported =
         canCaptureMicrophone() && pickMimeType(configRef.current.mimeTypes) !== null;
       if (!supported) {
@@ -857,6 +1004,7 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
         stop: () => requestStopRef.current('stop'),
         cancel: () => requestStopRef.current('cancel'),
         isRecording: () => statusRef.current === 'recording',
+        getStatus: () => statusRef.current,
         getDurationMs: () => {
           if (statusRef.current === 'recording') {
             return Math.max(0, performance.now() - startedAtRef.current);
@@ -871,13 +1019,18 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
       configRef.current.onReady?.(handle);
     }, [handle]);
 
-    React.useEffect(
-      () => () => {
+    // `unmountedRef` is a MOUNT-SCOPED fact, so the setup that owns it re-establishes it. Without
+    // the reset it latched: React 19 `<StrictMode>` runs setup, cleanup, setup on mount, so the
+    // second setup began with the flag already `true` and every granted stream was stopped by the
+    // post-`await` guard - the component could never record at all, and sat on a spinner that never
+    // resolved. StrictMode is on by default in Next.js, which is where consumers live.
+    React.useEffect(() => {
+      unmountedRef.current = false;
+      return () => {
         unmountedRef.current = true;
         releaseCapture();
-      },
-      [releaseCapture],
-    );
+      };
+    }, [releaseCapture]);
 
     // The elapsed announcement is throttled here rather than inside the clock, so the timer stays
     // a timer and the ten-second rule is one readable condition.
@@ -928,11 +1081,15 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
     // `role="status"` would otherwise announce a second, competing message (learning 30).
     if (requesting) controlGlyph = <Spinner size="sm" aria-hidden="true" />;
 
-    let controlClass = CONTROL_BUTTON_CLASS;
-    if (requesting) controlClass = CONTROL_BUTTON_WAITING_CLASS;
+    // Busy resolves itself (the prompt is open, or the engine is handing over its last chunk);
+    // blocked does not, from inside the page. Neither sets the `disabled` ATTRIBUTE - see the note
+    // on CONTROL_BUTTON_CLASS - so the control keeps focus and the handlers ignore the press.
+    const controlBusy = requesting || stopping;
+    const controlBlocked = status === 'permission-denied' || status === 'unsupported';
 
-    const controlDisabled =
-      requesting || stopping || status === 'permission-denied' || status === 'unsupported';
+    let controlClass = CONTROL_BUTTON_CLASS;
+    if (controlBusy) controlClass = CONTROL_BUTTON_BUSY_CLASS;
+    if (controlBlocked) controlClass = CONTROL_BUTTON_BLOCKED_CLASS;
 
     let message = '';
     if (status === 'permission-denied') message = permissionDeniedLabel;
@@ -946,7 +1103,7 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
     // `position: absolute` and so takes no space in the flex column.
     const statusText = message || announcement;
     let statusClass = 'sr-only';
-    if (message) statusClass = 'text-caption text-danger';
+    if (message) statusClass = 'flex items-start gap-1.5 text-caption text-text';
 
     let cancelButton: React.ReactNode = null;
     if (recording) {
@@ -972,11 +1129,15 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
     if (showWaveform && reducedMotion) {
       // Reduced motion REDUCES the waveform rather than removing it. Deleting it would delete the
       // one signal that a muted microphone is muted, which is the reason it exists.
+      // Same row height and the same trackless form as the bars, so the two presentations of one
+      // idea read as relatives rather than as a waveform and a progress bar. The track it used to
+      // sit in was `bg-muted-raised` under a `bg-border` fill, which in dark is the same value -
+      // 1.0:1, an empty track with no indicator in it at all.
       let fillClass = METER_FILL_IDLE_CLASS;
       if (active) fillClass = METER_FILL_ACTIVE_CLASS;
       const meterLevel = Math.max(MIN_BAR_LEVEL, levels[0] ?? 0);
       waveform = (
-        <div aria-hidden="true" className="h-2 flex-1 overflow-hidden rounded-full bg-muted-raised">
+        <div aria-hidden="true" className="flex h-10 flex-1 items-center">
           <div className={fillClass} style={{ width: `${Math.round(meterLevel * 100)}%` }} />
         </div>
       );
@@ -1010,8 +1171,11 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
         onKeyDown={handleKeyDown}
         {...rest}
       >
-        {/* Cancel sits beside the control it undoes, which keeps the clock pinned to the trailing
-            edge instead of sliding sideways as cancel appears and disappears. */}
+        {/* Cancel sits PAST the waveform, and its slot is reserved when it is not there. Beside the
+            control, "stop" and "throw the take away, no undo, no confirmation" were two 40px
+            targets 12px apart under the same thumb; and mounting it on demand took 52px away from
+            the waveform at the exact moment the reader is watching the bars to see whether the
+            microphone works. The reserved slot keeps the clock pinned either way. */}
         <div className="flex items-center gap-3">
           <Button
             type="button"
@@ -1019,18 +1183,29 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
             size="icon"
             className={controlClass}
             aria-label={controlLabel}
-            disabled={controlDisabled}
+            aria-disabled={controlBusy || controlBlocked}
+            aria-busy={controlBusy}
             onClick={handleControlClick}
           >
             {controlGlyph}
           </Button>
-          {cancelButton}
           {waveform}
-          <span className="text-caption text-text-muted tabular-nums">
+          {cancelButton ?? <span aria-hidden="true" className="w-10 shrink-0" />}
+          <span
+            aria-hidden="true"
+            className={cn(RECORDING_DOT_CLASS, active ? 'bg-danger' : 'bg-transparent')}
+          />
+          {/* The clock is the only quantitative readout on the card, and while recording it is the
+              only thing changing that a reader can actually read - so it brightens with the state
+              rather than growing, which cannot reflow. */}
+          <span
+            className={cn('text-caption tabular-nums', active ? 'text-text' : 'text-text-muted')}
+          >
             {formatElapsed(elapsedMs)}
           </span>
         </div>
         <p role="status" className={statusClass}>
+          {message ? <AlertGlyph /> : null}
           {statusText}
         </p>
       </div>

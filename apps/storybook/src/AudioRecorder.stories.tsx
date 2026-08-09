@@ -1,7 +1,7 @@
 import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Audio, AudioRecorder } from '@rogueoak/canopy/branches';
-import type { AudioRecording, RecordingError } from '@rogueoak/canopy/branches';
+import type { AudioRecording, AudioRecordingError } from '@rogueoak/canopy/branches';
 
 /**
  * Branches/AudioRecorder - the sound-capture Branch (spec 0072), the counterpart to
@@ -115,7 +115,7 @@ export const CustomCopy: Story = {
  */
 function CompletionExample(args: React.ComponentProps<typeof AudioRecorder>) {
   const [recording, setRecording] = React.useState<AudioRecording | null>(null);
-  const [error, setError] = React.useState<RecordingError | null>(null);
+  const [error, setError] = React.useState<AudioRecordingError | null>(null);
 
   const handleComplete = (next: AudioRecording) => {
     setError(null);
@@ -144,7 +144,7 @@ function CompletionExample(args: React.ComponentProps<typeof AudioRecorder>) {
 
   return (
     <div className="flex w-[420px] max-w-full flex-col gap-3">
-      <AudioRecorder {...args} onComplete={handleComplete} onError={setError} />
+      <AudioRecorder {...args} onComplete={handleComplete} onRecordingError={setError} />
       {summary}
     </div>
   );
@@ -160,21 +160,26 @@ export const ShowsWhatYouGet: Story = {
  * player into the recorder would be two players to keep in step.
  */
 function RecordAndPlayExample(args: React.ComponentProps<typeof AudioRecorder>) {
-  const [url, setUrl] = React.useState<string | null>(null);
+  const [take, setTake] = React.useState<{ url: string; format: string } | null>(null);
 
   // The object URL is the app's to own and revoke - the design system never makes one, because a
   // component that mints URLs has quietly taken a position on where the audio lives.
   React.useEffect(() => {
-    if (!url) return;
-    return () => URL.revokeObjectURL(url);
-  }, [url]);
+    if (!take) return;
+    return () => URL.revokeObjectURL(take.url);
+  }, [take]);
 
   const handleComplete = (recording: AudioRecording) => {
-    setUrl(URL.createObjectURL(recording.blob));
+    // An object URL carries no extension, so howler leans entirely on this hint - and the recorder
+    // deliberately does NOT always choose WebM: on Safari the `audio/mp4` entry is what wins.
+    // Hard-coding `['webm']` here told it to decode a Safari take as WebM, on the one browser this
+    // story exists to check. `'audio/webm;codecs=opus'` -> `'webm'`, `'audio/mp4'` -> `'mp4'`.
+    const format = recording.mimeType.split(';')[0]!.split('/')[1]!;
+    setTake({ url: URL.createObjectURL(recording.blob), format });
   };
 
   let player = <p className="text-caption text-text-muted">Record something to play it back.</p>;
-  if (url) player = <Audio src={url} format={['webm']} />;
+  if (take) player = <Audio src={take.url} format={[take.format]} />;
 
   return (
     <div className="flex w-[420px] max-w-full flex-col gap-4">
@@ -244,6 +249,39 @@ export const DrivenByTheHandle: Story = {
  */
 export const Unsupported: Story = {
   args: { mimeTypes: ['audio/x-not-a-real-container'] },
+  render: (args) => (
+    <div className="w-[420px] max-w-full">
+      <AudioRecorder {...args} />
+    </div>
+  ),
+};
+
+/**
+ * The same refused control on the dark card, which is the theme where it is easy to get wrong: the
+ * `disabled` role and `surface-raised` resolve to the same value in dark, so a control that falls
+ * through to Button's default disabled treatment reads as a hole in the card rather than as a
+ * disabled control. This one dims its own fill instead, so it stays visible.
+ */
+export const UnsupportedDark: Story = {
+  args: { mimeTypes: ['audio/x-not-a-real-container'] },
+  render: (args) => (
+    <div className="dark w-[420px] max-w-full rounded-lg bg-bg p-6">
+      <AudioRecorder {...args} />
+    </div>
+  ),
+};
+
+/**
+ * The reduced-motion form. Storybook cannot force the media query, so to see this one:
+ * **DevTools -> the Rendering panel -> Emulate CSS media feature `prefers-reduced-motion: reduce`**,
+ * then reload the frame.
+ *
+ * Reduced motion REDUCES the waveform rather than removing it - deleting it would delete the one
+ * signal that a muted microphone is muted. The bars collapse to a single level meter, in the same
+ * row and the same trackless form, that eases toward each new reading four times a second instead
+ * of tracking every frame.
+ */
+export const ReducedMotion: Story = {
   render: (args) => (
     <div className="w-[420px] max-w-full">
       <AudioRecorder {...args} />
