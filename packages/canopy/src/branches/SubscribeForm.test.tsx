@@ -59,6 +59,15 @@ describe('SubscribeForm', () => {
     });
   });
 
+  it('renders no hidden honeypot field (feedback 0024)', () => {
+    // The honeypot was removed because browser/password-manager autofill could fill the hidden
+    // `company` input and trip each app's server-side drop, silently losing a real subscriber.
+    const { container } = render(
+      <SubscribeForm source="test" onSubscribe={vi.fn().mockResolvedValue(undefined)} />,
+    );
+    expect(container.querySelector('input[name="company"]')).toBeNull();
+  });
+
   it('renders the success card after a resolved submit', async () => {
     const user = userEvent.setup();
     render(

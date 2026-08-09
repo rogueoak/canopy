@@ -29,7 +29,10 @@ since the other anti-abuse layers remain.
 - **Canopy 1.4.0 (breaking):** `SubscribeForm` no longer renders the hidden `company` input;
   `SubscribeValues` drops `company` (payload is now `{ email, name }`). Removing a public interface
   field is breaking, so this ships as a minor (1.4.0), not a patch. Spec 0035's "honeypot stays
-  rendered by Canopy" locked decision is revised in place.
+  rendered by Canopy" locked decision is revised in place. (Strict SemVer would make a post-1.0
+  breaking removal a major (2.0.0); the developer deliberately kept 1.4.0 because all four
+  consumers are updated in lockstep here and the runtime is fail-safe - an un-updated server sees
+  `company` absent and simply stops dropping - so no consumer breaks in practice.)
 - **Consumers:** bump to `@rogueoak/canopy@^1.4.0`, drop `company` from the client `onSubscribe`
   wrapper, and delete the server-side honeypot check (and, for matthewmaynes + rogueoak, the same
   honeypot on their hand-rolled contact forms). Remaining anti-abuse: per-IP rate limiting,
