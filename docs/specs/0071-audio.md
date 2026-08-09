@@ -44,6 +44,17 @@ posts, episode pages, docs, marketing sections.
   - `skipBackSeconds?: number` (default `10`), `skipForwardSeconds?: number` (default `10`) -
     independent, per the developer's call, so a podcast consumer can run the usual back-15 /
     forward-30 without a new component.
+  - `startAtSeconds?: number` - the position to begin at, for resuming an episode or deep-linking
+    a timestamp. Applied once the media loads (seeking needs a duration to clamp against, and
+    howler ignores a seek on an unloaded player) and clamped to the media's length. Deliberately a
+    **starting** position, not a controlled one: a later change does not yank a listener who has
+    since scrubbed elsewhere, but it does apply again when `src` changes, because a new source is a
+    new start. Continuous control is what `onReady`'s instance is for.
+  - `loadingLabel?: string` (default `'Loading audio'`), `errorLabel?: string` (default
+    `'Could not load audio'`) - copy as defaulted props, per learning 34, so a consumer can reword
+    or translate.
+  - `onLoadError?: (error: unknown) => void` - the media failed to load. Named `onLoadError` rather
+    than `onError` so the wrapper's native `onError` is left alone.
   - `options?: HowlOptions` - raw howler options, shallow-merged **under** the first-class props
     (explicit props win for the keys they own; `options` fills the rest), matching Video's
     passthrough contract exactly.
@@ -180,6 +191,43 @@ Canopy owns the whole UI here, so it owns all of this:
 - Per learning 32, keyboard operation is a first-class test: a test tabs to the controls and
   drives play, skip, and seek by keyboard alone.
 
+### Load states: fetching and failing must not look alike
+
+Media arrives asynchronously and can fail, and a player that only distinguishes enabled from
+disabled renders those two as the **same picture** - inert controls. A reader cannot tell a slow
+network from a URL that will never load, and neither can the developer debugging it.
+
+That is not a hypothetical for this component: the CORS caveat below fails exactly this way, and
+it did so during the build, presenting as a player that looked merely slow forever.
+
+So the component owns a four-state machine:
+
+| State | When | What it shows |
+|---|---|---|
+| `idle` | `preload={false}`, nothing asked for yet | play live; pressing it starts the load |
+| `loading` | the howler chunk, or the media, in flight | spinner in the play button, `aria-busy` |
+| `ready` | duration known | every control live |
+| `error` | `loaderror`, or the chunk import failed | controls inert, and the player **says so** |
+
+Details that matter:
+
+- **`aria-busy` on the wrapper.** The spinner is a purely visual signal; without this the loading
+  state says nothing to a screen reader. The play button's accessible name becomes the loading
+  label, so it describes what is happening rather than offering an action it cannot perform.
+- **The loading play button keeps its primary fill.** Button's disabled treatment swaps in the
+  `bg-disabled` pair, which bleaches the spinner into near-invisibility on the card - hiding the
+  one element whose entire job is to say something is happening. `cursor-wait`, not
+  `cursor-not-allowed`: this state resolves itself, it is not a refusal.
+- **Unknown duration reads `--:--`, not `0:00`.** A zeroed total reads as a zero-length clip rather
+  than an unanswered question, and it is precisely what a reader sees while a file loads or while a
+  blocked one never will.
+- **`playerror` is not the error state.** A refused playback (an autoplay policy, a decode hiccup)
+  says nothing about whether the media is good, so it only clears the playing flag rather than
+  declaring failure.
+- **The chunk import is guarded too.** A failed dynamic `import('howler')` would otherwise reject
+  unhandled in the consumer's app while the player rendered as a normal but permanently inert
+  control group.
+
 ### Two media caveats worth documenting (found while building)
 
 Both are howler behaviours a consumer will hit and neither is obvious, so they belong in the README
@@ -259,6 +307,13 @@ internals:
 - [ ] Elapsed and total time render as `m:ss` (widening to `h:mm:ss` past an hour) and stay
       stable-width as the clock ticks.
 - [ ] The bar is disabled until duration is known, rather than looking draggable and doing nothing.
+- [ ] Loading and failure are visibly **different** states, not both "disabled": a spinner and
+      `aria-busy` while fetching, an announced message and inert controls on failure.
+- [ ] An unknown duration reads `--:--`, never `0:00`.
+- [ ] `preload={false}` starts idle with a live play button, and pressing it raises the spinner.
+- [ ] A failed chunk import is caught, not left as an unhandled rejection.
+- [ ] `startAtSeconds` begins at the requested position, clamped to the media, applied on load and
+      again on a source change - and a later change does not re-seek a listener.
 - [ ] First-class props map to the correct howler options (asserted on the options object we
       build, not on howler internals); `options` passthrough merges; explicit props win for their
       keys (distinct-value fixture).

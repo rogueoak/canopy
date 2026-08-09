@@ -191,6 +191,21 @@ Play/pause, skip back, skip forward, and a scrubbable progress bar, keyboard ope
 The two skip intervals default to 10 seconds and are set independently. Reach the raw `Howl`
 through `onReady={(howl) => ...}` and pass any howler option through `options={{ ... }}`.
 
+To resume an episode or deep-link a timestamp, set `startAtSeconds`:
+
+```tsx
+<Audio src="/episode-12.mp3" startAtSeconds={825} />
+```
+
+It applies once the media loads and is clamped to its length. It is a _starting_ position, not a
+controlled one: changing it later will not yank a listener who has scrubbed somewhere else, though
+it does apply again if `src` changes. For continuous control, use the `Howl` from `onReady`.
+
+The player shows what it is doing while media is in flight - a spinner on the play button with
+`aria-busy` set - and, if the media fails to load, says so and stays inert rather than looking
+merely slow. Both strings are props (`loadingLabel`, `errorLabel`), and `onLoadError` reports the
+failure.
+
 Two things to know about the media itself:
 
 - **Long files want `html5`.** howler's default Web Audio path buffers the whole clip before it

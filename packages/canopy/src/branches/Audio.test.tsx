@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Audio, buildOptions, formatTime } from './Audio';
@@ -18,19 +18,33 @@ const mock = vi.hoisted(() => {
     position = 0;
     mediaDuration = 0;
     looping = false;
+    isPlaying = false;
 
+    // Modelled on the real thing: howler sets its internal playing flag SYNCHRONOUSLY but emits
+    // `play` ASYNCHRONOUSLY (a `setTimeout(0)` on the Web Audio path, the `node.play()` promise on
+    // the html5 one). The gap is the whole point - a mock that emitted synchronously would let a
+    // component that branches on lagging React state pass, which is exactly the double-play bug.
     play = vi.fn(() => {
-      this.emit('play');
+      this.isPlaying = true;
+      void Promise.resolve().then(() => {
+        if (this.isPlaying) this.emit('play');
+      });
     });
     pause = vi.fn(() => {
+      this.isPlaying = false;
       this.emit('pause');
     });
+    playing = vi.fn(() => this.isPlaying);
     unload = vi.fn();
     off = vi.fn(() => {
       this.handlers.clear();
     });
+    // howler's `seek()` is an overloaded getter/setter, and mid-load the GETTER returns the Howl
+    // itself rather than a number. The mock reproduces that (`seekReturnsSelf`) so the component's
+    // narrowing guard is actually exercised - without it an un-narrowed read renders `NaN`.
+    seekReturnsSelf = false;
     seek = vi.fn((value?: number) => {
-      if (value === undefined) return this.position;
+      if (value === undefined) return this.seekReturnsSelf ? this : this.position;
       this.position = value;
       return this;
     });
@@ -93,16 +107,69 @@ async function renderLoaded(
   return { ...utils, howl };
 }
 
-// The position loop is driven by requestAnimationFrame. Stub both halves so the loop never
-// actually schedules in tests (an unstubbed rAF would recurse forever) and so the cancellation
-// the component promises is directly observable.
-const frame = { request: vi.fn(), cancel: vi.fn() };
+// The position loop is driven by requestAnimationFrame. The stub RECORDS each scheduled callback
+// instead of discarding it, so a test can step the loop one frame at a time: a stub that only
+// counted calls would never execute the tick body, and "the loop reads the player's position"
+// would be untested while looking covered.
+const frame = {
+  request: vi.fn(),
+  cancel: vi.fn(),
+  scheduled: new Map<number, FrameRequestCallback>(),
+};
+
+/** Run the frame the component is currently waiting on, the way the browser would. */
+function stepFrame(): boolean {
+  const pending = [...frame.scheduled.entries()].at(-1);
+  if (!pending) return false;
+  const [handle, callback] = pending;
+  frame.scheduled.delete(handle);
+  callback(0);
+  return true;
+}
+
+/** Whether the loop is still armed - the positive form of "was not cancelled". */
+const loopIsRunning = () => frame.scheduled.size > 0;
+
+/**
+ * Radix's slider maps a pointer's clientX onto a value using the track's rect and the Pointer
+ * Capture API, neither of which jsdom implements - the rect is all zeroes and `setPointerCapture`
+ * does not exist, so a drag silently computes nothing. Stubbing both is what makes a real pointer
+ * scrub testable here; it is stubbing the ENVIRONMENT, not the component's own behaviour.
+ * 100px of track over a 100-second clip keeps the arithmetic 1px = 1s.
+ */
+function stubSliderGeometry(track: HTMLElement) {
+  track.getBoundingClientRect = () =>
+    ({ left: 0, top: 0, right: 100, bottom: 10, width: 100, height: 10, x: 0, y: 0 }) as DOMRect;
+  track.setPointerCapture = () => {};
+  track.releasePointerCapture = () => {};
+  track.hasPointerCapture = () => true;
+}
+
+/**
+ * Dispatch a pointer event carrying real coordinates. `fireEvent.pointerDown` cannot be used here:
+ * jsdom does not implement `PointerEvent`, so Testing Library falls back to an event with no
+ * `clientX`, and Radix reads `undefined` and computes `NaN` - a drag that silently does nothing.
+ * A `MouseEvent` under the pointer event's name carries the coordinate and reaches React's
+ * listener unchanged.
+ */
+function firePointer(target: HTMLElement, type: string, clientX: number) {
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX, button: 0 });
+  Object.defineProperty(event, 'pointerId', { value: 1 });
+  fireEvent(target, event);
+}
 
 beforeEach(() => {
   mock.state.instances.length = 0;
   let id = 0;
-  frame.request = vi.fn(() => ++id);
-  frame.cancel = vi.fn();
+  frame.scheduled = new Map();
+  frame.request = vi.fn((callback: FrameRequestCallback) => {
+    const handle = ++id;
+    frame.scheduled.set(handle, callback);
+    return handle;
+  });
+  frame.cancel = vi.fn((handle: number) => {
+    frame.scheduled.delete(handle);
+  });
   vi.stubGlobal('requestAnimationFrame', frame.request);
   vi.stubGlobal('cancelAnimationFrame', frame.cancel);
 });
@@ -208,6 +275,33 @@ describe('player lifecycle', () => {
     expect(howl.options).toMatchObject({ src: ['clip.mp3'], html5: true, volume: 0.5 });
   });
 
+  it('constructs the Howl with the FULL built options, passthrough included', async () => {
+    // Asserted on the constructed instance, not just on `buildOptions` as a pure function: the
+    // component could compute the right object and then hand howler something else.
+    render(
+      <Audio
+        src="clip.mp3"
+        format={['mp3']}
+        loop
+        preload={false}
+        autoplay
+        options={{ rate: 1.5 }}
+      />,
+    );
+    const howl = await waitForPlayer();
+
+    expect(howl.options).toMatchObject({
+      src: ['clip.mp3'],
+      format: ['mp3'],
+      loop: true,
+      preload: false,
+      autoplay: true,
+      rate: 1.5,
+      volume: 1,
+      html5: false,
+    });
+  });
+
   it('unloads the Howl on unmount, so no audio survives the component', async () => {
     const { unmount } = render(<Audio src="clip.mp3" />);
     const howl = await waitForPlayer();
@@ -231,12 +325,63 @@ describe('player lifecycle', () => {
     expect(lastHowl()!.options).toMatchObject({ src: ['other.mp3'] });
   });
 
+  it('resets the clock when the source changes, rather than carrying the old position over', async () => {
+    const { rerender } = render(<Audio src="clip.mp3" />);
+    const first = await loadMedia(180);
+    first.position = 65;
+    await act(async () => {
+      first.emit('pause');
+    });
+    expect(screen.getByText('1:05')).toBeInTheDocument();
+
+    rerender(<Audio src="other.mp3" />);
+    await waitFor(() => expect(instances()).toHaveLength(2));
+
+    // A new source starts at the beginning with an unknown length.
+    expect(screen.getByText('0:00')).toBeInTheDocument();
+    expect(screen.getByText('--:--')).toBeInTheDocument();
+  });
+
   it('does NOT rebuild the player when an unrelated prop changes', async () => {
     const { rerender } = render(<Audio src="clip.mp3" skipForwardSeconds={10} />);
     await waitForPlayer();
     rerender(<Audio src="clip.mp3" skipForwardSeconds={30} className="mt-4" />);
     // A settle window: if a rebuild were coming, it would land here.
     await act(async () => {});
+    expect(instances()).toHaveLength(1);
+  });
+
+  it('rebuilds when a construction-only option changes, since howler fixes it at construction', async () => {
+    // `html5` picks the playback path and can only be chosen when the Howl is built, so a player
+    // that kept the old instance would silently ignore the new value.
+    const { rerender } = render(<Audio src="clip.mp3" html5={false} />);
+    await waitForPlayer();
+
+    rerender(<Audio src="clip.mp3" html5 />);
+
+    await waitFor(() => expect(instances()).toHaveLength(2));
+    expect(lastHowl()!.options).toMatchObject({ html5: true });
+  });
+
+  it('rebuilds when a construction-only option arrives through the options passthrough', async () => {
+    const { rerender } = render(<Audio src="clip.mp3" options={{ format: ['mp3'] }} />);
+    await waitForPlayer();
+
+    rerender(<Audio src="clip.mp3" options={{ format: ['ogg'] }} />);
+
+    await waitFor(() => expect(instances()).toHaveLength(2));
+    expect(lastHowl()!.options).toMatchObject({ format: ['ogg'] });
+  });
+
+  it('does not rebuild for an inline options object whose values did not change', async () => {
+    // A new object identity every render must not thrash the player - the key is a VALUE
+    // comparison, and key order within the literal is not a value change.
+    const { rerender } = render(<Audio src="clip.mp3" options={{ format: ['mp3'], rate: 1 }} />);
+    await waitForPlayer();
+
+    rerender(<Audio src="clip.mp3" options={{ rate: 1, format: ['mp3'] }} />);
+    await act(async () => {});
+
     expect(instances()).toHaveLength(1);
   });
 
@@ -276,6 +421,21 @@ describe('transport controls', () => {
     expect(howl.play).toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
+  });
+
+  it('swaps the glyph, not just the label, between play and pause', async () => {
+    // The label is a11y; the glyph is what a sighted reader actually goes by. A button stuck on a
+    // play triangle while playing passes every name-based assertion in this file.
+    const user = userEvent.setup();
+    await renderLoaded();
+    const playGlyph = screen.getByRole('button', { name: 'Play' }).querySelector('svg path');
+    const playPath = playGlyph?.getAttribute('d');
+
+    await user.click(screen.getByRole('button', { name: 'Play' }));
+
+    const pauseButton = screen.getByRole('button', { name: 'Pause' });
+    expect(pauseButton.querySelector('rect')).toBeInTheDocument();
+    expect(pauseButton.querySelector('svg path')?.getAttribute('d')).not.toBe(playPath);
   });
 
   it('pauses on the second click and flips back to Play', async () => {
@@ -350,17 +510,247 @@ describe('transport controls', () => {
     expect(howl.seek).toHaveBeenCalledWith(180);
   });
 
-  it('disables the skip controls until the duration is known', async () => {
+  it('disables every control until the duration is known', async () => {
     render(<Audio src="clip.mp3" />);
     await waitForPlayer();
 
     expect(screen.getByRole('button', { name: 'Skip forward 10 seconds' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Skip back 10 seconds' })).toBeDisabled();
-    // Play stays live: with `preload={false}` pressing play is what triggers the load.
-    expect(screen.getByRole('button', { name: 'Play' })).toBeEnabled();
+    // Play too, while preloading: a press here would be dropped, so it must not look available.
+    expect(screen.getByRole('button', { name: 'Loading audio' })).toBeDisabled();
 
     await loadMedia(180);
     expect(screen.getByRole('button', { name: 'Skip forward 10 seconds' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Play' })).toBeEnabled();
+  });
+
+  it('does not start a second playback when play is pressed twice before howler emits', async () => {
+    const user = userEvent.setup();
+    const { howl } = await renderLoaded();
+
+    // howler emits `play` asynchronously, so between these two clicks the button may still read
+    // "Play" while the player is already playing. Branching on React state here would call play()
+    // twice, and howler would allocate a SECOND sound - two copies of the clip at once.
+    const play = screen.getByRole('button', { name: 'Play' });
+    await user.click(play);
+    await user.click(screen.getByRole('button', { name: /Play|Pause/ }));
+
+    expect(howl.play).toHaveBeenCalledTimes(1);
+    expect(howl.pause).toHaveBeenCalledTimes(1);
+  });
+});
+
+/* --------------------------------------------------------------------------- startAtSeconds */
+
+describe('startAtSeconds', () => {
+  it('begins at the requested position once the media loads', async () => {
+    render(<Audio src="clip.mp3" startAtSeconds={65} />);
+    const howl = await loadMedia(180);
+
+    expect(howl.seek).toHaveBeenCalledWith(65);
+    expect(screen.getByText('1:05')).toBeInTheDocument();
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '1:05');
+  });
+
+  it('does not seek before the duration is known', async () => {
+    // Seeking a player that has not loaded is a no-op in howler, so a start position applied at
+    // construction would be silently lost.
+    render(<Audio src="clip.mp3" startAtSeconds={65} />);
+    const howl = await waitForPlayer();
+
+    expect(howl.seek).not.toHaveBeenCalledWith(65);
+  });
+
+  it('clamps a start position past the end of the media', async () => {
+    render(<Audio src="clip.mp3" startAtSeconds={500} />);
+    const howl = await loadMedia(180);
+
+    expect(howl.seek).toHaveBeenCalledWith(180);
+  });
+
+  it('ignores a zero or negative start position', async () => {
+    render(<Audio src="clip.mp3" startAtSeconds={-30} />);
+    const howl = await loadMedia(180);
+
+    expect(howl.seek).not.toHaveBeenCalled();
+    expect(screen.getAllByText('0:00')[0]).toBeInTheDocument();
+  });
+
+  it('is a STARTING position, not a controlled one - a later change does not yank the listener', async () => {
+    const { rerender } = render(<Audio src="clip.mp3" startAtSeconds={30} />);
+    const howl = await loadMedia(180);
+    howl.seek.mockClear();
+
+    rerender(<Audio src="clip.mp3" startAtSeconds={90} />);
+    await act(async () => {});
+
+    expect(howl.seek).not.toHaveBeenCalled();
+    expect(instances()).toHaveLength(1);
+  });
+
+  it('applies again when the source changes, because a new source is a new start', async () => {
+    const { rerender } = render(<Audio src="clip.mp3" startAtSeconds={30} />);
+    await loadMedia(180);
+
+    rerender(<Audio src="other.mp3" startAtSeconds={30} />);
+    await waitFor(() => expect(instances()).toHaveLength(2));
+    const next = await loadMedia(180);
+
+    expect(next.seek).toHaveBeenCalledWith(30);
+  });
+});
+
+/* ------------------------------------------------------------------------ load / error state */
+
+describe('load state', () => {
+  it('shows a busy player while the media is fetching', async () => {
+    const { container } = render(<Audio src="clip.mp3" />);
+    await waitForPlayer();
+
+    // The visual spinner says nothing to a screen reader; `aria-busy` is what carries it.
+    expect(container.firstElementChild).toHaveAttribute('aria-busy', 'true');
+    // The play button's NAME says what is happening rather than offering an action it cannot do.
+    expect(screen.getByRole('button', { name: 'Loading audio' })).toBeDisabled();
+  });
+
+  it('clears the busy state once loaded', async () => {
+    const { container } = render(<Audio src="clip.mp3" />);
+    await loadMedia(180);
+
+    expect(container.firstElementChild).toHaveAttribute('aria-busy', 'false');
+    expect(screen.getByRole('button', { name: 'Play' })).toBeEnabled();
+  });
+
+  it('takes the loading label from a prop, so it can be reworded or translated', async () => {
+    render(<Audio src="clip.mp3" loadingLabel="Fetching episode" />);
+    await waitForPlayer();
+
+    expect(screen.getByRole('button', { name: 'Fetching episode' })).toBeInTheDocument();
+  });
+
+  it('is idle rather than busy when nothing has been asked for yet (preload=false)', async () => {
+    const { container } = render(<Audio src="clip.mp3" preload={false} />);
+    await waitForPlayer();
+
+    // Nothing is fetching, so no spinner and no busy flag - but play is live, because pressing it
+    // is what starts the load.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Play' })).toBeEnabled());
+    expect(container.firstElementChild).toHaveAttribute('aria-busy', 'false');
+  });
+
+  it('goes busy when play starts the load on a no-preload player', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Audio src="clip.mp3" preload={false} />);
+    const howl = await waitForPlayer();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Play' })).toBeEnabled());
+
+    await user.click(screen.getByRole('button', { name: 'Play' }));
+
+    expect(howl.play).toHaveBeenCalled();
+    expect(container.firstElementChild).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('is busy while the howler chunk itself is still in flight', () => {
+    // Before the dynamic import resolves there is no instance, so a press would be dropped.
+    const { container } = render(<Audio src="clip.mp3" preload={false} />);
+
+    expect(container.firstElementChild).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('button', { name: 'Loading audio' })).toBeDisabled();
+  });
+});
+
+describe('error state', () => {
+  /** Render, then fail the load the way a CORS-blocked or missing file does. */
+  async function renderFailed(props: Partial<React.ComponentProps<typeof Audio>> = {}) {
+    const utils = render(<Audio src="clip.mp3" {...props} />);
+    const howl = await waitForPlayer();
+    await act(async () => {
+      howl.emit('loaderror');
+    });
+    return { ...utils, howl };
+  }
+
+  it('says the media failed instead of leaving controls that look merely slow', async () => {
+    const { container } = await renderFailed();
+
+    expect(screen.getByRole('status')).toHaveTextContent('Could not load audio');
+    // Crucially NOT busy: a failure that still reads as "loading" is the bug this state exists for.
+    expect(container.firstElementChild).toHaveAttribute('aria-busy', 'false');
+  });
+
+  it('takes the error message from a prop', async () => {
+    await renderFailed({ errorLabel: 'This episode is unavailable' });
+
+    expect(screen.getByRole('status')).toHaveTextContent('This episode is unavailable');
+  });
+
+  it('leaves every control inert', async () => {
+    await renderFailed();
+
+    expect(screen.getByRole('button', { name: 'Play' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Skip back 10 seconds' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Skip forward 10 seconds' })).toBeDisabled();
+    expect(screen.getByRole('slider')).toHaveAttribute('data-disabled');
+  });
+
+  it('does not try to play after a failure', async () => {
+    const user = userEvent.setup();
+    const { howl } = await renderFailed();
+
+    await user.click(screen.getByRole('button', { name: 'Play' }));
+
+    expect(howl.play).not.toHaveBeenCalled();
+  });
+
+  it('reports the failure to onLoadError', async () => {
+    const onLoadError = vi.fn();
+    render(<Audio src="clip.mp3" onLoadError={onLoadError} />);
+    const howl = await waitForPlayer();
+
+    await act(async () => {
+      howl.emit('loaderror');
+    });
+
+    expect(onLoadError).toHaveBeenCalled();
+  });
+
+  it('replaces the clock, rather than showing zeroed times beside an error', async () => {
+    await renderFailed();
+
+    expect(screen.queryByText('0:00')).not.toBeInTheDocument();
+  });
+
+  it('recovers when the source changes to one that loads', async () => {
+    const { rerender } = render(<Audio src="broken.mp3" />);
+    const broken = await waitForPlayer();
+    await act(async () => {
+      broken.emit('loaderror');
+    });
+    expect(screen.getByRole('status')).toBeInTheDocument();
+
+    rerender(<Audio src="good.mp3" />);
+    await waitFor(() => expect(instances()).toHaveLength(2));
+    await loadMedia(90);
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play' })).toBeEnabled();
+  });
+
+  it('does not treat a playback refusal as a failed load', async () => {
+    // `playerror` is an autoplay policy or a decode hiccup - the media may be fine, so the player
+    // must not display the fatal error - but the button must stop claiming it is playing.
+    const { howl } = await renderLoaded();
+    await act(async () => {
+      howl.emit('play');
+    });
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
+
+    await act(async () => {
+      howl.emit('playerror');
+    });
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
   });
 });
 
@@ -372,8 +762,9 @@ describe('the scrub bar', () => {
     await waitForPlayer();
 
     expect(screen.getByRole('slider')).toHaveAttribute('data-disabled');
-    // Both readouts sit at zero before the media loads: elapsed and an unknown duration.
-    expect(screen.getAllByText('0:00')).toHaveLength(2);
+    expect(screen.getByText('0:00')).toBeInTheDocument();
+    // The total is genuinely unknown, and says so - `0:00` there would read as a zero-length clip.
+    expect(screen.getByText('--:--')).toBeInTheDocument();
   });
 
   it('exposes the duration as the range once loaded', async () => {
@@ -396,6 +787,47 @@ describe('the scrub bar', () => {
     expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '2:22');
   });
 
+  it('does not seek mid-drag - only when the drag is released', async () => {
+    // The keyboard path cannot prove this: Radix commits on the same keydown that changes the
+    // value, so change and commit are indistinguishable there. Only a pointer drag separates them,
+    // which is why this test bothers with the jsdom geometry stubs.
+    const { howl, container } = await renderLoaded({}, 100);
+    const track = container.querySelector('[data-orientation="horizontal"]') as HTMLElement;
+    stubSliderGeometry(track);
+
+    firePointer(track, 'pointerdown', 20);
+    firePointer(track, 'pointermove', 60);
+
+    // The thumb and the clock follow the finger...
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '1:00');
+    // ...but the player has NOT been moved yet. Seeking on every pointermove would stutter audio
+    // across a drag.
+    expect(howl.seek).not.toHaveBeenCalledWith(expect.any(Number));
+
+    firePointer(track, 'pointerup', 60);
+
+    expect(howl.seek).toHaveBeenCalledWith(60);
+  });
+
+  it('hands the drag back to the position loop once released', async () => {
+    const { howl, container } = await renderLoaded({}, 100);
+    const track = container.querySelector('[data-orientation="horizontal"]') as HTMLElement;
+    stubSliderGeometry(track);
+    await act(async () => {
+      howl.emit('play');
+    });
+
+    firePointer(track, 'pointerdown', 80);
+    firePointer(track, 'pointerup', 80);
+
+    // With the scrub released, the loop's reading wins again rather than the stale drag value.
+    howl.position = 12;
+    await act(async () => {
+      stepFrame();
+    });
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '0:12');
+  });
+
   it('seeks when a keyboard scrub commits', async () => {
     const user = userEvent.setup();
     const { howl } = await renderLoaded({}, 180);
@@ -404,6 +836,28 @@ describe('the scrub bar', () => {
     await user.keyboard('{ArrowRight}');
 
     await waitFor(() => expect(howl.seek).toHaveBeenCalledWith(1));
+  });
+
+  it('survives a non-numeric seek() reading mid-load', async () => {
+    // howler's getter returns the Howl itself while loading. Un-narrowed, that reaches the position
+    // state and renders `NaN` in the clock and on `aria-valuenow`.
+    const { howl } = await renderLoaded({}, 180);
+    howl.seekReturnsSelf = true;
+    await act(async () => {
+      howl.emit('play');
+    });
+    await act(async () => {
+      stepFrame();
+    });
+
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '0:00');
+    expect(screen.getByRole('slider').getAttribute('aria-valuenow')).not.toBe('NaN');
+  });
+
+  it('renders the clock with tabular figures so the digits do not jitter', async () => {
+    const { container } = await renderLoaded({}, 180);
+    // The clock updates every frame; proportional figures make it shuffle sideways as it ticks.
+    expect(container.querySelector('.tabular-nums')).toBeInTheDocument();
   });
 
   it('renders the elapsed and total time', async () => {
@@ -478,14 +932,65 @@ describe('the position loop', () => {
     await act(async () => {
       howl.emit('play');
     });
-    frame.cancel.mockClear();
 
     await act(async () => {
       howl.emit('end');
     });
 
-    expect(frame.cancel).not.toHaveBeenCalled();
+    // Asserted POSITIVELY - that the loop is still armed. "cancel was not called" would also pass
+    // if the loop had never started at all.
+    expect(loopIsRunning()).toBe(true);
     expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
+  });
+
+  it('reads the player position on each frame and re-arms', async () => {
+    const { howl } = await renderLoaded({}, 180);
+    await act(async () => {
+      howl.emit('play');
+    });
+
+    howl.position = 42;
+    await act(async () => {
+      stepFrame();
+    });
+
+    // The tick body actually ran: the position came off the player, not from a test fixture.
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '0:42');
+    expect(screen.getByText('0:42')).toBeInTheDocument();
+    // ...and armed the next frame, so the clock keeps ticking.
+    expect(loopIsRunning()).toBe(true);
+  });
+
+  it('stops reading the player once paused', async () => {
+    const { howl } = await renderLoaded({}, 180);
+    await act(async () => {
+      howl.emit('play');
+    });
+    await act(async () => {
+      howl.emit('pause');
+    });
+
+    howl.position = 99;
+    await act(async () => {
+      stepFrame();
+    });
+
+    // No frame was pending, so nothing read 99 - the clock is where the pause left it.
+    expect(loopIsRunning()).toBe(false);
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '0:00');
+  });
+
+  it('survives a frame that fires after the player is gone', async () => {
+    const { howl, unmount } = await renderLoaded();
+    await act(async () => {
+      howl.emit('play');
+    });
+    const pending = [...frame.scheduled.values()].at(-1);
+
+    unmount();
+
+    // A frame already queued when the component unmounted must not throw on a nulled player.
+    expect(() => pending?.(0)).not.toThrow();
   });
 });
 
@@ -498,6 +1003,19 @@ describe('events', () => {
     const howl = await loadMedia(180);
 
     expect(onReady).toHaveBeenCalledWith(howl);
+  });
+
+  it('does not fire `onReady` before the media has loaded', async () => {
+    // "Ready" means the media is usable, not merely that the instance was constructed - a consumer
+    // calling `seek()` in this callback needs a duration to exist.
+    const onReady = vi.fn();
+    render(<Audio src="clip.mp3" onReady={onReady} />);
+    await waitForPlayer();
+
+    expect(onReady).not.toHaveBeenCalled();
+
+    await loadMedia(180);
+    expect(onReady).toHaveBeenCalledTimes(1);
   });
 
   it('fires onPlay, onPause, and onEnd', async () => {

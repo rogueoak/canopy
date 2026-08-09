@@ -100,6 +100,48 @@ export const FullWidth: Story = {
 };
 
 /**
+ * Resume where a listener left off. `startAtSeconds` is applied once the media loads and clamped to
+ * its length - a starting position, not a controlled one, so a later change will not yank a
+ * listener who has since scrubbed somewhere else.
+ */
+export const StartAtPosition: Story = {
+  args: { startAtSeconds: 8 },
+  render: (args) => (
+    <div className="w-[420px] max-w-full">
+      <Audio {...args} />
+    </div>
+  ),
+};
+
+/**
+ * The failure state, shown with a URL that cannot load. This matters more than it looks: howler's
+ * default Web Audio path fetches by XHR, so any cross-origin file without CORS headers lands here -
+ * and without a distinct error state it would be indistinguishable from a slow network, inert
+ * controls either way.
+ */
+export const FailedToLoad: Story = {
+  args: { src: 'https://example.com/does-not-exist.mp3' },
+  render: (args) => (
+    <div className="w-[420px] max-w-full">
+      <Audio {...args} />
+    </div>
+  ),
+};
+
+/**
+ * Nothing is fetched until the reader asks for it. With `preload={false}` the player sits idle with
+ * a live play button; pressing it starts the load and raises the spinner.
+ */
+export const LoadOnDemand: Story = {
+  args: { preload: false },
+  render: (args) => (
+    <div className="w-[420px] max-w-full">
+      <Audio {...args} />
+    </div>
+  ),
+};
+
+/**
  * Consumer brand override. Every element is a Canopy element styled with semantic role tokens, so
  * re-pointing `--color-primary` on a wrapper - exactly what `buildBrand()` (spec 0028) or an app's
  * own `:root { --color-*: ... }` does - re-themes the play button and the filled scrub range with

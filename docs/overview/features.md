@@ -696,9 +696,20 @@ extra**.
   bundled types and `Howl` / `HowlOptions` reach the public surface.
 - **Position without a `timeupdate` event.** howler has none, so position is polled on a
   `requestAnimationFrame` loop that runs **only while playing** - started on `play`, cancelled on
-  `pause` / `stop` / `end` / unmount. The bar renders **disabled** until the duration is known,
-  rather than looking draggable and doing nothing, and a scrub in progress suppresses the loop so
-  the thumb follows the drag instead of being yanked back.
+  `pause` / `stop` / `end` / unmount. A scrub in progress suppresses the loop so the thumb follows
+  the drag instead of being yanked back.
+- **Loading and failure are different states, not both "disabled".** Media arrives asynchronously
+  and can fail, and with only an enabled/disabled distinction those two render identically - inert
+  controls - so a reader cannot tell a slow network from a URL that will never load. Instead:
+  `idle` (nothing fetched yet, under `preload={false}`), `loading` (a spinner on the play button
+  plus `aria-busy`, since a spinner alone says nothing to a screen reader), `ready`, and `error`
+  (an announced message, controls inert). An unknown duration reads `--:--` rather than `0:00`,
+  which would claim a zero-length clip. `loadingLabel` / `errorLabel` are defaulted props, and
+  `onLoadError` reports the failure.
+- **`startAtSeconds`** - begin at a position, for resuming an episode or deep-linking a timestamp.
+  Applied on load and clamped to the media; a *starting* position rather than a controlled one, so
+  a later change does not yank a listener who has scrubbed elsewhere, though a new `src` starts
+  fresh.
 - **Accessible by construction.** Every control is keyboard operable; each button's label is built
   from the interval it acts on, so a changed `skipForwardSeconds` can never leave the label lying;
   and the scrub thumb announces **`aria-valuetext` as formatted time** (`2:22`, not `142`). That

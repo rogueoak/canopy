@@ -2,6 +2,7 @@ import * as React from 'react';
 import type { Howl, HowlOptions } from 'howler';
 import { Button } from '../seeds/Button';
 import { Slider } from '../seeds/Slider';
+import { Spinner } from '../seeds/Spinner';
 import { cn } from '../lib/cn';
 
 /**
@@ -43,16 +44,70 @@ const SEEK_STEP_SECONDS = 1;
 const UNKNOWN_DURATION_MAX = 1;
 
 /**
- * The transport controls are circles. `size="icon"` is already square, so `rounded-full` is the
- * only override needed - a FULL LITERAL, like every class Canopy ships, so Tailwind's scanner emits
- * it (learning 8). All three share it: a round play button flanked by two rounded-square skips
- * would read as two different control families rather than one transport group.
+ * Shown for a duration that is not known yet. `0:00` would be a lie of a specific kind - it reads
+ * as a zero-length clip rather than an unanswered question, and it is exactly what a reader sees
+ * while a slow file loads or while a CORS-blocked one never will.
+ */
+const UNKNOWN_TIME = '--:--';
+
+/**
+ * The transport controls are circles. `size="icon"` is already square, so the shape is one
+ * `rounded-full` - a FULL LITERAL, like every class Canopy ships, so Tailwind's scanner emits it
+ * (learning 8). All three share it: a round play button flanked by two rounded-square skips would
+ * read as two different control families rather than one transport group.
  *
  * The skips are `outline` rather than `ghost` so each reads as a button at rest instead of a bare
  * glyph that only reveals its hit area on hover. `primary` on play keeps the hierarchy - the
  * dominant action is filled, the secondary ones are outlined.
+ *
+ * The focus-ring offset is the first half of the RAISED-SURFACE correction. Button's defaults are
+ * tuned for the page canvas, so its ring punches a `ring-offset-ring-offset` (page-coloured) halo -
+ * near-black on this card in dark. The offset has to match the surface the ring is actually drawn
+ * on (the `SideNav` precedent). It MUST carry the `focus-visible:` prefix: Button's own token is
+ * `focus-visible:ring-offset-ring-offset`, and tailwind-merge treats a bare `ring-offset-*` as a
+ * different key, so an unprefixed override would sit alongside it and lose exactly when it matters.
  */
-const TRANSPORT_BUTTON_CLASS = 'rounded-full';
+const TRANSPORT_BUTTON_CLASS = 'rounded-full focus-visible:ring-offset-surface-raised';
+
+/**
+ * The second half of the correction, and it applies only to the OUTLINE skips - never to the
+ * filled play button, which correctly keeps its own `primary-hover`.
+ *
+ * Button's `hover:bg-muted` is one step up from the page canvas (`bg-bg`). This player is a card
+ * (`bg-surface-raised`), which per learnings 20 and 21 is its own design context: on it, the
+ * page's "one step up" is a step DOWN, so hovering a skip button visibly sinks into a recess in
+ * dark instead of lifting. `muted-raised` is the surface-relative highlight that actually lifts.
+ *
+ * Spelled out as a FULL LITERAL rather than interpolating the constant above, per learning 8.
+ */
+const SKIP_BUTTON_CLASS =
+  'rounded-full focus-visible:ring-offset-surface-raised hover:bg-muted-raised active:bg-muted-raised';
+
+/**
+ * The play button while loading. It is `disabled` (a press would be dropped), but Button's disabled
+ * treatment swaps in the `bg-disabled` pair - which would bleach the spinner into near-invisibility
+ * on the card, hiding the one element whose whole job is to say "something is happening".
+ *
+ * So the loading state keeps the primary fill and only the spinner communicates the wait, which is
+ * how a loading button conventionally reads. `cursor-wait` replaces the not-allowed cursor: this is
+ * a temporary state that will resolve itself, not a refusal.
+ */
+const PLAY_BUTTON_LOADING_CLASS =
+  'rounded-full focus-visible:ring-offset-surface-raised disabled:bg-primary disabled:text-primary-foreground disabled:cursor-wait';
+
+/**
+ * The player's load state. Media arrives asynchronously and can fail, and the two must not look
+ * alike: with only a disabled/enabled distinction, "still fetching" and "this will never load" are
+ * the same picture - inert controls - and a reader cannot tell a slow network from a broken URL.
+ * That is not hypothetical here: howler's default Web Audio path fetches by XHR, so any
+ * cross-origin file without CORS headers fails exactly this way.
+ *
+ * - `idle`    - `preload={false}`, nothing fetched yet. Play is live; pressing it starts the load.
+ * - `loading` - fetching or decoding. The play button holds a spinner.
+ * - `ready`   - duration known, every control live.
+ * - `error`   - the media failed to load. Controls stay inert and the player SAYS so.
+ */
+export type AudioStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 /* --------------------------------------------------------------------------------------- types */
 
@@ -79,14 +134,38 @@ export interface AudioProps
    * buffers the whole clip before playing, so anything podcast-length wants `html5`.
    */
   html5?: boolean;
+  /**
+   * Position to begin at, in seconds - for resuming an episode, or deep-linking a timestamp.
+   * Applied once, when the media loads (nothing can seek before a duration is known), and clamped
+   * to the media's length.
+   *
+   * Deliberately a STARTING position, not a controlled one: changing it later does not yank a
+   * listener who has since scrubbed elsewhere. It applies again when the `src` changes, because a
+   * new source is a new start. To drive position continuously, take the `Howl` from `onReady` and
+   * call `seek()` yourself.
+   */
+  startAtSeconds?: number;
   /** How far the back button seeks, in seconds. Default `10`. */
   skipBackSeconds?: number;
   /** How far the forward button seeks, in seconds. Default `10`. */
   skipForwardSeconds?: number;
+  /**
+   * Accessible name for the play button while the media is loading, and the text a screen reader
+   * announces for the busy state. Default `'Loading audio'`. A defaulted prop rather than a baked
+   * string so a consumer can match their own wording or ship another language (learning 34).
+   */
+  loadingLabel?: string;
+  /** Message shown when the media fails to load. Default `'Could not load audio'`. */
+  errorLabel?: string;
   /** Raw howler options merged UNDER the first-class props (props win for their keys). */
   options?: HowlOptions;
   /** Called once the media has loaded, with the `Howl` instance (the advanced escape hatch). */
   onReady?: (howl: Howl) => void;
+  /**
+   * Called when the media fails to load, with howler's error argument. Named `onLoadError` rather
+   * than `onError` to leave the native `onError` handler on the wrapper alone.
+   */
+  onLoadError?: (error: unknown) => void;
   /** Called when playback starts. */
   onPlay?: () => void;
   /** Called when playback pauses. */
@@ -159,6 +238,26 @@ function buildOptions(props: Pick<AudioProps, OptionPropKey>): HowlOptions {
   return { ...defaults, ...options, ...explicit, src: resolveSrc(src) };
 }
 
+/**
+ * Options howler can change on a LIVE player, so a new value must not rebuild it. Everything else
+ * in the built options is fixed at construction and therefore belongs in the rebuild key.
+ */
+const LIVE_UPDATABLE_OPTIONS = ['volume', 'loop'] as const;
+
+/**
+ * A value-equality key over the construction-time options. Keys are sorted so the string depends on
+ * the option VALUES rather than on the order a consumer happened to write their `options` literal
+ * in - otherwise reordering two keys in an inline object would needlessly rebuild the player.
+ */
+function constructionKeyOf(built: HowlOptions): string {
+  const entries = Object.entries(built)
+    .filter(
+      ([key]) => !LIVE_UPDATABLE_OPTIONS.includes(key as (typeof LIVE_UPDATABLE_OPTIONS)[number]),
+    )
+    .sort(([a], [b]) => a.localeCompare(b));
+  return JSON.stringify(entries);
+}
+
 type OptionPropKey =
   | 'src'
   | 'format'
@@ -229,10 +328,14 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
     volume,
     preload,
     html5,
+    startAtSeconds,
     skipBackSeconds = 10,
     skipForwardSeconds = 10,
+    loadingLabel = 'Loading audio',
+    errorLabel = 'Could not load audio',
     options,
     onReady,
+    onLoadError,
     onPlay,
     onPause,
     onEnd,
@@ -243,6 +346,9 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
   const howlRef = React.useRef<Howl | null>(null);
   const frameRef = React.useRef<number | null>(null);
 
+  const [status, setStatus] = React.useState<AudioStatus>(() =>
+    preload === false ? 'idle' : 'loading',
+  );
   const [playing, setPlaying] = React.useState(false);
   const [position, setPosition] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
@@ -253,7 +359,9 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
   // Keep the latest options and callbacks in refs so the create effect depends only on the source.
   // A consumer passing an inline `options` object or an inline arrow handler must not rebuild the
   // player on every render.
-  const optionsRef = React.useRef<HowlOptions>(undefined as unknown as HowlOptions);
+  const optionsRef = React.useRef<HowlOptions>(
+    buildOptions({ src, format, autoplay, loop, volume, preload, html5, options }),
+  );
   optionsRef.current = buildOptions({
     src,
     format,
@@ -264,8 +372,14 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
     html5,
     options,
   });
+  // Read at load time rather than captured at construction, so a value that arrives late (a
+  // resume position fetched from an API) still applies to the first load.
+  const startAtRef = React.useRef(startAtSeconds);
+  startAtRef.current = startAtSeconds;
   const onReadyRef = React.useRef(onReady);
   onReadyRef.current = onReady;
+  const onLoadErrorRef = React.useRef(onLoadError);
+  onLoadErrorRef.current = onLoadError;
   const onPlayRef = React.useRef(onPlay);
   onPlayRef.current = onPlay;
   const onPauseRef = React.useRef(onPause);
@@ -300,56 +414,109 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
 
   /* ------------------------------------------------------------------- create / destroy */
 
-  // Rebuild the player when the SOURCE changes, and only then. Everything else is read from
-  // `optionsRef` at construction (howler takes most options only at construction anyway), or
-  // applied through the instance API in the live-update effects below.
-  const sourceKey = JSON.stringify(resolveSrc(src));
+  // Rebuild the player when any CONSTRUCTION-time option changes - howler fixes `src`, `format`,
+  // `html5`, `preload`, and `autoplay` at construction, so a new value for one of them can only
+  // take effect on a new `Howl`. `volume` and `loop` are excluded because howler CAN change those
+  // live, and they are applied through the instance in the effects below; rebuilding on a volume
+  // tick would restart playback.
+  //
+  // The key is the built options serialised with sorted keys, which is a VALUE comparison: a
+  // consumer passing an inline `options={{ ... }}` object literal gets a new object identity every
+  // render, and keying on identity would rebuild the player on every render. Serialising also
+  // drops any function-valued option, so a consumer's inline callback in `options` cannot thrash
+  // the player either.
+  const constructionKey = constructionKeyOf(optionsRef.current);
 
   React.useEffect(() => {
     let cancelled = false;
     let created: Howl | null = null;
 
+    // Always `loading` at the start: even with `preload={false}` there is a real fetch in flight
+    // here - the dynamic `import('howler')` chunk - and the play button cannot do anything until
+    // it lands. Once the instance exists, a no-preload player drops to `idle`.
+    setStatus('loading');
+
     // Dynamic import: howler touches `window` and constructs an AudioContext at module scope, so
     // a static import would break SSR outright. It also keeps howler out of the initial bundle.
-    void import('howler').then(({ Howl }) => {
-      // The component may have unmounted (or the source changed again) before the import
-      // resolved - don't construct a player nothing will ever unload.
-      if (cancelled) return;
+    void import('howler')
+      .then(({ Howl }) => {
+        // The component may have unmounted (or the source changed again) before the import
+        // resolved - don't construct a player nothing will ever unload.
+        if (cancelled) return;
 
-      const howl = new Howl(optionsRef.current);
-      created = howl;
-      howlRef.current = howl;
+        const howl = new Howl(optionsRef.current);
+        created = howl;
+        howlRef.current = howl;
 
-      howl.on('load', () => {
-        setDuration(howl.duration());
-        onReadyRef.current?.(howl);
+        howl.on('load', () => {
+          setStatus('ready');
+          const mediaDuration = howl.duration();
+          setDuration(mediaDuration);
+          // `startAtSeconds` can only be honoured now: seeking needs a duration to clamp against,
+          // and howler ignores a seek on a player that has not loaded. Applied BEFORE `onReady` so
+          // a consumer reaching for the instance there sees the position already set.
+          const startAt = startAtRef.current;
+          if (startAt !== undefined && startAt > 0 && Number.isFinite(mediaDuration)) {
+            const clamped = Math.min(startAt, mediaDuration);
+            howl.seek(clamped);
+            setPosition(clamped);
+          }
+          onReadyRef.current?.(howl);
+        });
+        howl.on('loaderror', (_id, error) => {
+          // The media will never arrive (a bad URL, an unsupported codec, or - the case the README
+          // documents - a cross-origin file with no CORS headers on the Web Audio path). Say so:
+          // without this, the failure is indistinguishable from a slow network forever.
+          setStatus('error');
+          setPlaying(false);
+          stopTicking();
+          onLoadErrorRef.current?.(error);
+        });
+        howl.on('playerror', () => {
+          // Playback was refused (an autoplay policy, a decode failure). The MEDIA may still be
+          // fine, so this is deliberately not the error state - but the button must stop claiming
+          // it is playing.
+          setPlaying(false);
+          stopTicking();
+        });
+        howl.on('play', () => {
+          setPlaying(true);
+          startTicking();
+          onPlayRef.current?.();
+        });
+        howl.on('pause', () => {
+          setPlaying(false);
+          stopTicking();
+          setPosition(readPosition(howl));
+          onPauseRef.current?.();
+        });
+        howl.on('stop', () => {
+          setPlaying(false);
+          stopTicking();
+          setPosition(0);
+        });
+        howl.on('end', () => {
+          onEndRef.current?.();
+          // With `loop` set, howler fires `end` on every iteration and keeps playing - so the loop
+          // and the playing state must survive it. Only a real stop resets them.
+          if (howl.loop()) return;
+          setPlaying(false);
+          stopTicking();
+          setPosition(0);
+        });
+
+        // The instance exists, so the controls can act. A preloading player stays `loading` until
+        // its `load` event; a no-preload one is idle and waiting for a press.
+        if (optionsRef.current.preload === false) setStatus('idle');
+      })
+      .catch((error: unknown) => {
+        // The howler CHUNK failed to load (offline, a bad deploy, a blocked CDN). Without this the
+        // promise rejects unhandled in the consumer's app and the player renders as a normal but
+        // permanently inert set of controls.
+        if (cancelled) return;
+        setStatus('error');
+        onLoadErrorRef.current?.(error);
       });
-      howl.on('play', () => {
-        setPlaying(true);
-        startTicking();
-        onPlayRef.current?.();
-      });
-      howl.on('pause', () => {
-        setPlaying(false);
-        stopTicking();
-        setPosition(readPosition(howl));
-        onPauseRef.current?.();
-      });
-      howl.on('stop', () => {
-        setPlaying(false);
-        stopTicking();
-        setPosition(0);
-      });
-      howl.on('end', () => {
-        onEndRef.current?.();
-        // With `loop` set, howler fires `end` on every iteration and keeps playing - so the loop
-        // and the playing state must survive it. Only a real stop resets them.
-        if (howl.loop()) return;
-        setPlaying(false);
-        stopTicking();
-        setPosition(0);
-      });
-    });
 
     return () => {
       cancelled = true;
@@ -366,7 +533,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
       setDuration(0);
       setScrubValue(null);
     };
-  }, [sourceKey, startTicking, stopTicking]);
+  }, [constructionKey, startTicking, stopTicking]);
 
   /* --------------------------------------------------------------------- live updates */
 
@@ -386,7 +553,12 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
 
   /* ------------------------------------------------------------------------- handlers */
 
-  const loaded = duration > 0;
+  // Seeking needs a known, FINITE duration to clamp against. `Number.isFinite` is doing real work:
+  // a live stream reports `Infinity`, which would otherwise enable the bar with `max={Infinity}` -
+  // a thumb pinned at 0, an `aria-valuemax="Infinity"`, and a `0:00` total.
+  const loaded = status === 'ready' && Number.isFinite(duration) && duration > 0;
+  const loading = status === 'loading';
+  const failed = status === 'error';
 
   const seekTo = React.useCallback(
     (value: number) => {
@@ -403,11 +575,24 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
 
   const handleTogglePlay = () => {
     const howl = howlRef.current;
-    if (!howl) return;
-    // Driven by the state that howler's own `play`/`pause` events set, so the button and the
-    // player can never disagree about which action is next.
-    if (playing) howl.pause();
-    else howl.play();
+    if (!howl || failed) return;
+    // Ask the PLAYER whether it is playing, not React state. howler emits `play` asynchronously -
+    // from a `setTimeout(0)` on the Web Audio path, and from the `node.play()` promise on the
+    // `html5` path, which is hundreds of milliseconds while a stream buffers (and `html5` is
+    // exactly what the README tells podcast consumers to set). Through that window the button
+    // still reads "Play", so branching on the state would let a second click call `play()` again -
+    // and howler's play-lock sends that down the `_inactiveSound()` path, allocating a SECOND
+    // sound and playing two copies of the clip at once. `howl.playing()` is already true by then,
+    // because howler sets it synchronously before the emit. The `playing` STATE stays what it
+    // should be - a display concern, driving the glyph and the label.
+    if (howl.playing()) {
+      howl.pause();
+      return;
+    }
+    // With `preload={false}` this press is what starts the fetch, so the spinner has to go up here
+    // rather than waiting for an event howler will not fire until the media arrives.
+    if (status === 'idle') setStatus('loading');
+    howl.play();
   };
 
   const handleSkipBack = () => seekTo(position - skipBackSeconds);
@@ -436,39 +621,74 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
   const sliderMax = loaded ? duration : UNKNOWN_DURATION_MAX;
   const sliderValue = Math.min(Math.max(displayPosition, 0), sliderMax);
   const elapsedLabel = formatTime(displayPosition);
-  const durationLabel = formatTime(duration);
-  const playLabel = playing ? 'Pause' : 'Play';
+  // The elapsed side is always a real number (playback starts at 0), but the total is genuinely
+  // unknown until the media loads, so it says so rather than claiming zero.
+  let durationLabel = UNKNOWN_TIME;
+  if (loaded) durationLabel = formatTime(duration);
+  // While loading, the button's name says what is happening rather than offering an action it
+  // cannot perform. Per the repo's no-ternaries-in-JSX convention, the branch is resolved here.
+  let playLabel = playing ? 'Pause' : 'Play';
+  if (loading) playLabel = loadingLabel;
   // Built from the same value the handler acts on, so a caller who changes an interval can never
   // leave the label disagreeing with the behaviour.
   const skipBackLabel = `Skip back ${skipBackSeconds} seconds`;
   const skipForwardLabel = `Skip forward ${skipForwardSeconds} seconds`;
 
+  let playButtonClass = TRANSPORT_BUTTON_CLASS;
+  if (loading) playButtonClass = PLAY_BUTTON_LOADING_CLASS;
+
+  let playGlyph = <PlayGlyph />;
+  if (playing) playGlyph = <PauseGlyph />;
+  // `aria-hidden` because the button already carries the loading label: Spinner's own `role="status"`
+  // would otherwise announce a second, competing "Loading" (learning 30 - one name, one source).
+  if (loading) playGlyph = <Spinner size="sm" aria-hidden="true" />;
+
+  // A failed load replaces the clock, because two zeroed times next to an error would just be
+  // noise. `role="status"` announces it once, politely, without stealing focus.
+  let timeRow = (
+    <div className="flex items-center justify-between text-caption text-text-muted tabular-nums">
+      <span>{elapsedLabel}</span>
+      <span>{durationLabel}</span>
+    </div>
+  );
+  if (failed) {
+    timeRow = (
+      <p role="status" className="text-caption text-danger">
+        {errorLabel}
+      </p>
+    );
+  }
+
   return (
     <div
       ref={ref}
+      // `aria-busy` is what tells assistive tech the region is still resolving - the visual
+      // spinner alone says nothing to a screen reader.
+      aria-busy={loading}
       className={cn(
-        'flex w-full flex-col gap-3 rounded-lg border border-border bg-surface-raised p-4 text-text shadow-sm',
+        'flex w-full flex-col gap-4 rounded-lg border border-border bg-surface-raised p-4 text-text shadow-sm',
         className,
       )}
       {...rest}
     >
-      <Slider
-        aria-label="Seek"
-        // A seek bar's raw `aria-valuenow` is a second count, which a screen reader announces as
-        // "one hundred forty two" for 2:22. `aria-valuetext` is read in preference to it.
-        aria-valuetext={elapsedLabel}
-        value={[sliderValue]}
-        min={0}
-        max={sliderMax}
-        step={SEEK_STEP_SECONDS}
-        disabled={!loaded}
-        onValueChange={handleScrub}
-        onValueCommit={handleScrubCommit}
-      />
-
-      <div className="flex items-center justify-between text-caption text-text-muted tabular-nums">
-        <span>{elapsedLabel}</span>
-        <span>{durationLabel}</span>
+      {/* The bar and its clock are one unit, so they sit closer to each other (gap-1.5) than the
+          pair does to the transport row (the parent's gap-4). A uniform gap left the clock
+          equidistant between the bar it labels and the buttons it does not. */}
+      <div className="flex flex-col gap-1.5">
+        <Slider
+          aria-label="Seek"
+          // A seek bar's raw `aria-valuenow` is a second count, which a screen reader announces as
+          // "one hundred forty two" for 2:22. `aria-valuetext` is read in preference to it.
+          aria-valuetext={elapsedLabel}
+          value={[sliderValue]}
+          min={0}
+          max={sliderMax}
+          step={SEEK_STEP_SECONDS}
+          disabled={!loaded}
+          onValueChange={handleScrub}
+          onValueCommit={handleScrubCommit}
+        />
+        {timeRow}
       </div>
 
       <div className="flex items-center justify-center gap-3">
@@ -476,7 +696,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
           type="button"
           variant="outline"
           size="icon"
-          className={TRANSPORT_BUTTON_CLASS}
+          className={SKIP_BUTTON_CLASS}
           aria-label={skipBackLabel}
           disabled={!loaded}
           onClick={handleSkipBack}
@@ -487,17 +707,21 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
           type="button"
           variant="primary"
           size="icon"
-          className={TRANSPORT_BUTTON_CLASS}
+          className={playButtonClass}
           aria-label={playLabel}
+          // Play stays live in `idle` (with `preload={false}`, pressing it is what starts the
+          // fetch) but not while the chunk or the media is still in flight, and not after a
+          // failure - a press in those windows would be silently dropped.
+          disabled={loading || failed}
           onClick={handleTogglePlay}
         >
-          {playing ? <PauseGlyph /> : <PlayGlyph />}
+          {playGlyph}
         </Button>
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className={TRANSPORT_BUTTON_CLASS}
+          className={SKIP_BUTTON_CLASS}
           aria-label={skipForwardLabel}
           disabled={!loaded}
           onClick={handleSkipForward}
