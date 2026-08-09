@@ -1,7 +1,7 @@
 export { Video } from './Video';
 export type { VideoProps, VideoSource, VideoPlayer, VideoJsOptions } from './Video';
 export { Audio } from './Audio';
-export type { AudioProps } from './Audio';
+export type { AudioProps, AudioHandle, AudioStatus, AudioLoadError } from './Audio';
 export {
   Dialog,
   DialogTrigger,

@@ -20,10 +20,15 @@ publish in lockstep at the tag version.
   as a time (`2:22`) rather than a raw second count. While media is in flight the play button holds
   a spinner and the player sets `aria-busy`; if it fails to load, the player says so and stays inert
   rather than looking merely slow, with `loadingLabel` / `errorLabel` as props and `onLoadError` for
-  the callback. Reach the `Howl` through `onReady` and pass any howler option through `options`.
-  Note two things about the media: long files want `html5` (the default Web Audio path buffers the
-  whole clip first), and that path needs CORS on a cross-origin source - `html5` fixes both.
-  (spec 0071)
+  the callback. To drive playback yourself, `onReady` hands you an `AudioHandle` - `play`, `pause`,
+  `stop`, `seek`, `getPosition`, `getDuration`, `setVolume`, `isPlaying`. That handle is
+  **Canopy's own interface, not the playback library's**: there is deliberately no raw-options
+  passthrough and no access to the engine, so which library plays the audio stays an implementation
+  detail we can change without breaking you. For the same reason the props name intent rather than
+  mechanism - `stream` for "do not download the whole file first" - and load failures arrive as an
+  `AudioLoadError` with a `reason` of `media` or `engine`. Note two things about the media itself:
+  long files want `stream` (by default the whole clip is buffered before playback starts), and the
+  default path needs CORS on a cross-origin source - `stream` fixes both. (spec 0071)
 - **Video** - the media-player Branch, a [video.js](https://videojs.com) player with its control bar
   fully skinned to the Canopy tokens, shipped as `@rogueoak/canopy/video.css`. Lean props for the
   common case plus an `options` passthrough and `onReady(player)`; fluid and responsive by default;

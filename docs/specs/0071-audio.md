@@ -38,9 +38,9 @@ posts, episode pages, docs, marketing sections.
     link, a streaming endpoint). Passed straight to howler.
   - `autoplay?: boolean` (default `false`), `loop?: boolean` (default `false`),
     `volume?: number` (0-1, default `1`), `preload?: boolean` (default `true`).
-  - `html5?: boolean` (default `false`) - force HTML5 Audio instead of Web Audio. Documented as
-    the flag to set for long files: Web Audio buffers the whole clip before playing, so anything
-    podcast-length wants `html5`.
+  - `stream?: boolean` (default `false`) - stream rather than download in full before playing.
+    The flag to set for long files, and named for the INTENT rather than the mechanism that
+    implements it (howler's `html5`), so it stays meaningful whatever engine is behind it.
   - `skipBackSeconds?: number` (default `10`), `skipForwardSeconds?: number` (default `10`) -
     independent, per the developer's call, so a podcast consumer can run the usual back-15 /
     forward-30 without a new component.
@@ -49,18 +49,16 @@ posts, episode pages, docs, marketing sections.
     howler ignores a seek on an unloaded player) and clamped to the media's length. Deliberately a
     **starting** position, not a controlled one: a later change does not yank a listener who has
     since scrubbed elsewhere, but it does apply again when `src` changes, because a new source is a
-    new start. Continuous control is what `onReady`'s instance is for.
+    new start. Continuous control is what `onReady`'s handle is for.
   - `loadingLabel?: string` (default `'Loading audio'`), `errorLabel?: string` (default
     `'Could not load audio'`) - copy as defaulted props, per learning 34, so a consumer can reword
     or translate.
-  - `onLoadError?: (error: unknown) => void` - the media failed to load. Named `onLoadError` rather
-    than `onError` so the wrapper's native `onError` is left alone.
-  - `options?: HowlOptions` - raw howler options, shallow-merged **under** the first-class props
-    (explicit props win for the keys they own; `options` fills the rest), matching Video's
-    passthrough contract exactly.
-  - `onReady?: (howl: Howl) => void` - fired once the media has loaded, with the `Howl`
-    instance: the escape hatch for rate control, sprites, fades, analytics, anything not
-    surfaced.
+  - `onLoadError?: (error: AudioLoadError) => void` - the media failed to load. An `Error` carrying
+    an engine-independent `reason` (`media` / `engine`), following the `SubscribeError` precedent.
+    Named `onLoadError` rather than `onError` so the wrapper's native `onError` is left alone.
+  - `onReady?: (audio: AudioHandle) => void` - fired once the media has loaded, with **Canopy's
+    own** playback handle (`play` / `pause` / `stop` / `seek` / `getPosition` / `getDuration` /
+    `setVolume` / `isPlaying`). See "The engine must not reach the public API" below.
   - `onPlay?`, `onPause?`, `onEnd?` - the three events worth surfacing for a basic player.
   - `className` / `style` / native div props merged via `cn()` onto the wrapper.
 - **Layout (developer's call): stacked.** A full-width scrub bar on top, the elapsed and total
@@ -78,13 +76,14 @@ posts, episode pages, docs, marketing sections.
 
 ### Out
 
-- **Volume slider / mute toggle.** `volume` is settable as a prop and reachable on the instance
-  via `onReady`, but there is no volume UI in v1. Deliberate: the developer scoped this build to
+- **Volume slider / mute toggle.** `volume` is settable as a prop and through the handle's
+  `setVolume`, but there is no volume UI in v1. Deliberate: the developer scoped this build to
   play/pause, seek, and progress.
 - **Playlists, playback-rate menu, waveform rendering, audio sprites, spatial audio, captions or
-  transcripts, download and share buttons, media-session / lock-screen metadata.** All either
-  reachable through `options` / `onReady` or genuinely later features. This spec is the basic
-  player; the props are shaped so each of these can arrive as an additive minor.
+  transcripts, download and share buttons, media-session / lock-screen metadata.** Genuinely later
+  features - and each one arrives as a first-class prop, NOT as a hole punched through to the
+  engine (see below). This spec is the basic player; the props are shaped so each of these can
+  arrive as an additive minor.
 - **A shipped stylesheet.** Unlike Video, `Audio` needs none - see Approach.
 
 ## Approach
@@ -120,6 +119,51 @@ video.js-specific exception rather than becoming the media pattern.
 
 It also means the accessibility is ours to get right rather than inherited, which is why the
 a11y section below is explicit rather than assumed.
+
+### The engine must not reach the public API
+
+This spec originally copied Video's escape hatch: `onReady(player)` handing over the library
+instance, plus a raw `options` passthrough. That is defensible for **Video** - video.js *is* the
+UI, so its own API is the only way to reach the control bar it renders.
+
+For a **headless** engine it is a mistake, and the reason is the same one that makes this component
+different from Video in the first place. howler renders nothing, so nothing about it needs to be
+visible to a consumer - but `onReady(howl)` and `options: HowlOptions` put it in the **published
+API** anyway. Every consumer that reached through them would bind to howler, and swapping the
+engine (for the native `HTMLMediaElement`, or anything else) would stop being an internal decision
+and become a breaking change for them. Given howler's last release was 2023, that is a real risk to
+have taken on by accident.
+
+So the public surface is Canopy's own, and it is small enough to reimplement on anything:
+
+- **`AudioHandle`** - `play` / `pause` / `stop` / `seek` / `getPosition` / `getDuration` /
+  `setVolume` / `isPlaying`. Handed to `onReady`, stable for the component's lifetime, and reading
+  the *current* player through a ref so it survives a source change rebuilding the engine
+  underneath it. `seek` goes through the component's own clamping rather than straight at the
+  engine, so the handle and the buttons cannot disagree.
+- **`AudioLoadError`** - a real `Error` with an engine-independent `reason` (`media` / `engine`),
+  the `message` + machine-reason pairing from `SubscribeError` (learning 34).
+- **Props that name intent, not mechanism** - `stream`, not `html5`. The mechanism is howler's; the
+  intent is the consumer's.
+- **No raw-options passthrough at all.** Anything it would have enabled becomes a first-class prop
+  when it is actually wanted. That is more work per feature and the right trade: a passthrough is
+  an unbounded, unversioned commitment to whatever is behind it.
+
+The translation between the two vocabularies lives in exactly one function (`buildOptions`), so
+replacing the engine means rewriting that mapping plus the effect around it, and touching nothing a
+consumer can see.
+
+**Guarded, not merely intended.** A test asserts the **built** `dist/branches/index.d.ts` contains
+no reference to howler. Against the artifact rather than the source, because a type can leak
+through inference without ever being written down - which is exactly how it leaked the first time.
+Comments are stripped before matching, so the doc comments may still name the engine while
+explaining why it is not exposed. `test` depends on `build` in `turbo.json`, so the file is present
+and current. Same shape as the `video.css` drift guard: state the invariant, then make it a build
+failure.
+
+A pleasant consequence: **`@types/howler` moves to `devDependencies`**. It was a runtime dependency
+only because `Howl` / `HowlOptions` reached the emitted `.d.ts`; with nothing howler-shaped in the
+published types, a consumer never needs them.
 
 ### Player lifecycle (the howler + React seam)
 
@@ -237,7 +281,7 @@ rather than in a support conversation later:
   cross-origin source without `Access-Control-Allow-Origin` fails to load - silently, as far as the
   UI is concerned (duration stays `0:00` and the bar stays disabled). This surfaced immediately in
   the Storybook story, whose first sample host sent no CORS headers.
-- **`html5` is the fix for both problems.** An HTML5 Audio element does not go through XHR, so it
+- **`stream` is the fix for both problems.** A streamed element does not go through XHR, so it
   sidesteps CORS as well as the buffer-the-whole-file behaviour it is nominally there for. The
   `LongFileStreaming` story demonstrates the pairing.
 
@@ -257,12 +301,11 @@ reach for, the parallel with `Video` is the whole point, and a module that impor
 - `howler` (`^2.2.4`) in `@rogueoak/canopy` `dependencies` **and** tsup `external`, so the dynamic
   `import('howler')` stays a runtime import resolved at the consumer's install (the recipe every
   other lib follows).
-- **`@types/howler` (`^2.2.13`) goes in `dependencies`, not `devDependencies`** - deliberate and
-  worth stating. howler ships no bundled types (this is where it differs from video.js), and the
-  public API exposes the `Howl` instance through `onReady` and `HowlOptions` through `options`,
-  so the emitted `dist/*.d.ts` references those types. A consumer who only had them as a dev
-  dependency of ours would get broken types. This is the standard treatment for a `@types`
-  package that a library's public surface leaks.
+- **`@types/howler` (`^2.2.13`) is a `devDependency`.** howler ships no bundled types (where it
+  differs from video.js), so they are needed to BUILD - but not to consume, because nothing
+  howler-shaped reaches the published `.d.ts` (see "The engine must not reach the public API").
+  Had the escape hatch stayed as `onReady(howl)` / `options: HowlOptions`, this would have had to
+  be a runtime dependency; that it does not is a useful signal the boundary is real.
 - **Footprint:** howler is a single dependency-free file, roughly 10x lighter than video.js and
   with no transitive tree at all. The dependency cost is genuinely small; the lazy import is for
   SSR safety and initial-bundle hygiene rather than weight.
@@ -292,7 +335,7 @@ jsdom implements neither Web Audio nor real media playback, so per learning 39 t
 internals:
 
 - `howler` is loaded by **dynamic** import, and `Howl` is constructed with the options object we
-  built from props (src normalised to an array, html5/loop/volume/autoplay/preload/format).
+  built from props (src normalised to an array, stream->html5, loop/volume/autoplay/preload/format).
 - `options` passthrough merges and an explicit prop **wins** over the same key in `options`, with
   a fixture whose two values are **distinct** so a swapped precedence fails (learning 29).
 - Clicking play calls `howl.play()`; clicking again calls `pause()`; the button's label and glyph
@@ -344,9 +387,9 @@ internals:
       and a new one covers the forwarding.
 - [ ] **No new stylesheet and no new consumer wiring** - styled with full-literal semantic-token
       utilities the existing `@source` emits, and no `dark:` on the common path.
-- [ ] `howler` in `dependencies` + tsup `external`; `@types/howler` in `dependencies`.
+- [ ] `howler` in `dependencies` + tsup `external`; `@types/howler` in `devDependencies`.
 - [ ] Story `Branches/Audio`: Playground, custom skip intervals, autoplay-muted-style long-file
-      (`html5`), a brand-override example, and a Dark example; reads correctly in both themes.
+      (`stream`), a brand-override example, and a Dark example; reads correctly in both themes.
 - [ ] Screenshots captured from the running Storybook in light and dark for developer review.
 - [ ] README entry; living docs updated (features + architecture; a learning only if one
       generalises); CHANGELOG entry for the minor bump.

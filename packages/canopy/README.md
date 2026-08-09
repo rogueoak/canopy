@@ -99,7 +99,7 @@ composition + token styling.
 | ------------------ | -------------------------------------------------------------------- |
 | `Accordion`        | Multi-section inline disclosure (single/multiple expansion).         |
 | `AlertDialog`      | Blocking confirmation modal for destructive actions.                 |
-| `Audio`            | howler.js player - play/pause, skip, scrubbable progress bar.        |
+| `Audio`            | Audio player - play/pause, skip, scrubbable progress bar.            |
 | `Calendar`         | Month grid with single/range/multiple selection and keyboard nav.    |
 | `Carousel`         | Draggable, snapping item carousel with prev/next controls.           |
 | `Chart`            | recharts wrapper with token-driven colours and styled tooltip.       |
@@ -188,8 +188,19 @@ import { Audio } from '@rogueoak/canopy/branches';
 ```
 
 Play/pause, skip back, skip forward, and a scrubbable progress bar, keyboard operable throughout.
-The two skip intervals default to 10 seconds and are set independently. Reach the raw `Howl`
-through `onReady={(howl) => ...}` and pass any howler option through `options={{ ... }}`.
+The two skip intervals default to 10 seconds and are set independently.
+
+To drive playback from outside the component, take the handle `onReady` gives you:
+
+```tsx
+<Audio src="/episode-12.mp3" onReady={(audio) => audio.seek(120)} />
+```
+
+`AudioHandle` is `play` / `pause` / `stop` / `seek` / `getPosition` / `getDuration` /
+`setVolume` / `isPlaying` - **Canopy's own interface, not the playback engine's**. There is
+deliberately no raw-options passthrough and no access to the underlying library: both would publish
+the implementation and make replacing it a breaking change for you. Anything the handle cannot
+express is a missing prop - ask for it.
 
 To resume an episode or deep-link a timestamp, set `startAtSeconds`:
 
@@ -208,12 +219,11 @@ failure.
 
 Two things to know about the media itself:
 
-- **Long files want `html5`.** howler's default Web Audio path buffers the whole clip before it
-  plays, so anything podcast-length should set `html5` to stream through an HTML5 Audio element
-  instead.
-- **The default path needs CORS.** Web Audio fetches the media by XHR, so a cross-origin source
-  must send `Access-Control-Allow-Origin`. `html5` does not go through XHR, so it is also the fix
-  for a cross-origin file that refuses to load.
+- **Long files want `stream`.** By default the whole clip is buffered before playback starts, which
+  is fine for a short clip and wrong for anything podcast-length.
+- **The default path needs CORS.** It fetches the media by XHR, so a cross-origin source must send
+  `Access-Control-Allow-Origin`. `stream` does not go through XHR, so it is also the fix for a
+  cross-origin file that refuses to load.
 
 ## License
 

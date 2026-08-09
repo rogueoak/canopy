@@ -677,11 +677,10 @@ extra**.
 - **Audio** (`@rogueoak/canopy/branches`) - play/pause, skip back, skip forward, and a **scrubbable
   progress bar**, stacked: the bar on top, elapsed / total time beneath it, transport controls
   centred below. Lean props for the common case - `src` (a string or howler's fallback array),
-  `format`, `autoplay`, `loop`, `volume`, `preload`, `html5`, and the two **independent** skip
+  `format`, `autoplay`, `loop`, `volume`, `preload`, `stream`, and the two **independent** skip
   intervals `skipBackSeconds` / `skipForwardSeconds` (each defaulting to 10, so the podcast
-  convention of back-15 / forward-30 needs no new component) - plus an `options` passthrough (raw
-  howler config), `onReady(howl)` (the instance escape hatch), and `onPlay` / `onPause` / `onEnd`.
-  Explicit props win over `options`. It owns the lifecycle: creates the `Howl` on mount, rebuilds it
+  convention of back-15 / forward-30 needs no new component) - plus `onReady(audio)` handing over
+  Canopy's own `AudioHandle`, and `onPlay` / `onPause` / `onEnd`. It owns the lifecycle: creates the `Howl` on mount, rebuilds it
   when the source changes, applies live `volume` / `loop` changes through the instance rather than
   by rebuilding, and **unloads it on unmount** - an un-unloaded `Howl` would keep playing with no
   element left to stop it.
@@ -715,9 +714,17 @@ extra**.
   and the scrub thumb announces **`aria-valuetext` as formatted time** (`2:22`, not `142`). That
   added one small backwards-compatible capability to the **`Slider` Seed** - `aria-valuetext` now
   forwards to a single thumb, alongside the labelling attributes it already forwarded.
-- **Media caveats, documented in the README** - long files want `html5` (the default Web Audio path
-  buffers the whole clip first), and that path fetches by XHR so a cross-origin source needs CORS;
-  `html5` is the fix for both.
+- **The public interface is Canopy's, not the engine's.** `onReady` hands over an **`AudioHandle`**
+  (`play` / `pause` / `stop` / `seek` / `getPosition` / `getDuration` / `setVolume` / `isPlaying`),
+  and there is deliberately **no raw-options passthrough and no access to the `Howl`**. Props name
+  intent rather than mechanism - `stream`, not `html5` - and failures arrive as an `AudioLoadError`
+  with an engine-independent `reason` (`media` / `engine`). howler is therefore an implementation
+  detail that can be replaced (with the native `HTMLMediaElement`, say) without breaking a single
+  consumer. A test guards this against the **built** `dist/branches/index.d.ts`, since a type can
+  leak through inference without being written down in the source.
+- **Media caveats, documented in the README** - long files want `stream` (by default the whole clip
+  is buffered first), and the default path fetches by XHR so a cross-origin source needs CORS;
+  `stream` is the fix for both.
 - **Stories** - a `Branches/Audio` section: Playground, podcast skip intervals, long-file streaming,
   full-width, a **brand-override** demo, and a dark example. **Tests** mock howler and assert the
   mapping and behaviour Canopy owns (built options and precedence, the seek arithmetic **clamped at

@@ -111,13 +111,64 @@ export type AudioStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 /* --------------------------------------------------------------------------------------- types */
 
+/**
+ * The playback handle handed to `onReady` - Canopy's OWN control surface, deliberately not the
+ * underlying engine's instance.
+ *
+ * This is the seam that keeps the engine swappable. Exposing howler's `Howl` (and its `HowlOptions`)
+ * on the public props would make the engine part of the published API: every consumer reaching
+ * through the escape hatch would bind to howler, and replacing it - with the native
+ * `HTMLMediaElement`, or anything else - would become a breaking change for them, not an
+ * implementation detail for us. Every method below is expressible on any playback engine, so the
+ * contract survives that swap.
+ *
+ * It is intentionally SMALL. Anything a player might additionally do (rate, fades, sprites,
+ * analytics) is a first-class prop when it is wanted, not a hole punched through to the engine.
+ */
+export interface AudioHandle {
+  /** Start (or resume) playback. */
+  play(): void;
+  /** Pause, keeping the position. */
+  pause(): void;
+  /** Stop and return to the start. */
+  stop(): void;
+  /** Jump to a position in seconds, clamped to the media's length. */
+  seek(seconds: number): void;
+  /** Current position in seconds. */
+  getPosition(): number;
+  /** Total length in seconds, or `0` while it is still unknown. */
+  getDuration(): number;
+  /** Set the volume, 0 to 1. */
+  setVolume(volume: number): void;
+  /** Whether audio is playing right now. */
+  isPlaying(): boolean;
+}
+
+/**
+ * A load failure, following the `SubscribeError` precedent: a real `Error` (so it reads normally
+ * when logged or thrown) carrying a machine-readable `reason` alongside the human `message`.
+ *
+ * - `media`  - the audio itself would not load: a bad URL, an unsupported codec, or a cross-origin
+ *              file with no CORS headers.
+ * - `engine` - the playback engine could not be loaded at all (an offline or blocked chunk).
+ *
+ * `reason` is the engine-independent part, which is the point: a consumer branches on it without
+ * knowing what is playing the audio.
+ */
+export interface AudioLoadError extends Error {
+  reason: 'media' | 'engine';
+}
+
 export interface AudioProps
   // `onPlay` and `onPause` are native media-event handlers on React's HTMLAttributes, and our
   // props of the same name mean something different (fired from howler, no event argument). Per
   // learning 15 the component's own meaning wins, so the native ones are omitted rather than
   // silently conflicting.
   extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onPlay' | 'onPause'> {
-  /** The media URL. An array is howler's fallback list (e.g. `['clip.webm', 'clip.mp3']`). */
+  /**
+   * The media URL, or several of the same audio in different formats - the first one the browser
+   * can play wins (e.g. `['clip.webm', 'clip.mp3']`).
+   */
   src: string | string[];
   /** Explicit extensions, for URLs that do not end in one (a signed CDN link, a stream). */
   format?: string[];
@@ -130,10 +181,13 @@ export interface AudioProps
   /** Load the media before it is played. Default `true`. */
   preload?: boolean;
   /**
-   * Force HTML5 Audio instead of Web Audio. Default `false`. Set this for long files: Web Audio
-   * buffers the whole clip before playing, so anything podcast-length wants `html5`.
+   * Stream the audio rather than downloading it in full before playing. Default `false`.
+   *
+   * Set this for long files - by default the whole clip is buffered before playback starts, which
+   * is fine for a short clip and wrong for anything podcast-length. Described as an INTENT rather
+   * than by the mechanism that implements it, so it stays meaningful whatever is playing the audio.
    */
-  html5?: boolean;
+  stream?: boolean;
   /**
    * Position to begin at, in seconds - for resuming an episode, or deep-linking a timestamp.
    * Applied once, when the media loads (nothing can seek before a duration is known), and clamped
@@ -141,7 +195,7 @@ export interface AudioProps
    *
    * Deliberately a STARTING position, not a controlled one: changing it later does not yank a
    * listener who has since scrubbed elsewhere. It applies again when the `src` changes, because a
-   * new source is a new start. To drive position continuously, take the `Howl` from `onReady` and
+   * new source is a new start. To drive position continuously, take the handle from `onReady` and
    * call `seek()` yourself.
    */
   startAtSeconds?: number;
@@ -157,15 +211,20 @@ export interface AudioProps
   loadingLabel?: string;
   /** Message shown when the media fails to load. Default `'Could not load audio'`. */
   errorLabel?: string;
-  /** Raw howler options merged UNDER the first-class props (props win for their keys). */
-  options?: HowlOptions;
-  /** Called once the media has loaded, with the `Howl` instance (the advanced escape hatch). */
-  onReady?: (howl: Howl) => void;
   /**
-   * Called when the media fails to load, with howler's error argument. Named `onLoadError` rather
-   * than `onError` to leave the native `onError` handler on the wrapper alone.
+   * Called once the media has loaded, with Canopy's own {@link AudioHandle} - the escape hatch for
+   * driving playback from outside the component.
+   *
+   * There is deliberately NO raw-options passthrough and no access to the underlying engine: both
+   * would publish the implementation and make replacing it a breaking change. Anything the handle
+   * cannot express is a missing first-class prop; ask for it.
    */
-  onLoadError?: (error: unknown) => void;
+  onReady?: (audio: AudioHandle) => void;
+  /**
+   * Called when the media fails to load. Named `onLoadError` rather than `onError` to leave the
+   * native `onError` handler on the wrapper alone.
+   */
+  onLoadError?: (error: AudioLoadError) => void;
   /** Called when playback starts. */
   onPlay?: () => void;
   /** Called when playback pauses. */
@@ -209,45 +268,56 @@ function readPosition(howl: Howl): number {
 }
 
 /**
- * Build the howler options from props: `{ ...defaults, ...options, ...explicitProps }`. Defaults
- * are the base, the `options` passthrough overrides defaults, and an explicitly-passed prop wins
- * over both for the key it owns. Only props the caller actually set land in `explicit`, so an
- * unset prop leaves its key to `options` (or the default) rather than clobbering it.
+ * Build an {@link AudioLoadError}. A real `Error` so it reads normally when logged, carrying the
+ * engine-independent `reason` a consumer branches on and the raw `cause` for diagnosis - the
+ * `message` + machine-reason pairing SubscribeForm established (learning 34).
  */
-function buildOptions(props: Pick<AudioProps, OptionPropKey>): HowlOptions {
-  const { src, format, autoplay, loop, volume, preload, html5, options } = props;
-
-  const defaults = {
-    autoplay: false,
-    loop: false,
-    volume: 1,
-    preload: true,
-    html5: false,
-  };
-
-  const explicit: Partial<HowlOptions> = {};
-  if (format !== undefined) explicit.format = format;
-  if (autoplay !== undefined) explicit.autoplay = autoplay;
-  if (loop !== undefined) explicit.loop = loop;
-  if (volume !== undefined) explicit.volume = volume;
-  if (preload !== undefined) explicit.preload = preload;
-  if (html5 !== undefined) explicit.html5 = html5;
-
-  // `src` is required by howler and owned entirely by this component, so it is applied last and
-  // is never overridable through the `options` passthrough.
-  return { ...defaults, ...options, ...explicit, src: resolveSrc(src) };
+function makeLoadError(reason: AudioLoadError['reason'], message: string, cause?: unknown) {
+  const error = new Error(message) as AudioLoadError;
+  error.reason = reason;
+  if (cause !== undefined) error.cause = cause;
+  return error;
 }
 
 /**
- * Options howler can change on a LIVE player, so a new value must not rebuild it. Everything else
- * in the built options is fixed at construction and therefore belongs in the rebuild key.
+ * Translate Canopy's props into the engine's options. This function is the ONLY place the two
+ * vocabularies meet, which is what makes the engine replaceable: swapping howler out means
+ * rewriting this mapping and the effect that consumes it, and touching nothing a consumer can see.
+ *
+ * Note `stream` -> `html5`: the prop names the intent, this names howler's mechanism for it.
+ *
+ * With no raw-options passthrough there is no merge order to reason about any more - every value
+ * is either the caller's or the documented default.
+ */
+function buildOptions(props: Pick<AudioProps, OptionPropKey>): HowlOptions {
+  const { src, format, autoplay, loop, volume, preload, stream } = props;
+
+  const built: HowlOptions = {
+    src: resolveSrc(src),
+    autoplay: autoplay ?? false,
+    loop: loop ?? false,
+    volume: volume ?? 1,
+    preload: preload ?? true,
+    html5: stream ?? false,
+  };
+  if (format !== undefined) built.format = format;
+  return built;
+}
+
+/**
+ * Options the engine can change on a LIVE player, so a new value must not rebuild it. Everything
+ * else in the built options is fixed at construction and therefore belongs in the rebuild key.
  */
 const LIVE_UPDATABLE_OPTIONS = ['volume', 'loop'] as const;
 
 /**
- * A value-equality key over the construction-time options. Keys are sorted so the string depends on
- * the option VALUES rather than on the order a consumer happened to write their `options` literal
- * in - otherwise reordering two keys in an inline object would needlessly rebuild the player.
+ * A value-equality key over the construction-time options, so the create effect re-runs when one of
+ * them actually changes.
+ *
+ * It compares VALUES rather than object identity, which matters for the array-valued props: an
+ * inline `src={['a.webm', 'a.mp3']}` or `format={['mp3']}` is a new array on every render, and
+ * keying on identity would rebuild - and restart - the player continuously. Keys are sorted so the
+ * string depends only on the values, never on property order.
  */
 function constructionKeyOf(built: HowlOptions): string {
   const entries = Object.entries(built)
@@ -258,15 +328,7 @@ function constructionKeyOf(built: HowlOptions): string {
   return JSON.stringify(entries);
 }
 
-type OptionPropKey =
-  | 'src'
-  | 'format'
-  | 'autoplay'
-  | 'loop'
-  | 'volume'
-  | 'preload'
-  | 'html5'
-  | 'options';
+type OptionPropKey = 'src' | 'format' | 'autoplay' | 'loop' | 'volume' | 'preload' | 'stream';
 
 /* -------------------------------------------------------------------------------------- icons */
 
@@ -327,13 +389,12 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
     loop,
     volume,
     preload,
-    html5,
+    stream,
     startAtSeconds,
     skipBackSeconds = 10,
     skipForwardSeconds = 10,
     loadingLabel = 'Loading audio',
     errorLabel = 'Could not load audio',
-    options,
     onReady,
     onLoadError,
     onPlay,
@@ -356,22 +417,13 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
   // elapsed readout) follow the drag instead of being yanked back by the position loop.
   const [scrubValue, setScrubValue] = React.useState<number | null>(null);
 
-  // Keep the latest options and callbacks in refs so the create effect depends only on the source.
-  // A consumer passing an inline `options` object or an inline arrow handler must not rebuild the
-  // player on every render.
+  // Keep the latest options and callbacks in refs, so the create effect depends on the option
+  // VALUES (via `constructionKey`) rather than on anything's identity - an inline arrow handler
+  // must not rebuild the player on every render.
   const optionsRef = React.useRef<HowlOptions>(
-    buildOptions({ src, format, autoplay, loop, volume, preload, html5, options }),
+    buildOptions({ src, format, autoplay, loop, volume, preload, stream }),
   );
-  optionsRef.current = buildOptions({
-    src,
-    format,
-    autoplay,
-    loop,
-    volume,
-    preload,
-    html5,
-    options,
-  });
+  optionsRef.current = buildOptions({ src, format, autoplay, loop, volume, preload, stream });
   // Read at load time rather than captured at construction, so a value that arrives late (a
   // resume position fetched from an API) still applies to the first load.
   const startAtRef = React.useRef(startAtSeconds);
@@ -386,6 +438,34 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
   onPauseRef.current = onPause;
   const onEndRef = React.useRef(onEnd);
   onEndRef.current = onEnd;
+
+  /* --------------------------------------------------------------------- the public handle */
+
+  // Assigned further down, once `seekTo` exists - the handle only calls it after render, so the
+  // late assignment is safe and keeps the handle's identity stable.
+  const seekToRef = React.useRef<(seconds: number) => void>(() => {});
+
+  // Canopy's own control surface, NOT the engine's instance. Stable for the component's lifetime
+  // (empty deps) so a consumer can hold onto it: every method reads the CURRENT player through the
+  // ref rather than closing over one, which means it survives a source change rebuilding the
+  // player underneath it. Before the player exists, each method is a no-op or a zero rather than a
+  // crash.
+  const handle = React.useMemo<AudioHandle>(
+    () => ({
+      play: () => howlRef.current?.play(),
+      pause: () => howlRef.current?.pause(),
+      stop: () => howlRef.current?.stop(),
+      seek: (seconds: number) => seekToRef.current(seconds),
+      getPosition: () => (howlRef.current ? readPosition(howlRef.current) : 0),
+      getDuration: () => {
+        const value = howlRef.current?.duration() ?? 0;
+        return Number.isFinite(value) ? value : 0;
+      },
+      setVolume: (value: number) => howlRef.current?.volume(value),
+      isPlaying: () => howlRef.current?.playing() ?? false,
+    }),
+    [],
+  );
 
   /* ------------------------------------------------------------------ the position loop */
 
@@ -414,9 +494,9 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
 
   /* ------------------------------------------------------------------- create / destroy */
 
-  // Rebuild the player when any CONSTRUCTION-time option changes - howler fixes `src`, `format`,
-  // `html5`, `preload`, and `autoplay` at construction, so a new value for one of them can only
-  // take effect on a new `Howl`. `volume` and `loop` are excluded because howler CAN change those
+  // Rebuild the player when any CONSTRUCTION-time option changes - the engine fixes `src`,
+  // `format`, `stream`, `preload`, and `autoplay` when the player is built, so a new value for one
+  // of them can only take effect on a new one. `volume` and `loop` are excluded because howler CAN change those
   // live, and they are applied through the instance in the effects below; rebuilding on a volume
   // tick would restart playback.
   //
@@ -461,16 +541,16 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
             howl.seek(clamped);
             setPosition(clamped);
           }
-          onReadyRef.current?.(howl);
+          onReadyRef.current?.(handle);
         });
-        howl.on('loaderror', (_id, error) => {
+        howl.on('loaderror', (_id, cause) => {
           // The media will never arrive (a bad URL, an unsupported codec, or - the case the README
           // documents - a cross-origin file with no CORS headers on the Web Audio path). Say so:
           // without this, the failure is indistinguishable from a slow network forever.
           setStatus('error');
           setPlaying(false);
           stopTicking();
-          onLoadErrorRef.current?.(error);
+          onLoadErrorRef.current?.(makeLoadError('media', 'The audio could not be loaded.', cause));
         });
         howl.on('playerror', () => {
           // Playback was refused (an autoplay policy, a decode failure). The MEDIA may still be
@@ -509,13 +589,15 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
         // its `load` event; a no-preload one is idle and waiting for a press.
         if (optionsRef.current.preload === false) setStatus('idle');
       })
-      .catch((error: unknown) => {
+      .catch((cause: unknown) => {
         // The howler CHUNK failed to load (offline, a bad deploy, a blocked CDN). Without this the
         // promise rejects unhandled in the consumer's app and the player renders as a normal but
         // permanently inert set of controls.
         if (cancelled) return;
         setStatus('error');
-        onLoadErrorRef.current?.(error);
+        onLoadErrorRef.current?.(
+          makeLoadError('engine', 'The audio player could not be loaded.', cause),
+        );
       });
 
     return () => {
@@ -533,7 +615,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
       setDuration(0);
       setScrubValue(null);
     };
-  }, [constructionKey, startTicking, stopTicking]);
+  }, [constructionKey, handle, startTicking, stopTicking]);
 
   /* --------------------------------------------------------------------- live updates */
 
@@ -572,6 +654,9 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
     },
     [duration, loaded],
   );
+
+  // Late-bind the handle's `seek` now that the clamping implementation exists (see the ref above).
+  seekToRef.current = seekTo;
 
   const handleTogglePlay = () => {
     const howl = howlRef.current;

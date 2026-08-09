@@ -29,10 +29,11 @@ const meta = {
     src: { control: 'text' },
     autoplay: { control: 'boolean' },
     loop: { control: 'boolean' },
-    html5: { control: 'boolean' },
+    stream: { control: 'boolean' },
     volume: { control: { type: 'range', min: 0, max: 1, step: 0.05 } },
     skipBackSeconds: { control: { type: 'number', min: 1 } },
     skipForwardSeconds: { control: { type: 'number', min: 1 } },
+    startAtSeconds: { control: { type: 'number', min: 0 } },
   },
   args: {
     // A CORS-enabled clip: howler's default Web Audio path fetches the media by XHR, so the host
@@ -73,16 +74,16 @@ export const PodcastSkips: Story = {
 };
 
 /**
- * Long files want `html5`. Web Audio buffers the whole clip before playing, so anything
- * podcast-length should stream through HTML5 Audio instead - here, a six-minute track that starts
- * playing immediately rather than after a multi-megabyte download.
+ * Long files want `stream`. By default the whole clip is buffered before playback starts, so
+ * anything podcast-length should stream instead - here, a six-minute track that begins immediately
+ * rather than after a multi-megabyte download.
  *
- * `html5` also sidesteps CORS: the Web Audio path fetches media by XHR and so needs the host to
- * send `Access-Control-Allow-Origin`, while an HTML5 Audio element does not. A cross-origin source
- * that refuses to load on the default path will usually play with `html5` set.
+ * `stream` also sidesteps CORS: the default path fetches media by XHR and so needs the host to send
+ * `Access-Control-Allow-Origin`, while a streamed element does not. A cross-origin source that
+ * refuses to load by default will usually play with `stream` set.
  */
 export const LongFileStreaming: Story = {
-  args: { html5: true, src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  args: { stream: true, src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
   render: (args) => (
     <div className="w-[420px] max-w-full">
       <Audio {...args} />

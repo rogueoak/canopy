@@ -1,8 +1,11 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import * as React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Audio, buildOptions, formatTime } from './Audio';
+import type { AudioHandle, AudioLoadError } from './Audio';
 
 // jsdom implements neither Web Audio nor real media playback, so we mock the `howler` module and
 // assert the mapping and the behaviour WE own - the options we build, the seek arithmetic, the
@@ -200,7 +203,7 @@ describe('buildOptions (the props -> howler options mapping we own)', () => {
     expect(buildOptions({ src: ['clip.webm', 'clip.mp3'] }).src).toEqual(['clip.webm', 'clip.mp3']);
   });
 
-  it('maps every first-class prop onto its howler option', () => {
+  it('maps every first-class prop onto its engine option', () => {
     expect(
       buildOptions({
         src: 'clip.mp3',
@@ -209,7 +212,7 @@ describe('buildOptions (the props -> howler options mapping we own)', () => {
         loop: true,
         volume: 0.25,
         preload: false,
-        html5: true,
+        stream: true,
       }),
     ).toMatchObject({
       format: ['mp3'],
@@ -221,25 +224,10 @@ describe('buildOptions (the props -> howler options mapping we own)', () => {
     });
   });
 
-  it('merges the `options` passthrough for keys the props do not own', () => {
-    const built = buildOptions({ src: 'clip.mp3', options: { rate: 1.5, mute: true } });
-    expect(built).toMatchObject({ rate: 1.5, mute: true, volume: 1 });
-  });
-
-  it('lets an explicit prop win over the same key in `options`', () => {
-    // DISTINCT values on both sides, so a swapped precedence fails loudly rather than passing
-    // because the two happened to agree.
-    const built = buildOptions({ src: 'clip.mp3', volume: 0.2, options: { volume: 0.9 } });
-    expect(built.volume).toBe(0.2);
-  });
-
-  it('leaves a key to `options` when the prop owning it is unset', () => {
-    expect(buildOptions({ src: 'clip.mp3', options: { volume: 0.9 } }).volume).toBe(0.9);
-  });
-
-  it('never lets `options` override the source', () => {
-    const built = buildOptions({ src: 'clip.mp3', options: { src: ['other.mp3'] } });
-    expect(built.src).toEqual(['clip.mp3']);
+  it('translates `stream` onto the engine\u2019s streaming mechanism', () => {
+    // The prop names the INTENT; this mapping is the only place the engine's vocabulary appears.
+    expect(buildOptions({ src: 'clip.mp3', stream: true }).html5).toBe(true);
+    expect(buildOptions({ src: 'clip.mp3' }).html5).toBe(false);
   });
 });
 
@@ -270,24 +258,15 @@ describe('formatTime', () => {
 
 describe('player lifecycle', () => {
   it('constructs a Howl with the options built from props', async () => {
-    render(<Audio src="clip.mp3" html5 volume={0.5} />);
+    render(<Audio src="clip.mp3" stream volume={0.5} />);
     const howl = await waitForPlayer();
     expect(howl.options).toMatchObject({ src: ['clip.mp3'], html5: true, volume: 0.5 });
   });
 
-  it('constructs the Howl with the FULL built options, passthrough included', async () => {
+  it('constructs the player with the FULL built options', async () => {
     // Asserted on the constructed instance, not just on `buildOptions` as a pure function: the
     // component could compute the right object and then hand howler something else.
-    render(
-      <Audio
-        src="clip.mp3"
-        format={['mp3']}
-        loop
-        preload={false}
-        autoplay
-        options={{ rate: 1.5 }}
-      />,
-    );
+    render(<Audio src="clip.mp3" format={['mp3']} loop preload={false} autoplay />);
     const howl = await waitForPlayer();
 
     expect(howl.options).toMatchObject({
@@ -296,7 +275,6 @@ describe('player lifecycle', () => {
       loop: true,
       preload: false,
       autoplay: true,
-      rate: 1.5,
       volume: 1,
       html5: false,
     });
@@ -352,34 +330,34 @@ describe('player lifecycle', () => {
   });
 
   it('rebuilds when a construction-only option changes, since howler fixes it at construction', async () => {
-    // `html5` picks the playback path and can only be chosen when the Howl is built, so a player
+    // `stream` picks the playback path and can only be chosen when the player is built, so one
     // that kept the old instance would silently ignore the new value.
-    const { rerender } = render(<Audio src="clip.mp3" html5={false} />);
+    const { rerender } = render(<Audio src="clip.mp3" stream={false} />);
     await waitForPlayer();
 
-    rerender(<Audio src="clip.mp3" html5 />);
+    rerender(<Audio src="clip.mp3" stream />);
 
     await waitFor(() => expect(instances()).toHaveLength(2));
     expect(lastHowl()!.options).toMatchObject({ html5: true });
   });
 
-  it('rebuilds when a construction-only option arrives through the options passthrough', async () => {
-    const { rerender } = render(<Audio src="clip.mp3" options={{ format: ['mp3'] }} />);
+  it('rebuilds when the format hint changes', async () => {
+    const { rerender } = render(<Audio src="clip" format={['mp3']} />);
     await waitForPlayer();
 
-    rerender(<Audio src="clip.mp3" options={{ format: ['ogg'] }} />);
+    rerender(<Audio src="clip" format={['ogg']} />);
 
     await waitFor(() => expect(instances()).toHaveLength(2));
     expect(lastHowl()!.options).toMatchObject({ format: ['ogg'] });
   });
 
-  it('does not rebuild for an inline options object whose values did not change', async () => {
-    // A new object identity every render must not thrash the player - the key is a VALUE
-    // comparison, and key order within the literal is not a value change.
-    const { rerender } = render(<Audio src="clip.mp3" options={{ format: ['mp3'], rate: 1 }} />);
+  it('does not rebuild for an inline array prop whose contents did not change', async () => {
+    // `src` and `format` are arrays, so an inline literal is a NEW array on every render. Keying
+    // the effect on identity rather than value would rebuild - and restart - the player forever.
+    const { rerender } = render(<Audio src={['clip.webm', 'clip.mp3']} format={['webm', 'mp3']} />);
     await waitForPlayer();
 
-    rerender(<Audio src="clip.mp3" options={{ rate: 1, format: ['mp3'] }} />);
+    rerender(<Audio src={['clip.webm', 'clip.mp3']} format={['webm', 'mp3']} />);
     await act(async () => {});
 
     expect(instances()).toHaveLength(1);
@@ -537,6 +515,110 @@ describe('transport controls', () => {
 
     expect(howl.play).toHaveBeenCalledTimes(1);
     expect(howl.pause).toHaveBeenCalledTimes(1);
+  });
+});
+
+/* ------------------------------------------------------------- the owned interface (0071) */
+
+describe('the public interface is Canopy’s, not the engine’s', () => {
+  it('does not name the playback engine anywhere in the published types', () => {
+    // THE swappability guard. `onReady` used to hand out howler's `Howl`, and `options` took its
+    // raw config - which put the engine in the published API, so replacing it would have been a
+    // breaking change for every consumer rather than an implementation detail for us.
+    //
+    // Asserted against the BUILT artifact, because that is what a consumer actually installs, and
+    // because a type can leak through inference without ever being written down in the source.
+    // `test` depends on `build` in turbo.json, so this file is present and current.
+    const declarations = readFileSync(resolve(__dirname, '../../dist/branches/index.d.ts'), 'utf8');
+    // Strip comments before matching: the doc comments legitimately NAME howler when explaining
+    // why it is not exposed, and prose is not a contract. What must not appear is a type
+    // REFERENCE - an import from the package, or its types used in a declaration.
+    const types = declarations.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+
+    expect(declarations).toContain('AudioHandle');
+    expect(types).not.toMatch(/howler/i);
+    expect(types).not.toMatch(/\bHowl\b/);
+    expect(types).not.toMatch(/\bHowlOptions\b/);
+  });
+
+  it('hands `onReady` a handle whose methods drive playback', async () => {
+    const onReady = vi.fn();
+    render(<Audio src="clip.mp3" onReady={onReady} />);
+    const howl = await loadMedia(180);
+
+    const handle = onReady.mock.calls[0]![0] as AudioHandle;
+    // Not the engine instance - a surface we define and could implement on anything.
+    expect(handle).not.toBe(howl);
+
+    handle.play();
+    expect(howl.play).toHaveBeenCalled();
+
+    handle.pause();
+    expect(howl.pause).toHaveBeenCalled();
+
+    handle.setVolume(0.4);
+    expect(howl.volume).toHaveBeenCalledWith(0.4);
+  });
+
+  it('reports position, duration, and playing state through the handle', async () => {
+    const onReady = vi.fn();
+    render(<Audio src="clip.mp3" onReady={onReady} />);
+    const howl = await loadMedia(180);
+    const handle = onReady.mock.calls[0]![0] as AudioHandle;
+
+    howl.position = 42;
+    expect(handle.getPosition()).toBe(42);
+    expect(handle.getDuration()).toBe(180);
+    expect(handle.isPlaying()).toBe(false);
+
+    // Driven through the handle, so the reported state reflects the real player rather than a
+    // hand-planted event.
+    await act(async () => {
+      handle.play();
+    });
+    expect(handle.isPlaying()).toBe(true);
+  });
+
+  it('clamps a handle seek the same way the buttons do', async () => {
+    const onReady = vi.fn();
+    render(<Audio src="clip.mp3" onReady={onReady} />);
+    const howl = await loadMedia(180);
+    const handle = onReady.mock.calls[0]![0] as AudioHandle;
+
+    handle.seek(9999);
+
+    // The handle goes through the component's own clamping, not straight at the engine.
+    expect(howl.seek).toHaveBeenCalledWith(180);
+  });
+
+  it('keeps working after the player underneath it is rebuilt', async () => {
+    // A consumer holds the handle; a source change replaces the engine instance. The handle reads
+    // the CURRENT player through a ref, so it must not go stale.
+    const onReady = vi.fn();
+    const { rerender } = render(<Audio src="clip.mp3" onReady={onReady} />);
+    await loadMedia(180);
+    const handle = onReady.mock.calls[0]![0] as AudioHandle;
+
+    rerender(<Audio src="other.mp3" onReady={onReady} />);
+    await waitFor(() => expect(instances()).toHaveLength(2));
+    handle.play();
+
+    expect(lastHowl()!.play).toHaveBeenCalled();
+  });
+
+  it('reports a media failure as an Error with an engine-independent reason', async () => {
+    const onLoadError = vi.fn();
+    render(<Audio src="clip.mp3" onLoadError={onLoadError} />);
+    const howl = await waitForPlayer();
+
+    await act(async () => {
+      howl.emit('loaderror');
+    });
+
+    const error = onLoadError.mock.calls[0]![0] as AudioLoadError;
+    expect(error).toBeInstanceOf(Error);
+    expect(error.reason).toBe('media');
+    expect(error.message).toBeTruthy();
   });
 });
 
@@ -997,12 +1079,15 @@ describe('the position loop', () => {
 /* ----------------------------------------------------------------------------------- events */
 
 describe('events', () => {
-  it('hands the Howl instance to `onReady` once loaded', async () => {
+  it('hands the playback handle to `onReady` once loaded', async () => {
     const onReady = vi.fn();
     render(<Audio src="clip.mp3" onReady={onReady} />);
-    const howl = await loadMedia(180);
+    await loadMedia(180);
 
-    expect(onReady).toHaveBeenCalledWith(howl);
+    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(onReady.mock.calls[0]![0]).toEqual(
+      expect.objectContaining({ play: expect.any(Function), seek: expect.any(Function) }),
+    );
   });
 
   it('does not fire `onReady` before the media has loaded', async () => {

@@ -665,10 +665,30 @@ themed by the layers it composes and the tokens already provisioned.
     gone**, with no visible element left to stop it, so cleanup calls `off()` then `unload()`.
 
   `howler` is in `dependencies` + tsup `external` and loaded by a dynamic `import('howler')` (it
-  touches `window` at module scope, so it must stay client-only). **`@types/howler` is in
-  `dependencies`, not `devDependencies`** - howler ships no bundled types (where it differs from
-  video.js) and the public surface leaks `Howl` / `HowlOptions` into the emitted `.d.ts`, so a
-  consumer needs them to typecheck.
+  touches `window` at module scope, so it must stay client-only). `@types/howler` is a
+  **devDependency**, which is the deliberate consequence of the point below: nothing howler-shaped
+  reaches the published types, so a consumer never needs them.
+
+- **The engine is an implementation detail, and there is a guard proving it.** `Audio` first
+  shipped its escape hatch the way `Video` does - `onReady(player)` handing over the library
+  instance, plus a raw `options` passthrough. For video.js that is defensible (it *is* the UI, so
+  its own API is the only way to reach the control bar). For a headless engine it is a mistake:
+  those two props put howler in the **published API**, so replacing it later would break every
+  consumer that reached through them, rather than being an internal swap.
+
+  So the public surface is Canopy's own: **`AudioHandle`** (`play` / `pause` / `stop` / `seek` /
+  `getPosition` / `getDuration` / `setVolume` / `isPlaying`), **`AudioLoadError`** with an
+  engine-independent `reason` (`media` / `engine`), and props that name **intent, not mechanism** -
+  `stream`, not `html5`. Every one of those is implementable on a bare `HTMLMediaElement`. The
+  translation lives in exactly one function (`buildOptions`), so swapping engines means rewriting
+  that mapping and the effect around it and touching nothing a consumer can see.
+
+  The guard is a test asserting the **built** `dist/branches/index.d.ts` contains no reference to
+  howler - checked against the artifact rather than the source, because a type can leak through
+  inference without ever being written down, and comments are stripped first so the doc comments
+  may still *name* the engine while explaining why it is not exposed. `test` depends on `build` in
+  `turbo.json`, so the file is present and current. This is the same shape as the `video.css` drift
+  guard: state the invariant, then make it a build failure.
 
 ## Showcase + theming (Storybook)
 
