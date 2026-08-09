@@ -149,7 +149,7 @@ export const resolveCanopyDefaults = (tokensCss) => {
  * - `requiredRoles` is the full set of Canopy semantic roles (derived from Canopy's own shipped
  *   tokens, so the contract can't drift). A brand need NOT map them all: any it omits falls back to
  *   `defaults` and is reported (non-fatally) in `missingLight` / `missingDark`.
- * - `defaults` is `resolveCanopyDefaults(tokensCss)` — the Canopy value an omitted role inherits.
+ * - `defaults` is `resolveCanopyDefaults(tokensCss)` - the Canopy value an omitted role inherits.
  *   Optional: without it, pairs touching an omitted role are simply skipped (no fallback to check
  *   against).
  *

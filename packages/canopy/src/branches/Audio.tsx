@@ -496,15 +496,12 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
 
   // Rebuild the player when any CONSTRUCTION-time option changes - the engine fixes `src`,
   // `format`, `stream`, `preload`, and `autoplay` when the player is built, so a new value for one
-  // of them can only take effect on a new one. `volume` and `loop` are excluded because howler CAN change those
-  // live, and they are applied through the instance in the effects below; rebuilding on a volume
-  // tick would restart playback.
+  // of them can only take effect on a new one. `volume` and `loop` are excluded because they CAN
+  // be changed live, and are applied through the instance in the effects below; rebuilding on a
+  // volume tick would restart playback.
   //
-  // The key is the built options serialised with sorted keys, which is a VALUE comparison: a
-  // consumer passing an inline `options={{ ... }}` object literal gets a new object identity every
-  // render, and keying on identity would rebuild the player on every render. Serialising also
-  // drops any function-valued option, so a consumer's inline callback in `options` cannot thrash
-  // the player either.
+  // The key compares option VALUES, not identity: `src` and `format` are arrays, so an inline
+  // literal is a new array every render and identity would rebuild the player continuously.
   const constructionKey = constructionKeyOf(optionsRef.current);
 
   React.useEffect(() => {
@@ -533,8 +530,8 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
           const mediaDuration = howl.duration();
           setDuration(mediaDuration);
           // `startAtSeconds` can only be honoured now: seeking needs a duration to clamp against,
-          // and howler ignores a seek on a player that has not loaded. Applied BEFORE `onReady` so
-          // a consumer reaching for the instance there sees the position already set.
+          // and a seek on a player that has not loaded is ignored. Applied BEFORE `onReady` so a
+          // consumer taking the handle there sees the position already set.
           const startAt = startAtRef.current;
           if (startAt !== undefined && startAt > 0 && Number.isFinite(mediaDuration)) {
             const clamped = Math.min(startAt, mediaDuration);
