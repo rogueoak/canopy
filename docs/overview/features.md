@@ -732,6 +732,92 @@ extra**.
   unmount, the events, time formatting, and keyboard operation) per the "test your own mapping, not
   the library" learning.
 
+## Branches: AudioRecorder (0072)
+
+The sound-capture Branch, and the other half of the media pair: `Audio` plays, `AudioRecorder`
+records. The 29th Branch, and the first component in Canopy that asks the reader for a **device
+permission**.
+
+- **AudioRecorder** (`@rogueoak/canopy/branches`) - one obvious control (record, then stop) with a
+  live **waveform** beside it and the elapsed time at the trailing edge in tabular figures; a
+  `ghost` discard button appears only while recording. Props are lean and engine-free:
+  `onComplete(recording)` / `onStart` / `onStop` / `onCancel` / `onRecordingError(error)` /
+  `onReady(handle)`, `maxDurationSeconds` (default 600), `mimeTypes`, `showWaveform`, `barCount`,
+  and every string as a defaulted prop.
+- **It hands back a `Blob` and knows nothing about transport.** `AudioRecording` is
+  `{ blob, mimeType, durationMs }`; upload, storage, and URLs stay in the application, per the "a
+  shipped component must not bake in a consumer's transport" learning. Playback is out of scope
+  too - `Audio` already does it, and the two compose (`URL.createObjectURL(blob)` into `<Audio>`),
+  which is what the `RecordAndPlay` story shows. A second player in here would be two players to
+  keep in step.
+- **The permission is requested on press, and refusal is a state.** `getUserMedia` on mount fires a
+  browser prompt at someone who has not asked to record anything - alarming, denied by reflex, and
+  a denied microphone cannot be re-prompted from inside the page. So the call lives in the record
+  handler. Refusal renders copy and **disables** the control rather than hiding it, and the copy
+  deliberately does not name a browser or draw a menu path (wrong within a release, and the
+  consumer's to write). The states are `idle`, `requesting`, `recording`, `stopping`,
+  `permission-denied`, `unsupported`, and `device-error`; a device error is recoverable, so the
+  control stays live for a retry. A live take is marked by a **`danger` dot** in the row, not only
+  by the glyph on the control: with `showWaveform={false}` the glyph was otherwise the whole signal
+  that a microphone is open, and that is the one state here where being wrong has a privacy cost.
+- **Releasing the microphone is this component's `unload()`.** An un-stopped `MediaStreamTrack`
+  keeps the browser's recording indicator lit **after the component is gone**, with nothing visible
+  left to switch it off - worse than 0071's orphaned-`Howl` case, because it is a privacy signal
+  rather than a stray noise. Stop, cancel, `maxDurationSeconds`, an error, and unmount all route
+  through one `releaseCapture()` that stops every track and closes the `AudioContext`, and each
+  path has its own test. A stream granted **after** unmount is stopped too.
+- **The container is chosen, not assumed.** `MediaRecorder.isTypeSupported` is walked over
+  `mimeTypes` in order (default: Opus in WebM, then `audio/mp4`, then bare WebM), first supported
+  entry wins - Safari does not do WebM, so the mp4 entry is what makes it record at all. None
+  supported renders the unsupported state rather than throwing, and the chosen type comes back on
+  the recording because a consumer storing a blob cannot infer it.
+- **The duration is measured, not read.** WebM from a `MediaRecorder` routinely carries no duration
+  in its metadata (a live stream with no known end), so `new Audio(url).duration` returns
+  `Infinity` often enough to be a bug rather than an edge case. The component times the take from a
+  monotonic clock, measured at the moment stop was asked for so the engine's finalisation latency
+  does not inflate it.
+- **The waveform is DOM bars, not a canvas.** An `AnalyserNode` feeds `getByteTimeDomainData` into
+  ordinary elements carrying full-literal token utilities, so it themes light/dark and adopts a
+  brand override through the same seam as everything else. A canvas would have to read the token
+  values out of computed styles and re-read them on a theme change, which is how a waveform ends up
+  stuck in light mode. The rAF loop runs **only while recording**. Under `prefers-reduced-motion`
+  the bars **reduce** to a single smoothed level meter on a slower cadence rather than disappearing
+  - deleting it would delete the one signal that a muted microphone is muted.
+- **Accessibility: the waveform is decoration, the clock is the information.** The waveform wrapper
+  is `aria-hidden` with nothing focusable and no `sr-only` text inside it (learning 30). The control
+  is **one** button whose accessible name changes with state, and it is never given the `disabled`
+  ATTRIBUTE - the four states that block it (`requesting`, `stopping`, `permission-denied`,
+  `unsupported`) are all entered by pressing that very control, and a browser disabling the focused
+  element drops focus to `<body>`. It says `aria-disabled` (plus `aria-busy` while working) and the
+  handlers ignore the press, so focus stays where the reader put it. A single always-mounted
+  `role="status"` region is both the visible failure message and the polite announcer - so the same
+  words are never in the accessibility tree twice - and the elapsed announcement is throttled to
+  roughly every ten seconds, because every second turns a screen reader into a metronome. Escape
+  discards the take; Space and Enter operate the control.
+- **The public interface is Canopy's, not the platform's.** `onReady` hands over an
+  **`AudioRecorderHandle`** (`start` / `stop` / `cancel` / `isRecording` / `getStatus` /
+  `getDurationMs`), and failures arrive as an **`AudioRecordingError`** with an engine-independent
+  `reason` (`permission` / `unsupported` / `device` / `engine`) - owner-named, like every other
+  error type in the barrel. There is no `MediaRecorder` and no raw options passthrough anywhere in
+  the published API, and the guard is a **committed snapshot** of this component's declarations in
+  the **built** `dist/branches/index.d.ts` rather than a list of banned names: a denylist only
+  rejects what someone remembered to ban, and the device-selection and gain props this spec defers
+  would arrive as `MediaTrackConstraints` / `Constrain*`, which no such list had. Inverted, a new
+  type in the published surface is a reviewed diff, and the snapshot subsumes the presence half
+  (learning 57).
+- **No dependency, no stylesheet, no wiring.** `MediaRecorder`, `getUserMedia`, and `AudioContext`
+  are platform APIs, so nothing was added to `dependencies` and nothing was added to `external`.
+- **Stories** - a `Branches/AudioRecorder` section: Playground, coarse waveform, no waveform, a
+  short duration cap, custom copy, a panel showing exactly what `onComplete` hands back, the
+  record-then-play composition with `Audio`, handle-driven, unsupported (light and dark), the
+  reduced-motion meter, brand override, and dark.
+  **Tests** (94, including a `<StrictMode>` render that drives a full take) drive **steppable**
+  fakes for `MediaRecorder` / `getUserMedia` / `AudioContext` -
+  advanceable through data, a stop, an error, and a permission rejection, with a controllable input
+  level - and assert only Canopy's own mapping, per the "do not assert a third-party library's
+  browser internals in jsdom" and "a test double must be steppable, not merely countable"
+  learnings.
+
 ## npm publishing (0023)
 
 Releases now **publish to npm**, driven by git tags - a tag _is_ the release.

@@ -223,6 +223,10 @@ export interface AudioProps
   /**
    * Called when the media fails to load. Named `onLoadError` rather than `onError` to leave the
    * native `onError` handler on the wrapper alone.
+   *
+   * This is the media convention: the error the component is ABOUT, namespaced by what failed.
+   * `AudioRecorder` follows it with `onRecordingError`, so a consumer wiring both does not have to
+   * remember which one took the generic name.
    */
   onLoadError?: (error: AudioLoadError) => void;
   /** Called when playback starts. */

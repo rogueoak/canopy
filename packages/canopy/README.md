@@ -28,7 +28,7 @@ reverse.
 | `@rogueoak/canopy`          | the package root re-export               |
 | `@rogueoak/canopy/seeds`    | **Seeds** (atoms) - 18 components        |
 | `@rogueoak/canopy/twigs`    | **Twigs** (molecules) - 14 components    |
-| `@rogueoak/canopy/branches` | **Branches** (organisms) - 28 components |
+| `@rogueoak/canopy/branches` | **Branches** (organisms) - 29 components |
 
 ```tsx
 import { Button } from '@rogueoak/canopy/seeds';
@@ -100,6 +100,7 @@ composition + token styling.
 | `Accordion`        | Multi-section inline disclosure (single/multiple expansion).         |
 | `AlertDialog`      | Blocking confirmation modal for destructive actions.                 |
 | `Audio`            | Audio player - play/pause, skip, scrubbable progress bar.            |
+| `AudioRecorder`    | Microphone recorder - live waveform, hands back a `Blob`.            |
 | `Calendar`         | Month grid with single/range/multiple selection and keyboard nav.    |
 | `Carousel`         | Draggable, snapping item carousel with prev/next controls.           |
 | `Chart`            | recharts wrapper with token-driven colours and styled tooltip.       |
@@ -210,7 +211,7 @@ To resume an episode or deep-link a timestamp, set `startAtSeconds`:
 
 It applies once the media loads and is clamped to its length. It is a _starting_ position, not a
 controlled one: changing it later will not yank a listener who has scrubbed somewhere else, though
-it does apply again if `src` changes. For continuous control, use the `Howl` from `onReady`.
+it does apply again if `src` changes. For continuous control, use the handle from `onReady`.
 
 The player shows what it is doing while media is in flight - a spinner on the play button with
 `aria-busy` set - and, if the media fails to load, says so and stays inert rather than looking
@@ -224,6 +225,60 @@ Two things to know about the media itself:
 - **The default path needs CORS.** It fetches the media by XHR, so a cross-origin source must send
   `Access-Control-Allow-Origin`. `stream` does not go through XHR, so it is also the fix for a
   cross-origin file that refuses to load.
+
+### `AudioRecorder` captures sound and hands you a `Blob`
+
+The other half of the pair, and it needs no extra wiring either. `MediaRecorder` and the microphone
+are platform APIs, so there is no library to add at all.
+
+```tsx
+import { AudioRecorder } from '@rogueoak/canopy/branches';
+
+<AudioRecorder onComplete={({ blob, mimeType, durationMs }) => save(blob, mimeType, durationMs)} />;
+```
+
+One control - record, then stop - with a live waveform beside it so a dead or muted microphone is
+visible in the first second rather than at playback, and the elapsed time at the trailing edge.
+Escape discards the take, and the whole thing is keyboard operable.
+
+**It knows nothing about where the audio goes.** You get a `Blob`, the container the browser
+actually used, and a duration. Upload, storage, and URLs are yours. To play a take back, compose
+the two components - `URL.createObjectURL(blob)` into `<Audio src={...} />` - rather than looking
+for a player in here.
+
+Four things worth knowing:
+
+- **The microphone is requested when record is pressed**, never on mount. A prompt fired at someone
+  who has not asked to record anything is usually denied by reflex, and a denied microphone cannot
+  be re-prompted from inside the page. Refusal renders a message and disables the control rather
+  than hiding it; `onRecordingError` reports an `AudioRecordingError` whose `reason` is
+  `permission`, `unsupported`, `device`, or `engine`. It is named for what failed, the same way
+  `Audio` names `onLoadError`, so the native `onError` on the wrapper is left alone.
+- **The container is chosen, not assumed.** `mimeTypes` defaults to
+  `['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm']` and the first one the browser supports
+  wins - Safari does not do WebM, so the mp4 entry is what makes it record at all. The chosen type
+  comes back on the recording, because a blob you are about to store does not say what it is.
+- **The duration is measured, not read.** WebM out of a `MediaRecorder` routinely carries no
+  duration in its metadata, so asking the file gives you `Infinity`. `durationMs` is timed by the
+  component.
+- **The microphone is released on every exit path** - stop, cancel, `maxDurationSeconds`, an error,
+  and unmount - so the browser's recording indicator goes out when the component says it has.
+
+To drive it from your own chrome, take the handle:
+
+```tsx
+<AudioRecorder onReady={(recorder) => (recorderRef.current = recorder)} />
+```
+
+`AudioRecorderHandle` is `start` / `stop` / `cancel` / `isRecording` / `getStatus` /
+`getDurationMs` - **Canopy's own interface, not the browser's recorder**. There is deliberately no `MediaRecorder` and no raw
+options passthrough: both would publish a platform API whose support matrix is still moving.
+
+Every string is a defaulted prop (`startLabel`, `stopLabel`, `cancelLabel`, `recordingLabel`,
+`permissionDeniedLabel`, and the rest), so you can reword or translate it. `maxDurationSeconds`
+defaults to 600 and stops the take normally rather than erroring. Set `showWaveform={false}` for
+just a control and a clock; under `prefers-reduced-motion` the bars collapse to a single level
+meter, which still tells you the microphone is hearing you.
 
 ## License
 
