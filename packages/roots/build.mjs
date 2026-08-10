@@ -38,8 +38,10 @@ await light.buildAllPlatforms();
 // function of its inputs → re-running it is IDEMPOTENT and never double-appends (mirrors the
 // tokens.css fold below). It's independent of the theme sidecars, so it sits before that block.
 const presetFile = dist('tailwind-preset.css');
-const motionPartial = fileURLToPath(new URL('./preset-motion.css', import.meta.url));
-writeFileSync(presetFile, readFileSync(presetFile, 'utf8') + readFileSync(motionPartial, 'utf8'));
+const partials = ['./preset-motion.css', './preset-surface.css'].map((name) =>
+  readFileSync(fileURLToPath(new URL(name, import.meta.url)), 'utf8'),
+);
+writeFileSync(presetFile, readFileSync(presetFile, 'utf8') + partials.join(''));
 
 const sidecars = themes.map(({ name }) => dist(`tokens.${name}.css`));
 try {

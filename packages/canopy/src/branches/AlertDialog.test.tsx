@@ -270,7 +270,7 @@ describe('AlertDialog', () => {
     // tailwind-merge de-dupes the conflicting max-width: the caller's `max-w-sm` wins.
     expect(dialog).toHaveClass('max-w-sm');
     expect(dialog).not.toHaveClass('max-w-lg');
-    expect(dialog).toHaveClass('bg-surface-raised', 'border', 'shadow-lg');
+    expect(dialog).toHaveClass('surface-raised', 'border', 'shadow-lg');
   });
 
   it('styles Action with destructive tokens and Cancel with outline tokens', async () => {

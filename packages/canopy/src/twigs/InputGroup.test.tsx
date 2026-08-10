@@ -99,7 +99,7 @@ describe('InputGroup', () => {
           <InputGroupInput aria-label="Amount" />
         </InputGroup>,
       );
-      expect(screen.getByText('$').className).toContain('text-disabled-foreground');
+      expect(screen.getByText('$').className).toContain('opacity-50');
     });
 
     it('disables the group button when the group is disabled', () => {

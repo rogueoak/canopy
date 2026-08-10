@@ -26,7 +26,7 @@ describe('RadioGroup', () => {
     render(<Fixture />);
     expect(screen.getByRole('radiogroup')).toHaveClass('grid', 'gap-2');
     const [first] = screen.getAllByRole('radio');
-    expect(first).toHaveClass('h-5', 'w-5', 'rounded-full', 'border-border-strong', 'bg-surface');
+    expect(first).toHaveClass('h-5', 'w-5', 'rounded-full', 'border-border-strong', 'bg-control');
   });
 
   it('clicking an item selects it and fires onValueChange', async () => {

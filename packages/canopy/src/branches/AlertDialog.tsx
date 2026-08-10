@@ -20,7 +20,7 @@ import { cn } from '../lib/cn';
  *
  * Styling reuses the established Dialog surface: the scrim is the pre-provisioned `color-overlay`
  * token at reduced opacity (`bg-overlay/80`), the card sits on the raised-surface pattern
- * (`bg-surface-raised` + `border border-border` + `rounded-lg` + the primitive `shadow-lg`), and
+ * (`surface-raised` + `border border-border` + `rounded-lg` + the primitive `shadow-lg`), and
  * motion reuses the shared `animate-dialog-*` keyframes gated with `motion-reduce:animate-none` - so
  * this Branch adds NO new token and NO new keyframe. There is NO `dark:` on the common path:
  * light/dark flips through the token layer (spec 0004), and because `.dark` lives on `<html>`, the
@@ -69,7 +69,7 @@ AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 /**
  * AlertDialogContent - the portalled blocking card. Rendered through `AlertDialogPrimitive.Portal`
  * (so it escapes overflow/stacking contexts) over the `AlertDialogOverlay`, centred in the viewport
- * on the raised-surface pattern (`bg-surface-raised` + `border border-border` + `rounded-lg` + the
+ * on the raised-surface pattern (`surface-raised` + `border border-border` + `rounded-lg` + the
  * primitive `shadow-lg`), `p-6`, capped at `max-w-lg`. Unlike `DialogContent` there is **no** `X`
  * close affordance: the only way out is `AlertDialogAction` or `AlertDialogCancel`. Enter/exit zoom
  * + fade is gated with `motion-reduce:animate-none`.
@@ -98,7 +98,7 @@ const AlertDialogContent = React.forwardRef<
         event.preventDefault();
       }}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=open]:animate-dialog-content-in data-[state=closed]:animate-dialog-content-out motion-reduce:animate-none',
+        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-border surface-raised p-6 text-text shadow-lg data-[state=open]:animate-dialog-content-in data-[state=closed]:animate-dialog-content-out motion-reduce:animate-none',
         className,
       )}
       {...props}

@@ -58,7 +58,7 @@ describe('Tooltip', () => {
     // that span's parent (it also holds the text node + the arrow). Assert tokens on the parent.
     const content = (await screen.findByRole('tooltip')).parentElement;
     expect(content).toHaveClass(
-      'bg-surface-raised',
+      'surface-raised',
       'border-border',
       'text-text',
       'text-xs',
@@ -144,7 +144,7 @@ describe('Tooltip', () => {
     const content = (await screen.findByRole('tooltip')).parentElement;
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
     expect(ref.current).toBe(content);
-    expect(ref.current).toHaveClass('bg-surface-raised');
+    expect(ref.current).toHaveClass('surface-raised');
   });
 });
 

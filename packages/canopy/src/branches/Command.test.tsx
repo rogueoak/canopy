@@ -66,7 +66,7 @@ describe('Command (inline)', () => {
   it('renders on the raised-surface card', () => {
     const { container } = render(<BasicPalette />);
     const root = container.firstElementChild as HTMLElement;
-    expect(root).toHaveClass('bg-surface-raised', 'text-text');
+    expect(root).toHaveClass('surface-raised', 'text-text');
   });
 
   it('filters the list as the user types', async () => {

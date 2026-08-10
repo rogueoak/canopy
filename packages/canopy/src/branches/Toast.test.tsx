@@ -76,11 +76,7 @@ describe('Toast (parts)', () => {
 
   it('applies the default variant token classes (raised surface)', () => {
     render(<DeclarativeToast variant="default" />);
-    expect(screen.getByTestId('toast')).toHaveClass(
-      'bg-surface-raised',
-      'text-text',
-      'border-border',
-    );
+    expect(screen.getByTestId('toast')).toHaveClass('surface-raised', 'text-text', 'border-border');
   });
 
   it('applies the success variant token classes', () => {

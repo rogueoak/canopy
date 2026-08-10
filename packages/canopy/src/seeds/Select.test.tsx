@@ -52,7 +52,7 @@ describe('Select', () => {
   it('carries the Input-parity field token classes on the trigger', () => {
     render(<Basic />);
     const trigger = screen.getByRole('combobox');
-    expect(trigger).toHaveClass('border-border', 'bg-surface', 'text-text', 'rounded-md', 'h-10');
+    expect(trigger).toHaveClass('border-border', 'bg-control', 'text-text', 'rounded-md', 'h-10');
   });
 
   it('the trigger renders at 16px on mobile and 14px from md up (iOS anti-zoom, feedback 0017)', () => {

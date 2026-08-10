@@ -49,7 +49,7 @@ const ContextMenuSub = ContextMenuPrimitive.Sub;
 
 /**
  * ContextMenuContent - the portalled menu surface. Rendered through `ContextMenuPrimitive.Portal`
- * (so it escapes overflow/stacking contexts) onto a raised-surface card: `bg-surface-raised` +
+ * (so it escapes overflow/stacking contexts) onto a raised-surface card: `surface-raised` +
  * `text-text` + `border border-border` + `rounded-md` + the primitive `shadow-md` (there is no
  * semantic elevation token yet), `p-1`, `min-w-[8rem]`. Enter/exit uses the shared `animate-pop-*`
  * menu animation gated with `motion-reduce:animate-none`, matching `DropdownMenuContent` exactly.
@@ -62,7 +62,7 @@ const ContextMenuContent = React.forwardRef<
     <ContextMenuPrimitive.Content
       ref={ref}
       className={cn(
-        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
+        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
         className,
       )}
       {...props}
@@ -256,7 +256,7 @@ const ContextMenuSubContent = React.forwardRef<
     <ContextMenuPrimitive.SubContent
       ref={ref}
       className={cn(
-        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
+        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
         className,
       )}
       {...props}

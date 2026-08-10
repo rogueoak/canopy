@@ -17,7 +17,7 @@ describe('Textarea', () => {
     expect(textarea).toHaveClass(
       'border',
       'border-border',
-      'bg-surface',
+      'bg-control',
       'text-text',
       'rounded-md',
       'min-h-20',
@@ -55,7 +55,7 @@ describe('Textarea', () => {
     expect(textarea).toBeDisabled();
     await user.type(textarea, 'maple');
     expect(textarea.value).toBe('');
-    expect(textarea).toHaveClass('disabled:bg-disabled', 'disabled:text-disabled-foreground');
+    expect(textarea).toHaveClass('disabled:opacity-50', 'disabled:cursor-not-allowed');
   });
 
   it('applies the danger classes when aria-invalid is set', () => {

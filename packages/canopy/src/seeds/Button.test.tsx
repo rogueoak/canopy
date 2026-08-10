@@ -61,7 +61,7 @@ describe('Button', () => {
       'focus-visible:ring-ring',
       'focus-visible:ring-offset-ring-offset',
     );
-    expect(btn).toHaveClass('disabled:bg-disabled', 'disabled:text-disabled-foreground');
+    expect(btn).toHaveClass('disabled:opacity-50', 'disabled:pointer-events-none');
   });
 
   it('merges a caller className over the defaults (cn / tailwind-merge)', () => {

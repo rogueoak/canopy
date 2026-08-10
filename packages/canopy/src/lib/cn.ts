@@ -27,10 +27,23 @@ const TYPOGRAPHY_ROLES = [
   'code',
 ];
 
+/**
+ * `surface-raised` (spec 0073) paints a background AND re-points the control vars for its subtree,
+ * so it is a custom `@utility` rather than a generated `bg-*` colour. tailwind-merge keys on the
+ * class NAME, so out of the box it does not know this one sets a background: a caller passing
+ * `bg-muted` to a component defaulting to `surface-raised` would keep BOTH, leaving the winner to
+ * stylesheet order rather than to the caller. Registering it in the `background-color` group makes
+ * the caller win, which is the whole contract of `cn()`.
+ *
+ * Same failure mode as the typography roles above, one property along.
+ */
+const SURFACE_CONTEXTS = ['surface-raised'];
+
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
       'font-size': [{ text: TYPOGRAPHY_ROLES }],
+      'bg-color': SURFACE_CONTEXTS,
     },
   },
 });

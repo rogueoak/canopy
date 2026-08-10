@@ -16,7 +16,7 @@ export type SliderProps = React.ComponentPropsWithoutRef<typeof SliderPrimitive.
  * Styled entirely with semantic-token utilities (spec 0005 recipe) - all FULL LITERALS so
  * Tailwind v4's source scanner emits each one. No `dark:`: light/dark flips through the token
  * layer (spec 0004). The track is `bg-muted`, the filled range is `bg-primary`, and each thumb is
- * a rounded `bg-surface` token surface with the standard focus-visible ring; native `aria-invalid`
+ * a rounded `bg-control` token surface with the standard focus-visible ring; native `aria-invalid`
  * drives a danger ring on the thumbs. `disabled` reduces opacity and shows `cursor-not-allowed`
  * while the filled range survives. `forwardRef` forwards to the Root, full native prop spread, and
  * `cn()` merge (caller `className` wins) follow the recipe.
@@ -91,7 +91,7 @@ export const Slider = React.forwardRef<
           aria-label={thumbAriaLabel}
           aria-labelledby={thumbAriaLabelledBy}
           aria-valuetext={thumbAriaValueText}
-          className="block h-5 w-5 rounded-full border border-border bg-surface shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset aria-invalid:ring-2 aria-invalid:ring-danger"
+          className="block h-5 w-5 rounded-full border border-border bg-control shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset aria-invalid:ring-2 aria-invalid:ring-danger"
         />
       ))}
     </SliderPrimitive.Root>

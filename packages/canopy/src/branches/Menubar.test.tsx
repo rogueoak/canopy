@@ -358,7 +358,7 @@ describe('Menubar', () => {
 
   it('merges a caller className over the default on Menubar (cn)', () => {
     render(
-      <Menubar className="bg-surface-raised" data-testid="bar">
+      <Menubar className="surface-raised" data-testid="bar">
         <MenubarMenu>
           <MenubarTrigger>File</MenubarTrigger>
         </MenubarMenu>
@@ -367,7 +367,7 @@ describe('Menubar', () => {
 
     const bar = screen.getByTestId('bar');
     // tailwind-merge de-dupes the conflicting background: the caller's token wins.
-    expect(bar).toHaveClass('bg-surface-raised');
+    expect(bar).toHaveClass('surface-raised');
     expect(bar).not.toHaveClass('bg-surface');
     // Non-conflicting base classes are preserved.
     expect(bar).toHaveClass('border', 'rounded-md');
@@ -390,7 +390,7 @@ describe('Menubar', () => {
     const menu = screen.getByRole('menu');
     expect(menu).toHaveClass('min-w-[20rem]');
     expect(menu).not.toHaveClass('min-w-[12rem]');
-    expect(menu).toHaveClass('bg-surface-raised', 'border', 'shadow-md');
+    expect(menu).toHaveClass('surface-raised', 'border', 'shadow-md');
   });
 
   it('forwards a ref to the underlying menubar element', () => {

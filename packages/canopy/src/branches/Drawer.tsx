@@ -100,10 +100,10 @@ DrawerOverlay.displayName = 'DrawerOverlay';
  * toward its anchored edge: `bottom` reuses the `bottom-sheet-*` motion, `left` the `drawer-*`
  * (left-edge) motion, `top` the `drawer-top-*` (translateY(-100%)) motion, and `right` the
  * `drawer-right-*` (translateX(100%)) motion. Every variant sits on
- * the raised-surface pattern (`bg-surface-raised` + `border-border` + `text-text` + `shadow-lg`).
+ * the raised-surface pattern (`surface-raised` + `border-border` + `text-text` + `shadow-lg`).
  */
 const drawerContentVariants = cva(
-  'fixed z-50 flex flex-col border-border bg-surface-raised text-text shadow-lg motion-reduce:animate-none',
+  'fixed z-50 flex flex-col border-border surface-raised text-text shadow-lg motion-reduce:animate-none',
   {
     variants: {
       direction: {

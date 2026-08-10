@@ -358,7 +358,7 @@ describe('DropdownMenu', () => {
     expect(menu).toHaveClass('min-w-[16rem]');
     expect(menu).not.toHaveClass('min-w-[8rem]');
     // Non-conflicting base classes survive.
-    expect(menu).toHaveClass('bg-surface-raised', 'border', 'shadow-md');
+    expect(menu).toHaveClass('surface-raised', 'border', 'shadow-md');
   });
 
   it('applies the raised-surface highlight token on items', async () => {

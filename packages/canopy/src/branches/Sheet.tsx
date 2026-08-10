@@ -15,7 +15,7 @@ import { cn } from '../lib/cn';
  *
  * There is NO `dark:` on the common path: light/dark flips through the token layer (spec 0004), and
  * because `.dark` lives on `<html>` the portalled overlay + content (mounted under `<body>`) theme
- * correctly too. The surface reuses the raised-surface pattern (`bg-surface-raised` + `border` + the
+ * correctly too. The surface reuses the raised-surface pattern (`surface-raised` + `border` + the
  * primitive `shadow-lg`) and the scrim reuses the pre-provisioned `color-overlay` token at reduced
  * opacity (`bg-overlay/80`) - so Sheet adds NO new token.
  *
@@ -75,12 +75,12 @@ SheetOverlay.displayName = DialogPrimitive.Overlay.displayName;
  * composed class names, so Tailwind v4's scanner emits each): the anchored edge, the span/size
  * (`left`/`right` -> full height, capped width; `top`/`bottom` -> full width, capped auto height via
  * `max-h-[85vh]`, matching the Drawer sibling), and the per-edge slide motion. Every variant sits on
- * the shared raised-surface pattern in the base (`bg-surface-raised` + `border-border` + `text-text`
+ * the shared raised-surface pattern in the base (`surface-raised` + `border-border` + `text-text`
  * + `shadow-lg`) with `overflow-y-auto` so tall content scrolls inside the panel instead of
  * overflowing the viewport, gated with `motion-reduce:animate-none`.
  */
 const sheetContentVariants = cva(
-  'fixed z-50 flex flex-col gap-4 overflow-y-auto border-border bg-surface-raised p-6 text-text shadow-lg motion-reduce:animate-none',
+  'fixed z-50 flex flex-col gap-4 overflow-y-auto border-border surface-raised p-6 text-text shadow-lg motion-reduce:animate-none',
   {
     variants: {
       side: {

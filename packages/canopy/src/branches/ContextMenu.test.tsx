@@ -265,7 +265,7 @@ describe('ContextMenu', () => {
     expect(menu).toHaveClass('min-w-[20rem]');
     expect(menu).not.toHaveClass('min-w-[8rem]');
     // Non-conflicting base tokens survive.
-    expect(menu).toHaveClass('bg-surface-raised', 'border', 'shadow-md');
+    expect(menu).toHaveClass('surface-raised', 'border', 'shadow-md');
   });
 
   it('merges a caller className over the default on Item (cn: caller wins)', () => {

@@ -16,7 +16,7 @@ import { cn } from '../lib/cn';
  * - `SelectGroup` / `SelectLabel` - group related options under a heading.
  * - `SelectValue` - renders the selected option's text (or the placeholder) in the trigger.
  * - `SelectTrigger` - the field button; styled for parity with the Input field
- *   (`border-border` / `bg-surface` / `text-text`, focus-visible ring, `disabled:*` token pair,
+ *   (`border-border` / `bg-control` / `text-text`, focus-visible ring, `disabled:*` token pair,
  *   and `aria-invalid:` danger overrides) plus a trailing chevron and a muted placeholder via
  *   `data-[placeholder]:text-text-muted`.
  * - `SelectContent` - the portalled popup (`surface-raised` + `border` + the primitive
@@ -34,7 +34,7 @@ const SelectValue = SelectPrimitive.Value;
 
 /**
  * SelectTrigger - the field button that opens the dropdown. Class tokens mirror the Input
- * field (spec 0006) for visual parity: `border-border` + `bg-surface` + `text-text`, the
+ * field (spec 0006) for visual parity: `border-border` + `bg-control` + `text-text`, the
  * shared focus-visible ring, the `disabled:*` token pair (not opacity), and the
  * `aria-invalid:` danger overrides so an invalid Select reads identically to an invalid Input.
  * The placeholder picks up `data-[placeholder]:text-text-muted`, and a chevron-down SVG sits
@@ -54,7 +54,7 @@ const SelectTrigger = React.forwardRef<
     // a focused control under 16px, so the trigger matches Input/Textarea (feedback 0017). The
     // dropdown items below stay text-sm - they are not focusable text fields, so they never zoom.
     className={cn(
-      'flex h-10 w-full items-center justify-between rounded-md border border-border bg-surface px-3 text-base md:text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger data-[placeholder]:text-text-muted [&>span]:line-clamp-1',
+      'flex h-10 w-full items-center justify-between rounded-md border border-border bg-control px-3 text-base md:text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger aria-invalid:ring-danger data-[placeholder]:text-text-muted [&>span]:line-clamp-1',
       className,
     )}
     {...props}
@@ -143,7 +143,7 @@ SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayNam
 
 /**
  * SelectContent - the portalled dropdown surface. Rendered through `SelectPrimitive.Portal`
- * (so it escapes overflow/stacking contexts) onto a raised-surface card: `bg-surface-raised`
+ * (so it escapes overflow/stacking contexts) onto a raised-surface card: `surface-raised`
  * + `text-text` + `border border-border` + `rounded-md` + the primitive `shadow-md` (there is
  * no semantic elevation token yet - chosen as the closest default-elevation primitive). When
  * `position="popper"` (the default here) the viewport is offset off the trigger and sized to
@@ -157,7 +157,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'relative z-50 max-h-96 min-w-32 overflow-hidden rounded-md border border-border bg-surface-raised text-text shadow-md',
+        'relative z-50 max-h-96 min-w-32 overflow-hidden rounded-md border border-border surface-raised text-text shadow-md',
         position === 'popper' &&
           'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
         className,

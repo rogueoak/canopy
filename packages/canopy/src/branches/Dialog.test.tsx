@@ -173,7 +173,7 @@ describe('Dialog', () => {
     expect(dialog).toHaveClass('max-w-sm');
     expect(dialog).not.toHaveClass('max-w-lg');
     // Non-conflicting base classes are preserved.
-    expect(dialog).toHaveClass('bg-surface-raised', 'border', 'shadow-lg');
+    expect(dialog).toHaveClass('surface-raised', 'border', 'shadow-lg');
   });
 
   it('forwards a ref to the content element', async () => {

@@ -12,7 +12,7 @@ import { cn } from '../lib/cn';
  * The family follows the 0020 Twigs recipe: each part is a small `forwardRef` element that
  * spreads native props and merges `className` via `cn()`, with FULL LITERAL Tailwind class
  * strings so Tailwind v4's scanner emits each utility.
- * - `Card` - the container: `bg-surface-raised`, `border-border`, `rounded-lg`, the primitive
+ * - `Card` - the container: `surface-raised`, `border-border`, `rounded-lg`, the primitive
  *   `shadow-sm` (there is no semantic elevation token yet), and a vertical column structure.
  * - `CardHeader` - top region; padded, stacks `CardTitle` + `CardDescription` with a small gap.
  * - `CardTitle` - the card heading, rendered as a real heading element (default `<h3>`) with the
@@ -30,7 +30,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(({ className, ..
   <div
     ref={ref}
     className={cn(
-      'flex flex-col rounded-lg border border-border bg-surface-raised text-text shadow-sm',
+      'flex flex-col rounded-lg border border-border surface-raised text-text shadow-sm',
       className,
     )}
     {...props}

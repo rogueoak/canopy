@@ -50,7 +50,7 @@ const DropdownMenuSub = DropdownMenuPrimitive.Sub;
 /**
  * DropdownMenuContent - the portalled menu surface. Rendered through
  * `DropdownMenuPrimitive.Portal` (so it escapes overflow/stacking contexts) onto the raised-surface
- * card (`bg-surface-raised` + `text-text` + `border border-border` + `rounded-md` + the primitive
+ * card (`surface-raised` + `text-text` + `border border-border` + `rounded-md` + the primitive
  * `shadow-md`), `p-1`, `min-w-[8rem]`, with a default `sideOffset`. Collision avoidance and side
  * flipping come from Radix. Enter/exit pop is gated with `motion-reduce:animate-none`.
  */
@@ -63,7 +63,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
+        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
         className,
       )}
       {...props}
@@ -278,7 +278,7 @@ const DropdownMenuSubContent = React.forwardRef<
     <DropdownMenuPrimitive.SubContent
       ref={ref}
       className={cn(
-        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
+        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
         className,
       )}
       {...props}

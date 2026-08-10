@@ -226,7 +226,7 @@ describe('ToggleGroup', () => {
       );
       expect(screen.getByRole('radio', { name: 'Left' })).toHaveClass(
         'border-border',
-        'bg-surface',
+        'bg-control',
         'data-[state=on]:bg-muted',
         'data-[state=on]:border-border-strong',
       );

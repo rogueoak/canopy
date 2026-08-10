@@ -24,7 +24,7 @@ import { cn } from '../lib/cn';
  *   `open`/`onOpenChange`, and `defaultOpen` (controlled or uncontrolled).
  * - `HoverCardTrigger` - the hovered/focused element; `asChild` so any link, `Avatar`, or `Badge`
  *   becomes the trigger and stays a real, focusable element.
- * - `HoverCardContent` - the portalled raised-surface preview (`bg-surface-raised` + `border` +
+ * - `HoverCardContent` - the portalled raised-surface preview (`surface-raised` + `border` +
  *   `shadow-md` + `rounded-lg`) with the shared **pop** motion, `sideOffset`/`align` forwarded.
  *
  * Passive preview only - focus-trapping/interactive cards and async/lazy content are later specs
@@ -36,7 +36,7 @@ const HoverCardTrigger = HoverCardPrimitive.Trigger;
 
 /**
  * HoverCardContent - the portalled preview surface. Rendered through `HoverCardPrimitive.Portal`
- * (so it escapes overflow/stacking contexts) onto a raised-surface card: `bg-surface-raised` +
+ * (so it escapes overflow/stacking contexts) onto a raised-surface card: `surface-raised` +
  * `text-text` + `border border-border` + `rounded-lg` + the primitive `shadow-md`, `p-4`, sized to
  * its content (`w-64` default; override via `className`). The shared **pop** motion
  * (`animate-pop-in` / `data-[state=closed]:animate-pop-out`) is gated with
@@ -54,7 +54,7 @@ const HoverCardContent = React.forwardRef<
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 w-64 rounded-lg border border-border bg-surface-raised p-4 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
+        'z-50 w-64 rounded-lg border border-border surface-raised p-4 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
         className,
       )}
       {...props}

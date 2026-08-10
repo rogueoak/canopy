@@ -25,7 +25,7 @@ export const toggleVariants = cva(
         default:
           'bg-transparent text-text hover:bg-muted data-[state=on]:bg-accent data-[state=on]:text-accent-foreground',
         outline:
-          'border border-border bg-surface text-text hover:bg-muted data-[state=on]:bg-muted data-[state=on]:border-border-strong',
+          'border border-border bg-control text-text hover:bg-muted data-[state=on]:bg-muted data-[state=on]:border-border-strong',
       },
       size: {
         sm: 'h-8 min-w-8 px-2 text-sm',

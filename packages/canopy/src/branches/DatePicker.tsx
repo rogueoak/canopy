@@ -39,7 +39,7 @@ const DatePicker_Root = PopoverPrimitive.Root;
 /**
  * DatePickerTrigger - the field button that opens the popover (`Popover.Trigger`). Class tokens
  * mirror the Input field (spec 0006) and `SelectTrigger` / `ComboboxTrigger` for visual parity:
- * `border-border` + `bg-surface` + `text-text`, the shared focus-visible ring, the `disabled:*`
+ * `border-border` + `bg-control` + `text-text`, the shared focus-visible ring, the `disabled:*`
  * token pair (not opacity), and the `aria-invalid:` danger overrides so an invalid DatePicker
  * reads identically to an invalid Select or Input. Carries `aria-haspopup="dialog"` and a leading
  * calendar glyph. A muted placeholder shows when unset.
@@ -52,7 +52,7 @@ const DatePickerTrigger = React.forwardRef<
     ref={ref}
     aria-haspopup="dialog"
     className={cn(
-      'flex h-10 w-full items-center justify-start gap-2 rounded-md border border-border bg-surface px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger [&>span]:line-clamp-1',
+      'flex h-10 w-full items-center justify-start gap-2 rounded-md border border-border bg-control px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger aria-invalid:ring-danger [&>span]:line-clamp-1',
       className,
     )}
     {...props}
@@ -66,7 +66,7 @@ DatePickerTrigger.displayName = 'DatePickerTrigger';
 /**
  * DatePickerContent - the portalled popover surface housing the `Calendar` (0060). Rendered
  * through `Popover.Portal` (so it escapes overflow / stacking contexts) onto a raised-surface
- * card: `bg-surface-raised` + `text-text` + `border border-border` + `rounded-md` + `shadow-md`,
+ * card: `surface-raised` + `text-text` + `border border-border` + `rounded-md` + `shadow-md`,
  * matched to `ComboboxContent` (0030) / `SelectContent` (0013). Open / close uses the shared pop
  * animation gated with `motion-reduce:animate-none`.
  */
@@ -80,7 +80,7 @@ const DatePickerContent = React.forwardRef<
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 w-auto rounded-md border border-border bg-surface-raised p-0 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
+        'z-50 w-auto rounded-md border border-border surface-raised p-0 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
         className,
       )}
       {...props}

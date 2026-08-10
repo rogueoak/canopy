@@ -43,7 +43,7 @@ const Combobox_Root = PopoverPrimitive.Root;
 /**
  * ComboboxTrigger - the field button that opens the popover (`Popover.Trigger`). Class tokens
  * mirror the Input field (spec 0006) and `SelectTrigger` for visual parity: `border-border` +
- * `bg-surface` + `text-text`, the shared focus-visible ring, the `disabled:*` token pair (not
+ * `bg-control` + `text-text`, the shared focus-visible ring, the `disabled:*` token pair (not
  * opacity), and the `aria-invalid:` danger overrides so an invalid Combobox reads identically to
  * an invalid Select or Input. A muted placeholder and a trailing chevron complete the field.
  */
@@ -54,7 +54,7 @@ const ComboboxTrigger = React.forwardRef<
   <PopoverPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex h-10 w-full items-center justify-between rounded-md border border-border bg-surface px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:bg-disabled disabled:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger [&>span]:line-clamp-1',
+      'flex h-10 w-full items-center justify-between rounded-md border border-border bg-control px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-ring-offset disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger aria-invalid:ring-danger [&>span]:line-clamp-1',
       className,
     )}
     {...props}
@@ -67,7 +67,7 @@ ComboboxTrigger.displayName = 'ComboboxTrigger';
 
 /**
  * ComboboxContent - the portalled popover surface. Rendered through `Popover.Portal` (so it
- * escapes overflow/stacking contexts) onto a raised-surface card: `bg-surface-raised` +
+ * escapes overflow/stacking contexts) onto a raised-surface card: `surface-raised` +
  * `text-text` + `border border-border` + `rounded-md` + the primitive `shadow-md` (there is no
  * semantic elevation token yet - the closest default-elevation primitive, matched to
  * `SelectContent`). Width-synced to the trigger via Radix's `--radix-popover-trigger-width`.
@@ -82,7 +82,7 @@ const ComboboxContent = React.forwardRef<
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        'relative z-50 max-h-96 w-[var(--radix-popover-trigger-width)] min-w-32 overflow-hidden rounded-md border border-border bg-surface-raised text-text shadow-md',
+        'relative z-50 max-h-96 w-[var(--radix-popover-trigger-width)] min-w-32 overflow-hidden rounded-md border border-border surface-raised text-text shadow-md',
         className,
       )}
       {...props}
@@ -90,7 +90,7 @@ const ComboboxContent = React.forwardRef<
       {/*
        * Selection is owned by the root; the shared `Command` (spec 0066) drives only filtering +
        * active-item highlight. `Command` already renders the `flex h-full w-full flex-col
-       * overflow-hidden` list container on a `bg-surface-raised` card; the enclosing
+       * overflow-hidden` list container on a `surface-raised` card; the enclosing
        * `PopoverPrimitive.Content` above owns the raised card, border, and shadow, so `Command`
        * reads as the inner list here. `bg-transparent` lets the Popover surface show through.
        */}
@@ -357,7 +357,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>((props, ref)
           aria-invalid={ariaInvalid}
           data-disabled={disabled || undefined}
           className={cn(
-            'flex min-h-10 w-full flex-wrap items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-sm text-text has-[>button:focus-visible]:ring-2 has-[>button:focus-visible]:ring-ring has-[>button:focus-visible]:ring-offset-2 has-[>button:focus-visible]:ring-offset-ring-offset aria-invalid:border-danger aria-invalid:ring-danger data-[disabled]:cursor-not-allowed data-[disabled]:bg-disabled data-[disabled]:text-disabled-foreground',
+            'flex min-h-10 w-full flex-wrap items-center gap-1 rounded-md border border-border bg-control px-2 py-1 text-sm text-text has-[>button:focus-visible]:ring-2 has-[>button:focus-visible]:ring-ring has-[>button:focus-visible]:ring-offset-2 has-[>button:focus-visible]:ring-offset-ring-offset aria-invalid:border-danger aria-invalid:ring-danger data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
             className,
           )}
         >

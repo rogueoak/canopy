@@ -102,35 +102,33 @@ const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
  * control stays focusable, says `aria-disabled`, and the handlers ignore the activation - the
  * re-entry guards on `statusRef` were already doing that work.
  */
-const CONTROL_BUTTON_CLASS = 'rounded-full focus-visible:ring-offset-surface-raised';
+const CONTROL_BUTTON_CLASS = 'rounded-full';
 
 /**
  * The control while the permission prompt is open, or while a take is finalising. It keeps the
- * primary fill: Button's disabled treatment swaps in the `bg-disabled` pair, which would bleach the
- * spinner into near-invisibility - the one element whose whole job is to say something is
- * happening. `cursor-wait` rather than not-allowed: these states resolve themselves.
+ * primary fill at full strength: the single disabled language dims, which would take the spinner
+ * with it - the one element whose whole job is to say something is happening. `cursor-wait` rather
+ * than not-allowed: these states resolve themselves.
  */
 const CONTROL_BUTTON_BUSY_CLASS =
-  'rounded-full focus-visible:ring-offset-surface-raised cursor-wait hover:bg-primary active:bg-primary';
+  'rounded-full disabled:opacity-100 cursor-wait hover:bg-primary active:bg-primary';
 
 /**
- * The control once the microphone is refused or the browser cannot record. It DIMS the primary fill
- * rather than falling through to Button's `bg-disabled`, because in dark `disabled` and
- * `surface-raised` are the same value (`stone.800`, 1.0:1): the control would read as a hole in the
- * card instead of "disabled rather than hidden", which is what the spec asks for here. Per
- * learning 26 a control whose filled state carries meaning dims; it does not flatten to a neutral
- * surface. The durable fix is a raised-surface disabled fill at the token layer (feedback 0028).
+ * The control once the microphone is refused or the browser cannot record. It dims the primary fill,
+ * which is now simply what disabled looks like everywhere (spec 0073) rather than a local
+ * correction. This component predicted that fix: it used to dim by hand because falling through to
+ * Button's `bg-disabled` made the control a 1.0:1 hole in the card in dark, and noted that the
+ * durable answer was a token-layer one (feedback 0028). It was.
  */
 const CONTROL_BUTTON_BLOCKED_CLASS =
-  'rounded-full focus-visible:ring-offset-surface-raised opacity-50 cursor-not-allowed hover:bg-primary active:bg-primary';
+  'rounded-full opacity-50 cursor-not-allowed hover:bg-primary active:bg-primary';
 
 /**
- * Cancel. `ghost` so the dominant control stays dominant, with the raised-surface highlight:
- * Button's `hover:bg-muted` is one step up from the page canvas, which on this card is a step DOWN
- * in dark - the button would sink into a recess instead of lifting (learnings 20, 21, 43).
+ * Cancel. `ghost` so the dominant control stays dominant. The hover fill and the ring offset used
+ * to be corrected here by hand; the card is a `surface-raised` context now, so they come out right
+ * on their own (spec 0073).
  */
-const CANCEL_BUTTON_CLASS =
-  'rounded-full focus-visible:ring-offset-surface-raised hover:bg-muted-raised active:bg-muted-raised';
+const CANCEL_BUTTON_CLASS = 'rounded-full';
 
 /**
  * The waveform bars, as FULL LITERAL token utilities rather than a canvas.
@@ -1165,7 +1163,7 @@ const AudioRecorder = React.forwardRef<HTMLDivElement, AudioRecorderProps>(
       <div
         ref={ref}
         className={cn(
-          'flex w-full flex-col gap-2 rounded-lg border border-border bg-surface-raised p-4 text-text shadow-sm',
+          'flex w-full flex-col gap-2 rounded-lg border border-border surface-raised p-4 text-text shadow-sm',
           className,
         )}
         onKeyDown={handleKeyDown}

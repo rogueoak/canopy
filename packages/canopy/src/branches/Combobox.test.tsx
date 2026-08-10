@@ -48,7 +48,7 @@ describe('Combobox (single)', () => {
   it('carries the Input-parity field token classes on the trigger', () => {
     render(<Combobox options={FRUITS} aria-label="Fruit" />);
     const trigger = screen.getByRole('button', { name: 'Fruit' });
-    expect(trigger).toHaveClass('border-border', 'bg-surface', 'text-text', 'rounded-md', 'h-10');
+    expect(trigger).toHaveClass('border-border', 'bg-control', 'text-text', 'rounded-md', 'h-10');
   });
 
   it('opens the listbox with the options and combobox role on click', async () => {

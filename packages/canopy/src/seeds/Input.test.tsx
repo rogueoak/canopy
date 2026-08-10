@@ -17,7 +17,7 @@ describe('Input', () => {
     render(<Input aria-label="Field" />);
     const input = screen.getByRole('textbox');
     expect(input).toHaveClass('h-10');
-    expect(input).toHaveClass('border', 'border-border', 'bg-surface', 'text-text', 'rounded-md');
+    expect(input).toHaveClass('border', 'border-border', 'bg-control', 'text-text', 'rounded-md');
   });
 
   it('renders at 16px on mobile and 14px from md up (iOS anti-zoom, feedback 0017)', () => {
@@ -52,7 +52,7 @@ describe('Input', () => {
     expect(input).toBeDisabled();
     await user.type(input, 'maple');
     expect(input.value).toBe('');
-    expect(input).toHaveClass('disabled:bg-disabled', 'disabled:text-disabled-foreground');
+    expect(input).toHaveClass('disabled:opacity-50', 'disabled:cursor-not-allowed');
   });
 
   it('applies the danger classes when aria-invalid is set', () => {

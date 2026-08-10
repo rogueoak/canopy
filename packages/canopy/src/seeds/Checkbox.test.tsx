@@ -9,7 +9,7 @@ describe('Checkbox', () => {
     render(<Checkbox aria-label="Accept" />);
     const checkbox = screen.getByRole('checkbox', { name: 'Accept' });
     expect(checkbox).toBeInTheDocument();
-    expect(checkbox).toHaveClass('h-5', 'w-5', 'rounded-sm', 'border-border-strong', 'bg-surface');
+    expect(checkbox).toHaveClass('h-5', 'w-5', 'rounded-sm', 'border-border-strong', 'bg-control');
   });
 
   it('defaults to unchecked and toggles on click (uncontrolled)', async () => {

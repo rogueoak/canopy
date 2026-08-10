@@ -58,7 +58,7 @@ describe('DatePicker (single)', () => {
   it('carries the Input-parity field token classes on the trigger', () => {
     render(<DatePicker aria-label="Due date" />);
     const trigger = screen.getByRole('button', { name: 'Due date' });
-    expect(trigger).toHaveClass('border-border', 'bg-surface', 'text-text', 'rounded-md', 'h-10');
+    expect(trigger).toHaveClass('border-border', 'bg-control', 'text-text', 'rounded-md', 'h-10');
   });
 
   it('opens the calendar popover on trigger click', async () => {

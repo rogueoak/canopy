@@ -155,7 +155,7 @@ describe('Drawer', () => {
     const dialog = screen.getByRole('dialog');
     // tailwind-merge: caller bg wins over the surface default; base classes survive.
     expect(dialog).toHaveClass('bg-muted');
-    expect(dialog).not.toHaveClass('bg-surface-raised');
+    expect(dialog).not.toHaveClass('surface-raised');
     expect(dialog).toHaveClass('fixed', 'z-50');
   });
 

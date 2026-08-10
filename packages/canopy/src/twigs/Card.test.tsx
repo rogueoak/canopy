@@ -64,7 +64,7 @@ describe('Card', () => {
     expect(card).toHaveClass('rounded-none');
     expect(card).not.toHaveClass('rounded-lg');
     // Non-conflicting base classes are preserved.
-    expect(card).toHaveClass('border', 'bg-surface-raised', 'shadow-sm');
+    expect(card).toHaveClass('border', 'surface-raised', 'shadow-sm');
   });
 
   it('spreads native props onto each slot', () => {

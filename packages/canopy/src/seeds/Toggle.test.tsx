@@ -100,7 +100,7 @@ describe('Toggle', () => {
     expect(toggle).toHaveClass(
       'border',
       'border-border',
-      'bg-surface',
+      'bg-control',
       'data-[state=on]:bg-muted',
       'data-[state=on]:border-border-strong',
     );

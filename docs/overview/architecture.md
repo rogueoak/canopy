@@ -294,6 +294,25 @@ first portalled Seed), follows the same seam: it is the hover/focus fill for ite
 `stone-700` - lighter than `surface-raised` `stone-800`) where base `muted` would recede in dark.
 Guarded by a `text` × `muted-raised` AA pair in `tokens.test.ts`.
 
+**Spec 0073 finished that ladder and changed how it is reached.** `muted-raised` fixed the highlight
+but left every other control fill absolute, so a control still computed its colour from the page
+rather than from what it was sitting on: a `bg-surface` (`stone.900`) thumb read as a **hole** in a
+`stone.800` card, and `disabled` equalled `surface-raised` **exactly**, so a disabled control
+vanished into it. Both are the same mistake, and the first fix (each composing component re-pointing
+its Seeds by hand, as Audio did) does not scale - it is invisible when forgotten and only shows in
+dark.
+
+So the **surface declares itself and the controls inside correct themselves**. `--color-control` is
+the fill of a control on the current surface; the `surface-raised` **utility** paints the raised
+background and re-points `--color-control`, `--color-muted`, and `--color-ring-offset` for its whole
+subtree. `bg-control` emits `var(--color-control)`, so the same class resolves differently by context
+with no prop, provider, or variant. It ships from `preset-surface.css`, folded into the built preset
+exactly as `preset-motion.css` is, because a `@utility` is not a token and `@source` can never emit a
+rule no class string contains. Two consequences worth knowing: `cn()` registers `surface-raised` in
+tailwind-merge's background group (or a caller's `bg-*` sits alongside it rather than replacing it),
+and disabled became **one language** - every control dims, because a dim is relative to its context
+and a fill is not (see learnings).
+
 The contrast guard (`tokens.test.ts`) asserts AA for the foreground each state shows on its
 **hover/active** fill, in **both** themes - a bad state step fails the build. `disabled` is
 deliberately excluded (WCAG 2.1 §1.4.3 exempts disabled controls). Two state steps were nudged

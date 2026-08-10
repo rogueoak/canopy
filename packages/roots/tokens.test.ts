@@ -399,3 +399,81 @@ describe('Roots interaction states - base/hover/active are distinct within each 
     expect(fails, fails.join('\n')).toEqual([]);
   });
 });
+
+/**
+ * Spec 0073. A control's fill has to differ from the surface it sits on, in every context and both
+ * themes. Nothing checked that before, which is exactly why it shipped wrong twice: a `stone.900`
+ * thumb on a `stone.800` card read as a hole, and `disabled` collided with `surface-raised` at
+ * 1.00:1 so a disabled control vanished into it.
+ *
+ * These resolve the same way a browser would - through the reference chain to a primitive hex -
+ * rather than trusting the token names to mean what they say.
+ */
+describe('Roots control tokens - a control is never the colour of its surface', () => {
+  const css = read('tokens.css');
+  const primitives = Object.fromEntries(
+    [
+      ...css.matchAll(/--color-((?:[a-z]+-\d+)|base-white|base-black):\s*(#[0-9a-fA-F]{3,8});/g),
+    ].map((m) => [m[1], m[2].toLowerCase()]),
+  );
+  const scopeOf = (selector: string) => {
+    const match = new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\}`).exec(css);
+    return Object.fromEntries(
+      [...(match?.[1] ?? '').matchAll(/--color-([a-z-]+):\s*([^;]+);/g)].map((m) => [
+        m[1],
+        m[2].trim(),
+      ]),
+    );
+  };
+  /** Resolve a role to its primitive hex, following one `var(--color-*)` hop. */
+  const hex = (scope: Record<string, string>, role: string) => {
+    const raw = scope[role];
+    const ref = /var\(--color-([a-z0-9-]+)\)/.exec(raw ?? '');
+    return ref ? primitives[ref[1]] : raw;
+  };
+
+  for (const [label, selector] of [
+    ['light', ':root'],
+    ['dark', '\\.dark'],
+  ] as const) {
+    const scope = scopeOf(selector);
+
+    it(`${label}: every control role resolves to a real colour`, () => {
+      for (const role of ['control', 'control-raised', 'surface', 'surface-raised']) {
+        expect(hex(scope, role), `${label} ${role}`).toMatch(/^#[0-9a-f]{3,8}$/);
+      }
+    });
+
+    it(`${label}: a control on the base surface is not the same colour as it`, () => {
+      // Light is the degenerate case on purpose: both are white, and the control reads by its
+      // border instead. Only assert the separation where the fill is what carries it.
+      if (hex(scope, 'surface') === primitives['base-white']) return;
+      expect(hex(scope, 'control')).not.toBe(hex(scope, 'bg'));
+    });
+
+    it(`${label}: a control on a RAISED surface is separated from it`, () => {
+      // Light is deliberately degenerate: a white control on a white card, separated by its border
+      // rather than by fill, exactly as on the base surface. Asserting a fill difference there
+      // would be asserting a design Canopy does not have.
+      if (hex(scope, 'surface-raised') === primitives['base-white']) {
+        expect(hex(scope, 'control-raised')).toBe(primitives['base-white']);
+        return;
+      }
+      // Where fill IS what separates them, it has to actually differ. This is the bug the spec
+      // exists for; the direction is asserted below.
+      expect(hex(scope, 'control-raised')).not.toBe(hex(scope, 'surface-raised'));
+    });
+  }
+
+  it('dark: a raised control lifts off its surface rather than sinking into it', () => {
+    const dark = scopeOf('\\.dark');
+    const luminance = (value: string) =>
+      parseInt(value.slice(1, 3), 16) +
+      parseInt(value.slice(3, 5), 16) +
+      parseInt(value.slice(5, 7), 16);
+    // The original defect in one line: the thumb was darker than the card it sat on.
+    expect(luminance(hex(dark, 'control-raised')!)).toBeGreaterThan(
+      luminance(hex(dark, 'surface-raised')!),
+    );
+  });
+});

@@ -43,7 +43,7 @@ function isAriaInvalid(value: React.AriaAttributes['aria-invalid']): boolean {
  * exactly the tokens a lone `Input` uses, so a disabled/invalid group reads identically.
  */
 export const inputGroupVariants = cva(
-  'flex w-full items-center overflow-hidden rounded-md border border-border bg-surface text-base md:text-sm text-text focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-ring-offset has-[:disabled]:cursor-not-allowed has-[:disabled]:bg-disabled has-[:disabled]:text-disabled-foreground aria-invalid:border-danger aria-invalid:ring-danger',
+  'flex w-full items-center overflow-hidden rounded-md border border-border bg-control text-base md:text-sm text-text focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-ring-offset has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 aria-invalid:border-danger aria-invalid:ring-danger',
   {
     variants: {
       size: {
@@ -130,7 +130,7 @@ export const InputGroupAddon = React.forwardRef<HTMLDivElement, InputGroupAddonP
         data-align={align}
         className={cn(
           'flex items-center px-3 text-text-muted pointer-events-none',
-          disabled && 'text-disabled-foreground',
+          disabled && 'opacity-50',
           className,
         )}
         {...props}

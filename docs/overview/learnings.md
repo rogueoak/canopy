@@ -223,19 +223,33 @@ a `type` alias there breaks prop-types resolution. That empty interface trips
 `type` alias; no props and no variants → empty `interface … extends NativeAttrs {}` + a
 line-scoped `eslint-disable` explaining the prop-types constraint.
 
-## Disabled styling is per-control-kind, not one global rule
+## Disabled is one language, because a fill can collide and a dim cannot
 
-Two disabled treatments coexist by design. **Fields** (Input, Textarea, the Select trigger) use the
-`bg-disabled` / `text-disabled-foreground` **token pair** - an empty field has no fill to preserve,
-so a flat muted surface reads best. **Toggle controls that can be checked** (Checkbox, Switch,
-RadioGroupItem) use `disabled:opacity-50` + `cursor-not-allowed` instead - a disabled-but-checked
-control must stay visibly *filled* (its `primary` fill), and the token pair would flatten that to a
-neutral surface and lose the on/off signal. The Roots `disabled` token note explicitly sanctions
-opacity for controls that merely dim.
+**Revised by spec 0073.** This learning used to say the opposite: that disabled treatment should be
+chosen per control kind, with empty fields swapping to the `bg-disabled` / `text-disabled-foreground`
+pair and checkable toggles dimming so a checked fill survives. Each half was locally right and the
+rule still broke, which is what makes it worth rewriting rather than deleting.
 
-**Apply it:** choose the disabled treatment by whether a **filled/checked** state must survive
-disabling - yes → `opacity-50` + `cursor-not-allowed`; no (an empty field) → the
-`bg-disabled` / `text-disabled-foreground` pair.
+A fill is an **absolute** colour, so it can equal the thing behind it. `disabled` and
+`surface-raised` are both `stone.800` in dark, so every field and button that swapped to the pair
+became a **1.00:1** shape on any card: an outline button rendered as an empty ring with a 1.82:1
+glyph. Nothing caught it because nothing compared a control's fill to its surface, and it only
+appeared in dark, on raised surfaces, which no story showed. A dim cannot fail that way: it is a
+transform of whatever the control already renders, so it degrades proportionally against any
+background, including ones that do not exist yet.
+
+So every control dims: `disabled:opacity-50` + `cursor-not-allowed`. A disabled `Input` is now a
+faded input rather than a grey slab, which is a real change in appearance and the price of the
+guarantee.
+
+**Apply it:** reach for `opacity-50` + `cursor-not-allowed` and nothing else. Where a state must
+stay at full strength (Audio's loading button keeps its spinner legible), opt out explicitly with
+`disabled:opacity-100`, which reads as an override of a known default rather than as one of two
+competing conventions.
+
+The general lesson outlives the specific rule: **a style expressed as an absolute value can collide
+with its context; one expressed as a transform of the context cannot.** Prefer the transform when
+the context is not yours to know.
 
 ## Use `React.ComponentRef`, not the deprecated `React.ElementRef`
 
@@ -932,3 +946,26 @@ type that disappears fails the extraction rather than passing vacuously.
 The test for whether you wrote the wrong one: name a future, reasonable change to the code and ask
 whether the guard would catch it. If the answer is in the same spec's deferred-work list, it will
 not.
+
+## A control's fill must be relative to the surface it is on, not to the page
+
+Two bugs, one cause (spec 0073). A `Slider` thumb painted `bg-surface` (`stone.900`) sat on a
+`surface-raised` card (`stone.800`) and read as a **hole punched in the card**, because "one step up
+from the canvas" is one step DOWN from a raised surface. The disabled collision above is the same
+mistake wearing different clothes. Fifteen components painted a control with `bg-surface`.
+
+The first fix, in Audio, was for the composing component to re-point its Seeds' defaults by hand.
+That is correct and it does not scale: it is invisible when forgotten, it only shows in dark, and
+every future component on a raised surface repeats it. AudioRecorder repeated it, and left a comment
+predicting the token-layer fix.
+
+The durable shape is to make the **surface** declare itself and the controls inside it correct
+themselves. `--color-control` is a var, `bg-control` emits `var(--color-control)`, and the
+`surface-raised` utility re-points it for its subtree - so the same class means "one step up from
+whatever is behind me" without any component reading a prop.
+
+**Apply it:** when a token means "relative to its surroundings", express it as a var the surrounding
+context can re-point, not as a value the component hardcodes. And register any custom utility that
+sets a property with `cn()`'s tailwind-merge groups (`surface-raised` sets a background), or a
+caller's override will sit alongside your default instead of replacing it - the same trap as the
+typography roles.

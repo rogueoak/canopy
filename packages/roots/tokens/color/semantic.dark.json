@@ -15,6 +15,16 @@
       "$type": "color",
       "$description": "Raised surface (popovers, menus) - dark, lighter than surface."
     },
+    "control": {
+      "$value": "{color.stone.900}",
+      "$type": "color",
+      "$description": "Fill of a control that sits ON the current surface (a thumb, a checkbox, a field). Re-pointed by the surface-raised utility, so the same class steps correctly on a raised surface."
+    },
+    "control-raised": {
+      "$value": "{color.stone.700}",
+      "$type": "color",
+      "$description": "What `control` becomes inside a raised surface. Not used directly: the surface-raised utility points `control` at it."
+    },
     "overlay": {
       "$value": "{color.stone.950}",
       "$type": "color",
@@ -98,7 +108,7 @@
     "secondary-active": {
       "$value": "{color.bark.200}",
       "$type": "color",
-      "$description": "Secondary role - active/pressed state (dark). Lifts toward light (base .400 → hover .300 → active .200) so the near-black secondary-foreground (bark.950) keeps AA on the active surface; bark.500 was too dark (~3.77:1, below AA) - feedback 0003."
+      "$description": "Secondary role - active/pressed state (dark). Lifts toward light (base .400 \u2192 hover .300 \u2192 active .200) so the near-black secondary-foreground (bark.950) keeps AA on the active surface; bark.500 was too dark (~3.77:1, below AA) - feedback 0003."
     },
     "accent": {
       "$value": "{color.amber.400}",
@@ -133,7 +143,7 @@
     "muted-raised": {
       "$value": "{color.stone.700}",
       "$type": "color",
-      "$description": "Highlight/hover fill for items on a RAISED surface (popovers, menus) - dark (feedback 0006). stone.700 is LIGHTER than surface-raised (stone.800) → a real lift, unlike base muted (stone.900) which is DARKER than surface-raised and recedes. The near-white text (stone.50) stays above AA on stone.700."
+      "$description": "Highlight/hover fill for items on a RAISED surface (popovers, menus) - dark (feedback 0006). stone.700 is LIGHTER than surface-raised (stone.800) \u2192 a real lift, unlike base muted (stone.900) which is DARKER than surface-raised and recedes. The near-white text (stone.50) stays above AA on stone.700."
     },
     "success": {
       "DEFAULT": {
@@ -174,12 +184,12 @@
     "danger-hover": {
       "$value": "{color.danger.200}",
       "$type": "color",
-      "$description": "Danger role - hover state (dark). Lifts toward light (base .300 → hover .200 → active .100), NOT .300 - at .300 it collided with the .300 base and the destructive hover was invisible in dark (feedback 0004). Going lighter keeps the near-black danger-foreground (danger.950) above AA on the fill."
+      "$description": "Danger role - hover state (dark). Lifts toward light (base .300 \u2192 hover .200 \u2192 active .100), NOT .300 - at .300 it collided with the .300 base and the destructive hover was invisible in dark (feedback 0004). Going lighter keeps the near-black danger-foreground (danger.950) above AA on the fill."
     },
     "danger-active": {
       "$value": "{color.danger.100}",
       "$type": "color",
-      "$description": "Danger role - active/pressed state (dark). Continues the lighten-on-press path (.300 → .200 → .100) the dark theme uses where the foreground is near-black (cf. secondary .400 → .300 → .200); danger.950 stays well above AA on danger.100."
+      "$description": "Danger role - active/pressed state (dark). Continues the lighten-on-press path (.300 \u2192 .200 \u2192 .100) the dark theme uses where the foreground is near-black (cf. secondary .400 \u2192 .300 \u2192 .200); danger.950 stays well above AA on danger.100."
     },
     "info": {
       "DEFAULT": {

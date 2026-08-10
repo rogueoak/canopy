@@ -22,7 +22,7 @@ import { cn } from '../lib/cn';
  * - so each canopy part is composition + token styling, not hand-rolled focus management.
  *
  * The portalled content reuses the established raised-surface pattern (the same as `Dialog`,
- * `Select`, and `Combobox`): the card sits on `bg-surface-raised` + `border` + the primitive
+ * `Select`, and `Combobox`): the card sits on `surface-raised` + `border` + the primitive
  * `shadow-md`, and item highlight uses the RAISED `bg-muted-raised` fill (not base `bg-muted`,
  * which would recede on the raised surface in dark). Enter/exit uses the existing `animate-pop-*`
  * keyframes gated with `motion-reduce:animate-none`; no new keyframes are introduced.
@@ -88,7 +88,7 @@ const MenubarTrigger = React.forwardRef<
   <MenubarPrimitive.Trigger
     ref={ref}
     className={cn(
-      'flex select-none items-center rounded-sm px-3 py-1.5 text-label text-text outline-none focus:bg-muted data-[state=open]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:text-disabled-foreground',
+      'flex select-none items-center rounded-sm px-3 py-1.5 text-label text-text outline-none focus:bg-muted data-[state=open]:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,
     )}
     {...props}
@@ -138,7 +138,7 @@ MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName;
 
 /**
  * MenubarSubContent - the portalled nested sub-menu surface. Same raised-overlay chrome as
- * `MenubarContent` (`bg-surface-raised` + `border` + `shadow-md`), rendered through
+ * `MenubarContent` (`surface-raised` + `border` + `shadow-md`), rendered through
  * `MenubarPrimitive.Portal`. Enter/exit via `animate-pop-*`, gated with `motion-reduce`.
  */
 const MenubarSubContent = React.forwardRef<
@@ -149,7 +149,7 @@ const MenubarSubContent = React.forwardRef<
     <MenubarPrimitive.SubContent
       ref={ref}
       className={cn(
-        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
+        'z-50 min-w-[8rem] overflow-hidden rounded-md border border-border surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
         className,
       )}
       {...props}
@@ -160,7 +160,7 @@ MenubarSubContent.displayName = MenubarPrimitive.SubContent.displayName;
 
 /**
  * MenubarContent - the portalled menu surface. Rendered through `MenubarPrimitive.Portal` (so it
- * escapes overflow / stacking contexts) onto the raised-surface card: `bg-surface-raised` +
+ * escapes overflow / stacking contexts) onto the raised-surface card: `surface-raised` +
  * `text-text` + `border border-border` + `rounded-md` + the primitive `shadow-md`, `min-w-[12rem]`.
  * `align="start"` and small offsets anchor it under its trigger. Enter/exit uses the existing
  * `animate-pop-*` keyframes gated with `motion-reduce:animate-none`.
@@ -176,7 +176,7 @@ const MenubarContent = React.forwardRef<
       alignOffset={alignOffset}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 min-w-[12rem] overflow-hidden rounded-md border border-border bg-surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
+        'z-50 min-w-[12rem] overflow-hidden rounded-md border border-border surface-raised p-1 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none',
         className,
       )}
       {...props}

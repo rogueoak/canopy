@@ -66,7 +66,7 @@ ToastViewport.displayName = ToastPrimitive.Viewport.displayName;
  * the slide/fade motion keyed off Radix's `data-state` / `data-swipe` attributes - all gated with
  * `motion-reduce:animate-none` so reduced-motion users get an instant, static toast.
  *
- * `default` is the raised neutral surface (`bg-surface-raised` per the raised-surface rule) with a
+ * `default` is the raised neutral surface (`surface-raised` per the raised-surface rule) with a
  * hairline border and the default text token; `success` / `danger` are the solid status fills with
  * their paired `*-foreground` text and a transparent border (the fill carries the meaning), matching
  * the Alert (0040) role idiom - the title/description parts inherit this foreground via `text-current`
@@ -77,7 +77,7 @@ export const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-border bg-surface-raised text-text',
+        default: 'border-border surface-raised text-text',
         success: 'border-transparent bg-success text-success-foreground',
         danger: 'border-transparent bg-danger text-danger-foreground',
       },

@@ -182,7 +182,7 @@ NavigationMenuLink.displayName = NavigationMenuPrimitive.Link.displayName;
 
 /**
  * NavigationMenuIndicator - the arrow that tracks the open trigger. Radix positions it under the
- * active trigger; the rotated `bg-surface-raised` marker reads as the caret joining the trigger to
+ * active trigger; the rotated `surface-raised` marker reads as the caret joining the trigger to
  * the portalled viewport, with a `bg-border` seam behind it. Fades in/out gated
  * `motion-reduce:animate-none`.
  */
@@ -198,14 +198,14 @@ const NavigationMenuIndicator = React.forwardRef<
     )}
     {...props}
   >
-    <div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm border-l border-t border-border bg-surface-raised" />
+    <div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm border-l border-t border-border surface-raised" />
   </NavigationMenuPrimitive.Indicator>
 ));
 NavigationMenuIndicator.displayName = NavigationMenuPrimitive.Indicator.displayName;
 
 /**
  * NavigationMenuViewport - the portalled, size-and-position-synced container the active content
- * renders into (`bg-surface-raised border border-border rounded-md shadow-md`). Its width/height
+ * renders into (`surface-raised border border-border rounded-md shadow-md`). Its width/height
  * are driven by the Radix `--radix-navigation-menu-viewport-*` CSS vars. Being portalled under
  * `<body>` with `.dark` on `<html>`, it themes correctly with no per-portal wiring. Rendered by
  * `NavigationMenu` automatically; exported for advanced positioning.
@@ -218,7 +218,7 @@ const NavigationMenuViewport = React.forwardRef<
     <NavigationMenuPrimitive.Viewport
       ref={ref}
       className={cn(
-        'relative mt-1.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-top overflow-hidden rounded-md border border-border bg-surface-raised text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none md:w-[var(--radix-navigation-menu-viewport-width)]',
+        'relative mt-1.5 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-top overflow-hidden rounded-md border border-border surface-raised text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none md:w-[var(--radix-navigation-menu-viewport-width)]',
         className,
       )}
       {...props}

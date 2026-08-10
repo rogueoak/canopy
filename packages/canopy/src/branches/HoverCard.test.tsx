@@ -189,7 +189,7 @@ describe('HoverCard', () => {
     );
     const content = (await screen.findByText('Ada Lovelace')).parentElement;
     expect(content).toHaveClass(
-      'bg-surface-raised',
+      'surface-raised',
       'border-border',
       'text-text',
       'rounded-lg',
@@ -224,7 +224,7 @@ describe('HoverCard', () => {
     );
     await screen.findByText('Ada Lovelace');
     expect(ref.current).toBeInstanceOf(HTMLDivElement);
-    expect(ref.current).toHaveClass('bg-surface-raised');
+    expect(ref.current).toHaveClass('surface-raised');
   });
 });
 

@@ -60,40 +60,24 @@ const UNKNOWN_TIME = '--:--';
  * glyph that only reveals its hit area on hover. `primary` on play keeps the hierarchy - the
  * dominant action is filled, the secondary ones are outlined.
  *
- * The focus-ring offset is the first half of the RAISED-SURFACE correction. Button's defaults are
- * tuned for the page canvas, so its ring punches a `ring-offset-ring-offset` (page-coloured) halo -
- * near-black on this card in dark. The offset has to match the surface the ring is actually drawn
- * on (the `SideNav` precedent). It MUST carry the `focus-visible:` prefix: Button's own token is
- * `focus-visible:ring-offset-ring-offset`, and tailwind-merge treats a bare `ring-offset-*` as a
- * different key, so an unprefixed override would sit alongside it and lose exactly when it matters.
+ * The card declares itself a `surface-raised` CONTEXT (spec 0073), so the controls inside it get
+ * their surface-relative fills and ring offset for free. This used to be three hand-written
+ * corrections here, re-pointing hover, active, and the ring offset, because Button's defaults are
+ * tuned for the page canvas and a raised card inverts them. That correction now lives in the
+ * surface rather than in every component that sits on one.
  */
-const TRANSPORT_BUTTON_CLASS = 'rounded-full focus-visible:ring-offset-surface-raised';
+const TRANSPORT_BUTTON_CLASS = 'rounded-full';
 
 /**
- * The second half of the correction, and it applies only to the OUTLINE skips - never to the
- * filled play button, which correctly keeps its own `primary-hover`.
+ * The play button while loading. It is `disabled` (a press would be dropped), and the single
+ * disabled language dims the control - which would take the spinner down with it, hiding the one
+ * element whose whole job is to say "something is happening".
  *
- * Button's `hover:bg-muted` is one step up from the page canvas (`bg-bg`). This player is a card
- * (`bg-surface-raised`), which per learnings 20 and 21 is its own design context: on it, the
- * page's "one step up" is a step DOWN, so hovering a skip button visibly sinks into a recess in
- * dark instead of lifting. `muted-raised` is the surface-relative highlight that actually lifts.
- *
- * Spelled out as a FULL LITERAL rather than interpolating the constant above, per learning 8.
+ * So this state opts out of the dim and keeps the primary fill, which is how a loading button
+ * conventionally reads. `cursor-wait` replaces the not-allowed cursor: this is a temporary state
+ * that resolves itself, not a refusal.
  */
-const SKIP_BUTTON_CLASS =
-  'rounded-full focus-visible:ring-offset-surface-raised hover:bg-muted-raised active:bg-muted-raised';
-
-/**
- * The play button while loading. It is `disabled` (a press would be dropped), but Button's disabled
- * treatment swaps in the `bg-disabled` pair - which would bleach the spinner into near-invisibility
- * on the card, hiding the one element whose whole job is to say "something is happening".
- *
- * So the loading state keeps the primary fill and only the spinner communicates the wait, which is
- * how a loading button conventionally reads. `cursor-wait` replaces the not-allowed cursor: this is
- * a temporary state that will resolve itself, not a refusal.
- */
-const PLAY_BUTTON_LOADING_CLASS =
-  'rounded-full focus-visible:ring-offset-surface-raised disabled:bg-primary disabled:text-primary-foreground disabled:cursor-wait';
+const PLAY_BUTTON_LOADING_CLASS = 'rounded-full disabled:opacity-100 disabled:cursor-wait';
 
 /**
  * The player's load state. Media arrives asynchronously and can fail, and the two must not look
@@ -752,7 +736,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
       // spinner alone says nothing to a screen reader.
       aria-busy={loading}
       className={cn(
-        'flex w-full flex-col gap-4 rounded-lg border border-border bg-surface-raised p-4 text-text shadow-sm',
+        'flex w-full flex-col gap-4 rounded-lg border border-border surface-raised p-4 text-text shadow-sm',
         className,
       )}
       {...rest}
@@ -782,7 +766,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
           type="button"
           variant="outline"
           size="icon"
-          className={SKIP_BUTTON_CLASS}
+          className={TRANSPORT_BUTTON_CLASS}
           aria-label={skipBackLabel}
           disabled={!loaded}
           onClick={handleSkipBack}
@@ -807,7 +791,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
           type="button"
           variant="outline"
           size="icon"
-          className={SKIP_BUTTON_CLASS}
+          className={TRANSPORT_BUTTON_CLASS}
           aria-label={skipForwardLabel}
           disabled={!loaded}
           onClick={handleSkipForward}

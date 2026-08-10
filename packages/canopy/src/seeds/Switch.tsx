@@ -13,7 +13,7 @@ export type SwitchProps = React.ComponentPropsWithoutRef<typeof SwitchPrimitive.
  * Styled entirely with semantic-token utilities (spec 0005 recipe) - all FULL LITERALS so
  * Tailwind v4's source scanner emits each one. No `dark:`: light/dark flips through the token
  * layer (spec 0004). The pill track is `bg-border` when off and `data-[state=checked]:bg-primary`
- * when on; the `bg-surface` thumb slides with a transform transition. The focus-visible ring lives
+ * when on; the `bg-control` thumb slides with a transform transition. The focus-visible ring lives
  * on the Root so keyboard focus is always visible. Pairs with `Label` via `htmlFor`/`id`.
  * `forwardRef`, full native prop spread, and `cn()` merge follow the recipe.
  */
@@ -29,7 +29,7 @@ export const Switch = React.forwardRef<
     )}
     {...props}
   >
-    <SwitchPrimitive.Thumb className="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-surface shadow-sm transition-transform data-[state=checked]:translate-x-5" />
+    <SwitchPrimitive.Thumb className="pointer-events-none block h-5 w-5 translate-x-0.5 rounded-full bg-control shadow-sm transition-transform data-[state=checked]:translate-x-5" />
   </SwitchPrimitive.Root>
 ));
 Switch.displayName = 'Switch';

@@ -1,0 +1,42 @@
+/**
+ * Roots surface partial - the raised-surface CONTEXT.
+ *
+ * A `@utility` is not a token, and Tailwind's `@source` scanner can only emit rules whose class
+ * strings appear in scanned source. A rule that re-points a variable for its whole subtree appears
+ * nowhere, so it has to ship from CSS every consumer already imports. `build.mjs` folds this into
+ * `dist/tailwind-preset.css` in a single idempotent write, exactly as it does `preset-motion.css`.
+ *
+ * The problem it solves (spec 0073). Control fills are absolute, but the surface under them is not.
+ * `bg-surface` on a control means "one step up from the page canvas", and on a raised card that is
+ * one step DOWN: in dark, a `stone.900` thumb on a `stone.800` card reads as a hole punched in it.
+ * The same mistake made a disabled control vanish, since `disabled` and `surface-raised` are the
+ * same value in dark.
+ *
+ * Rather than every composing component remembering to re-point its Seeds (which is what Audio did
+ * by hand, and what nobody will remember in six months), the SURFACE declares itself and the
+ * controls inside it correct themselves. `bg-control` emits `var(--color-control)`, so the same
+ * class resolves differently by context for free - no prop, no provider, no variant.
+ *
+ * Use it wherever you would have written `bg-surface-raised`: it paints the same background and
+ * additionally fixes everything inside.
+ *
+ *   <div class="surface-raised rounded-lg border border-border">   // not bg-surface-raised
+ *
+ * Deliberately does NOT nest: a raised surface inside a raised surface does not step twice. Canopy
+ * has no two-deep raised surface, and a ladder that keeps climbing runs out of ramp.
+ */
+@utility surface-raised {
+  background-color: var(--color-surface-raised);
+
+  /* Everything below is the context. A control inside this subtree is one step up from THIS
+     surface rather than from the page. */
+  --color-control: var(--color-control-raised);
+
+  /* The interaction fill follows the same rule, and this rung already existed: `muted-raised` was
+     added (learning 20) the first time a highlight needed to be surface-relative. */
+  --color-muted: var(--color-muted-raised);
+
+  /* A focus ring is drawn ON this surface, so its offset has to match it or the ring punches a
+     page-coloured halo through the card. */
+  --color-ring-offset: var(--color-surface-raised);
+}

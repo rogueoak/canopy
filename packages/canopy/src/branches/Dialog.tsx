@@ -10,7 +10,7 @@ import { cn } from '../lib/cn';
  * so this component is composition + token styling - not hand-rolled focus management.
  *
  * It reuses the established raised-surface pattern (the third portalled surface after Select 0013
- * and Tooltip 0014): the content card sits on `bg-surface-raised` + `border` + the primitive
+ * and Tooltip 0014): the content card sits on `surface-raised` + `border` + the primitive
  * `shadow-lg`, and the scrim uses the **pre-provisioned** `color-overlay` token at reduced opacity
  * (`bg-overlay/80`) - so the first Branch adds NO new token. There is NO `dark:` on the common
  * path: light/dark flips through the token layer (spec 0004), and because `.dark` lives on
@@ -65,7 +65,7 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 /**
  * DialogContent - the portalled content card. Rendered through `DialogPrimitive.Portal` (so it
  * escapes overflow/stacking contexts) over the `DialogOverlay`, centred in the viewport on the
- * raised-surface pattern (`bg-surface-raised` + `border border-border` + `rounded-lg` + the
+ * raised-surface pattern (`surface-raised` + `border border-border` + `rounded-lg` + the
  * primitive `shadow-lg`), `p-6`, capped at `max-w-lg`. Includes a built-in close affordance: an
  * `X`-icon `DialogClose` (inline SVG using `currentColor`, `aria-hidden`) with `aria-label="Close"`,
  * the `muted-raised` hover fill (the raised-surface lift) and the shared focus-visible ring. Enter/
@@ -85,7 +85,7 @@ const DialogContent = React.forwardRef<
       ref={ref}
       aria-modal="true"
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-border bg-surface-raised p-6 text-text shadow-lg data-[state=open]:animate-dialog-content-in data-[state=closed]:animate-dialog-content-out motion-reduce:animate-none',
+        'fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-border surface-raised p-6 text-text shadow-lg data-[state=open]:animate-dialog-content-in data-[state=closed]:animate-dialog-content-out motion-reduce:animate-none',
         className,
       )}
       {...props}

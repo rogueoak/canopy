@@ -145,7 +145,7 @@ export interface SideNavProps extends React.HTMLAttributes<HTMLElement> {
  * landmark, sized `w-60` (expanded) / `w-16` (collapsed) with a `transition-[width]`. On mobile it
  * renders the canopy `Drawer` (`direction="left"`): the shared `bg-overlay/80` scrim + a left-anchored
  * full-height `DrawerContent` panel that **slides in/out** (`animate-drawer-in`/`-out`, from the Roots
- * preset) and sits on the raised-surface lift (`bg-surface-raised` + `shadow-lg` + `border-r`), holding
+ * preset) and sits on the raised-surface lift (`surface-raised` + `shadow-lg` + `border-r`), holding
  * an sr-only `DrawerTitle` (the drawer needs a Title for its accessible name), a visible `X` close
  * affordance, and the `<nav>` landmark. Either way exactly one `<nav>` renders. Opening moves focus
  * INTO the panel (the modal focus trap); because the `SideNavTrigger` is a decoupled sibling (no

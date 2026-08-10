@@ -15,6 +15,16 @@
       "$type": "color",
       "$description": "Raised surface (popovers, menus) - distinguished by elevation."
     },
+    "control": {
+      "$value": "{color.base.white}",
+      "$type": "color",
+      "$description": "Fill of a control that sits ON the current surface (a thumb, a checkbox, a field). Re-pointed by the surface-raised utility, so the same class steps correctly on a raised surface."
+    },
+    "control-raised": {
+      "$value": "{color.base.white}",
+      "$type": "color",
+      "$description": "What `control` becomes inside a raised surface. Not used directly: the surface-raised utility points `control` at it."
+    },
     "overlay": {
       "$value": "{color.stone.900}",
       "$type": "color",
@@ -118,7 +128,7 @@
     "accent-hover": {
       "$value": "{color.amber.400}",
       "$type": "color",
-      "$description": "Accent role - hover state. accent is a fill role with a near-black foreground (accent-foreground = amber.950), so its hover lightens (amber.500 → .400) rather than darkening: amber.600 dropped the foreground to ~3.79:1 (below AA), amber.400 restores it to ~6.40:1 (feedback 0003)."
+      "$description": "Accent role - hover state. accent is a fill role with a near-black foreground (accent-foreground = amber.950), so its hover lightens (amber.500 \u2192 .400) rather than darkening: amber.600 dropped the foreground to ~3.79:1 (below AA), amber.400 restores it to ~6.40:1 (feedback 0003)."
     },
     "muted": {
       "$value": "{color.stone.100}",
@@ -139,7 +149,7 @@
       "DEFAULT": {
         "$value": "{color.success.600}",
         "$type": "color",
-        "$description": "Success status role. Lives at .DEFAULT (sibling of the success ramp steps) so it emits --color-success (→ bg-success) without colliding with the color.success ramp group."
+        "$description": "Success status role. Lives at .DEFAULT (sibling of the success ramp steps) so it emits --color-success (\u2192 bg-success) without colliding with the color.success ramp group."
       }
     },
     "success-foreground": {
@@ -179,7 +189,7 @@
     "danger-active": {
       "$value": "{color.danger.800}",
       "$type": "color",
-      "$description": "Danger role - active/pressed state. Deepens 600 → 700 → 800 like primary/secondary so the destructive button gives press feedback; near-white danger-foreground (danger.50) stays well above AA on the darker fill."
+      "$description": "Danger role - active/pressed state. Deepens 600 \u2192 700 \u2192 800 like primary/secondary so the destructive button gives press feedback; near-white danger-foreground (danger.50) stays well above AA on the darker fill."
     },
     "disabled": {
       "$value": "{color.stone.100}",

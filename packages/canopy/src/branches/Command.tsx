@@ -41,7 +41,7 @@ import {
 
 /**
  * Command - `Command.Root`, the stateful list container. Styled as the same raised-surface card
- * the Combobox popover uses (`bg-surface-raised` + `text-text`) so inline and in-dialog read
+ * the Combobox popover uses (`surface-raised` + `text-text`) so inline and in-dialog read
  * identically.
  */
 const Command = React.forwardRef<
@@ -51,7 +51,7 @@ const Command = React.forwardRef<
   <CommandPrimitive
     ref={ref}
     className={cn(
-      'flex h-full w-full flex-col overflow-hidden rounded-md bg-surface-raised text-text',
+      'flex h-full w-full flex-col overflow-hidden rounded-md surface-raised text-text',
       className,
     )}
     {...props}

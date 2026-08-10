@@ -16,7 +16,7 @@ import { cn } from '../lib/cn';
  * - `Tooltip` - the stateful root; opens on hover AND keyboard focus, closes on blur/escape.
  * - `TooltipTrigger` - the element the tooltip describes (use `asChild` to wrap a Button etc.).
  * - `TooltipContent` - the portalled hint (`Portal` + `Content` + a matching `Arrow`), styled on
- *   a raised-surface card (`bg-surface-raised` + `border` + `shadow-md`) with terse `text-xs`.
+ *   a raised-surface card (`surface-raised` + `border` + `shadow-md`) with terse `text-xs`.
  *
  * Short, non-interactive text only - Popover / HoverCard / rich content are separate, later
  * specs (spec 0014, Out of scope).
@@ -36,7 +36,7 @@ export interface TooltipContentProps extends React.ComponentPropsWithoutRef<
 
 /**
  * TooltipContent - the portalled hint surface. Rendered through `TooltipPrimitive.Portal` (so it
- * escapes overflow/stacking contexts) onto a raised-surface card: `bg-surface-raised` + `text-text`
+ * escapes overflow/stacking contexts) onto a raised-surface card: `surface-raised` + `text-text`
  * + `border border-border` + `rounded-md` + the primitive `shadow-md` (there is no semantic
  * elevation token yet), capped at `max-w-xs` so a long hint wraps instead of stretching.
  * `sideOffset` defaults to `4` to nudge the card off the trigger. The `arrow` (default `true`)
@@ -52,7 +52,7 @@ const TooltipContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 max-w-xs overflow-hidden rounded-md border border-border bg-surface-raised px-3 py-1.5 text-xs text-text shadow-md',
+        'z-50 max-w-xs overflow-hidden rounded-md border border-border surface-raised px-3 py-1.5 text-xs text-text shadow-md',
         className,
       )}
       {...props}

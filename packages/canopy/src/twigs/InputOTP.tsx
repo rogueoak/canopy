@@ -105,9 +105,9 @@ export const InputOTPSlot = React.forwardRef<HTMLDivElement, InputOTPSlotProps>(
         data-active={isActive ? 'true' : undefined}
         aria-invalid={props['aria-invalid']}
         className={cn(
-          'relative flex h-10 w-10 items-center justify-center border-y border-r border-border bg-surface text-base md:text-sm text-text',
+          'relative flex h-10 w-10 items-center justify-center border-y border-r border-border bg-control text-base md:text-sm text-text',
           'first:rounded-l-md first:border-l last:rounded-r-md',
-          'group-has-[:disabled]:bg-disabled group-has-[:disabled]:text-disabled-foreground',
+          'group- group-',
           'aria-invalid:border-danger',
           'data-[active=true]:z-10 data-[active=true]:ring-2 data-[active=true]:ring-ring data-[active=true]:ring-offset-2 data-[active=true]:ring-offset-ring-offset',
           'data-[active=true]:aria-invalid:ring-danger',

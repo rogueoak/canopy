@@ -18,7 +18,7 @@ import { cn } from '../lib/cn';
  *   `--color-<key>` CSS custom properties on its wrapper, so caller primitives read
  *   `fill="var(--color-<key>)"` / `stroke="var(--color-<key>)"` and stay theme-aware.
  * - `ChartTooltip` - a binding of recharts `Tooltip` so callers wire it like native recharts.
- * - `ChartTooltipContent` - a canopy-styled tooltip body (`bg-surface-raised`, `border-border`,
+ * - `ChartTooltipContent` - a canopy-styled tooltip body (`surface-raised`, `border-border`,
  *   `shadow-md`) that reads labels and colors from the `ChartConfig` via `useChart()`.
  * - `ChartLegend` - a binding of recharts `Legend`.
  * - `ChartLegendContent` - a canopy-styled legend row that reads labels / icons / colors from the
@@ -223,7 +223,7 @@ function getPayloadConfig(
 /**
  * ChartTooltipContent - the canopy-styled tooltip body. Rendered by recharts with the hovered
  * `payload`; it reads each series' label and color from the `ChartConfig` via `useChart()` and
- * lays them out on a raised-surface card (`bg-surface-raised border border-border shadow-md`),
+ * lays them out on a raised-surface card (`surface-raised border border-border shadow-md`),
  * with a per-series color swatch driven by the `--color-<key>` variable. Returns `null` when the
  * tooltip is inactive or the payload is empty, so nothing renders off-hover.
  */
@@ -276,7 +276,7 @@ export const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltip
       <div
         ref={ref}
         className={cn(
-          'grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border bg-surface-raised px-3 py-2 text-xs text-text shadow-md',
+          'grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border surface-raised px-3 py-2 text-xs text-text shadow-md',
           className,
         )}
         {...props}

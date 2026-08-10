@@ -151,7 +151,7 @@ describe('Sheet', () => {
       expect(sheet).toHaveClass(...anchors);
       expect(sheet).toHaveClass(motion);
       // Shared raised-surface tokens are always present.
-      expect(sheet).toHaveClass('bg-surface-raised', 'shadow-lg', 'motion-reduce:animate-none');
+      expect(sheet).toHaveClass('surface-raised', 'shadow-lg', 'motion-reduce:animate-none');
     },
   );
 
@@ -213,7 +213,7 @@ describe('Sheet', () => {
     // tailwind-merge de-dupes the conflicting max-width: the caller's `max-w-lg` wins.
     expect(sheet).toHaveClass('max-w-lg');
     expect(sheet).not.toHaveClass('max-w-sm');
-    expect(sheet).toHaveClass('bg-surface-raised', 'shadow-lg');
+    expect(sheet).toHaveClass('surface-raised', 'shadow-lg');
   });
 
   it('forwards a ref to the content element', async () => {
