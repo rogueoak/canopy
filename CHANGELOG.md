@@ -4,6 +4,46 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 2.0.0 - 2026-08-10
+
+### Changed (breaking)
+
+- **A control's fill now follows the surface it sits on.** `--color-control` is the fill of a
+  control on the current surface, and the new `surface-raised` **utility** paints a raised
+  background _and_ re-points that fill for everything inside it. So `bg-control` means "one step up
+  from whatever is behind me" with no per-component work. This fixes two dark-mode bugs that were
+  one cause: a `Slider` thumb was **darker** than the card it sat on and read as a hole, and
+  `disabled` resolved to exactly the same value as `surface-raised`, so a disabled control was a
+  1.00:1 fill against its own background.
+
+  **Migration:** where you wrote `bg-surface-raised` on something that contains Canopy controls,
+  write `surface-raised` instead. It paints the same colour and fixes the controls inside. The
+  `bg-surface-raised` utility still exists and still works, so nothing breaks if you do not.
+
+- **Disabled is one language: every control dims.** `disabled:opacity-50` replaces the
+  `bg-disabled` / `text-disabled-foreground` fill swap on every control that used it (Button,
+  Input, Textarea, Select, InputGroup, InputOTP, DatePicker, Combobox). A fill is an absolute
+  colour, so it can collide with what is behind it; a dim is a transform of what the control already
+  renders, so it works on any surface, including ones that do not exist yet.
+
+  **This changes how your disabled fields look**: a disabled `Input` is now a faded input rather
+  than a grey slab. There is nothing to migrate, but it is worth a look. `disabled` and
+  `disabled-foreground` remain in the token set if you want the old treatment on your own
+  components.
+
+- If you override a Canopy default with your own background, note that `cn()` now knows
+  `surface-raised` sets one, so your class wins as it should.
+
+### Added
+
+- **`Audio` gains `skipGlyph`** (`auto` | `numbered` | `plain`, default `auto`). The skip buttons
+  show the interval as a numbered circular arrow as soon as either interval stops being the standard
+  10 seconds, so a player configured back-15 / forward-30 no longer looks identical to the default.
+  `numbered` and `plain` force it either way, and the accessible name is the same in all three.
+
+- **Roots**: `control` and `control-raised` semantic tokens, and `preset-surface.css` folded into the
+  built Tailwind preset. A brand must map the two new roles, the same as every other semantic role.
+
 ## 1.5.0 - 2026-08-09
 
 ### Added
