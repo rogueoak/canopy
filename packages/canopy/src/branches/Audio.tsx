@@ -51,6 +51,28 @@ const UNKNOWN_DURATION_MAX = 1;
 const UNKNOWN_TIME = '--:--';
 
 /**
+ * The standard skip interval. A module constant rather than four literal `10`s (two prop defaults,
+ * the `auto` comparison, and the docs): changing the default while `auto` still compared against a
+ * hardcoded 10 would make every default player draw the numbered glyph.
+ */
+const DEFAULT_SKIP_SECONDS = 10;
+
+/**
+ * How an interval is written, for the accessible name AND the glyph.
+ *
+ * One function because they were two, and they disagreed: the glyph rounded while the name and the
+ * seek used the raw value, so `skipForwardSeconds={10.4}` drew the numbered glyph (because 10.4 is
+ * not 10) with `10` inside it, on a button announcing "10.4 seconds" and jumping 10.4. The label
+ * could not drift from the behaviour; the glyph could, and did.
+ *
+ * Fractions keep one decimal and lose a trailing `.0`, so 7.5 reads `7.5` and 10.0 reads `10`.
+ */
+function formatInterval(seconds: number): string {
+  const rounded = Math.round(seconds * 10) / 10;
+  return String(rounded);
+}
+
+/**
  * The transport controls are circles. `size="icon"` is already square, so the shape is one
  * `rounded-full` - a FULL LITERAL, like every class Canopy ships, so Tailwind's scanner emits it
  * (learning 8). All three share it: a round play button flanked by two rounded-square skips would
@@ -203,6 +225,19 @@ export interface AudioProps
   skipBackSeconds?: number;
   /** How far the forward button seeks, in seconds. Default `10`. */
   skipForwardSeconds?: number;
+  /**
+   * How the skip buttons draw themselves.
+   *
+   * - `auto` (default) - the plain double triangle while both intervals are the standard 10
+   *   seconds, and the numbered circular arrow as soon as either is changed. The reasoning: at the
+   *   default there is nothing to tell the reader that the glyph does not already imply, and a
+   *   number would be noise; the moment a caller picks their own interval, the glyph is the only
+   *   place a sighted reader can learn it.
+   * - `numbered` - always show the interval, even at 10.
+   * - `plain` - never show it. The interval still reaches assistive tech through the button's
+   *   accessible name, which is built from the same value either way.
+   */
+  skipGlyph?: 'auto' | 'numbered' | 'plain';
   /**
    * Accessible name for the play button while the media is loading, and the text a screen reader
    * announces for the busy state. Default `'Loading audio'`. A defaulted prop rather than a baked
@@ -383,6 +418,93 @@ function SkipForwardGlyph() {
   );
 }
 
+/**
+ * The numbered skip glyph: a circular arrow wrapping the interval, the convention every podcast app
+ * uses. It exists because the double triangle cannot say HOW FAR it jumps, so a player configured
+ * back-15 / forward-30 was pixel-identical to the 10/10 default.
+ *
+ * Three things here were got wrong before and are worth stating, because each looked fine in the
+ * markup and only showed on a screen:
+ *
+ * - **The digits must be constrained, not merely sized down.** Stepping the font size by digit
+ *   count still collided with the arc at `120`, because it tunes to one font's metrics and any
+ *   other resolves wider. `textLength` + `lengthAdjust` makes the browser fit the string to a width
+ *   we choose, so it cannot overflow whatever font it resolves.
+ * - **The arc's cap must be flat where the arrowhead meets it.** A round cap left ~0.65 units
+ *   poking out behind the head, reading as a stray dot welded to the arrow.
+ * - **The drawing has to be optically centred, not geometrically.** The head overhangs the circle's
+ *   top, so centring the circle in the box leaves the whole glyph riding high next to the play
+ *   button. The group is nudged down by half the overhang.
+ *
+ * It renders at the shared `GLYPH_CLASS` size like every other transport glyph. An earlier version
+ * was `h-6` to buy room for the digits; that made it the only one-off glyph in the package and
+ * out-weighed the 16px play triangle sitting between the two skips, inverting the hierarchy - the
+ * dominant control has to stay dominant.
+ */
+function NumberedSkipGlyph({
+  seconds,
+  direction,
+}: {
+  seconds: number;
+  direction: 'back' | 'forward';
+}) {
+  const label = formatInterval(seconds);
+
+  // The widest the digits may draw, inside r=7.5 minus the stroke. `textLength` holds them to it
+  // whatever the font, so this is a guarantee rather than a tuning.
+  const INNER_WIDTH = 11;
+  // Still stepped, because squeezing three digits into a two-digit width makes them unreadably
+  // narrow: the size gets them close, `textLength` stops them overflowing.
+  let fontSize = 8;
+  if (label.length === 3) fontSize = 6.5;
+  if (label.length > 3) fontSize = 5;
+
+  // One drawing, mirrored for the back direction, so the pair cannot drift apart.
+  const flip = direction === 'back' ? 'scale(-1 1) translate(-24 0)' : undefined;
+
+  return (
+    <svg className={GLYPH_CLASS} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      {/* Nudged down by half the arrowhead's overhang so the glyph sits on the same optical
+          centreline as its neighbours rather than riding high. */}
+      <g transform="translate(0 0.75)">
+        <g transform={flip}>
+          {/* 310 degrees of r=7.5 from the top, clockwise, leaving a gap for the head. `butt` caps
+              so nothing protrudes behind it. */}
+          <path
+            d="M12 4.5 A 7.5 7.5 0 1 1 6.18 7.07"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="butt"
+          />
+          {/* The head's flat back sits on the arc's start, so the two read as one stroke. */}
+          <path d="M12 2.6 L14.3 4.5 L12 6.4 Z" fill="currentColor" />
+        </g>
+        <text
+          x="12"
+          // Baseline: the centre plus roughly a third of the size puts the digits' optical middle
+          // on the circle's.
+          y={12 + fontSize * 0.35}
+          textAnchor="middle"
+          textLength={INNER_WIDTH}
+          lengthAdjust="spacingAndGlyphs"
+          fill="currentColor"
+          fontSize={fontSize}
+          fontWeight="700"
+          // Not selectable and not a hit target: it is an icon, and real text in one is otherwise
+          // caret-selectable and findable, so Ctrl+F for "30" would scroll to a transport button.
+          className="select-none"
+          pointerEvents="none"
+          // The brand font would drag a webfont dependency into an icon; the system stack sets
+          // digits identically enough at this size and always resolves.
+          fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+        >
+          {label}
+        </text>
+      </g>
+    </svg>
+  );
+}
+
 /* ---------------------------------------------------------------------------------- component */
 
 const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props, ref) {
@@ -395,8 +517,9 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
     preload,
     stream,
     startAtSeconds,
-    skipBackSeconds = 10,
-    skipForwardSeconds = 10,
+    skipGlyph = 'auto',
+    skipBackSeconds = DEFAULT_SKIP_SECONDS,
+    skipForwardSeconds = DEFAULT_SKIP_SECONDS,
     loadingLabel = 'Loading audio',
     errorLabel = 'Could not load audio',
     onReady,
@@ -717,8 +840,31 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
   if (loading) playLabel = loadingLabel;
   // Built from the same value the handler acts on, so a caller who changes an interval can never
   // leave the label disagreeing with the behaviour.
-  const skipBackLabel = `Skip back ${skipBackSeconds} seconds`;
-  const skipForwardLabel = `Skip forward ${skipForwardSeconds} seconds`;
+  // `auto` shows the interval as soon as either side stops being the standard interval. At the
+  // default the plain triangle already says everything a number would; past it, the glyph is the
+  // only place a sighted reader can learn how far a press jumps.
+  //
+  // A non-finite interval falls back to the plain glyph rather than drawing itself: `NaN` and
+  // `Infinity` are strings as far as SVG text is concerned, and both rendered literally inside the
+  // ring. The seek clamps them harmlessly; the glyph would not.
+  const intervalsDrawable = Number.isFinite(skipBackSeconds) && Number.isFinite(skipForwardSeconds);
+  let showsInterval = skipGlyph === 'numbered';
+  if (skipGlyph === 'auto') {
+    showsInterval =
+      skipBackSeconds !== DEFAULT_SKIP_SECONDS || skipForwardSeconds !== DEFAULT_SKIP_SECONDS;
+  }
+  if (!intervalsDrawable) showsInterval = false;
+
+  let skipBackGlyph = <SkipBackGlyph />;
+  let skipForwardGlyph = <SkipForwardGlyph />;
+  if (showsInterval) {
+    skipBackGlyph = <NumberedSkipGlyph seconds={skipBackSeconds} direction="back" />;
+    skipForwardGlyph = <NumberedSkipGlyph seconds={skipForwardSeconds} direction="forward" />;
+  }
+
+  // Same `formatInterval` the glyph draws, so the spoken name and the drawn number cannot disagree.
+  const skipBackLabel = `Skip back ${formatInterval(skipBackSeconds)} seconds`;
+  const skipForwardLabel = `Skip forward ${formatInterval(skipForwardSeconds)} seconds`;
 
   let playButtonClass = TRANSPORT_BUTTON_CLASS;
   if (loading) playButtonClass = PLAY_BUTTON_LOADING_CLASS;
@@ -787,7 +933,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
           disabled={!loaded}
           onClick={handleSkipBack}
         >
-          <SkipBackGlyph />
+          {skipBackGlyph}
         </Button>
         <Button
           type="button"
@@ -812,7 +958,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
           disabled={!loaded}
           onClick={handleSkipForward}
         >
-          <SkipForwardGlyph />
+          {skipForwardGlyph}
         </Button>
       </div>
     </div>

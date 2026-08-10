@@ -4,6 +4,20 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 1.6.0 - 2026-08-10
+
+### Added
+
+- **`Audio` gains `skipGlyph`** (`auto` | `numbered` | `plain`, default `auto`). The skip buttons
+  now show how far they jump: `auto` keeps the plain double triangle while both intervals are the
+  standard 10 seconds and switches to a numbered circular arrow the moment either is customised, so
+  a player set to back-15 / forward-30 no longer looks identical to the default. `numbered` and
+  `plain` force it either way, and the accessible name carries the interval in all three.
+
+  The number and the accessible name are formatted by the same function, so a fractional interval
+  reads the same in both and matches the seek: `skipForwardSeconds={7.5}` draws `7.5`, announces
+  "7.5 seconds", and jumps 7.5. A non-finite interval falls back to the plain glyph.
+
 ## 1.5.0 - 2026-08-09
 
 ### Added

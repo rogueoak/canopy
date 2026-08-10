@@ -34,6 +34,7 @@ const meta = {
     skipBackSeconds: { control: { type: 'number', min: 1 } },
     skipForwardSeconds: { control: { type: 'number', min: 1 } },
     startAtSeconds: { control: { type: 'number', min: 0 } },
+    skipGlyph: { control: 'inline-radio', options: ['auto', 'numbered', 'plain'] },
   },
   args: {
     // A CORS-enabled clip: howler's default Web Audio path fetches the media by XHR, so the host
@@ -69,6 +70,46 @@ export const PodcastSkips: Story = {
   render: (args) => (
     <div className="w-[420px] max-w-full">
       <Audio {...args} />
+    </div>
+  ),
+};
+
+/**
+ * `skipGlyph` decides whether the buttons say how far they jump. `auto` (the default) draws the
+ * plain double triangle while both intervals are the standard 10 seconds and switches to the
+ * numbered circular arrow the moment either is customised: at the default a number is noise, and
+ * past it the glyph is the only place a sighted reader can learn the interval. `numbered` and
+ * `plain` force it either way. The accessible name carries the interval in all three.
+ */
+export const SkipGlyphModes: Story = {
+  render: (args) => (
+    // Each row pins its own skipGlyph so the toolbar control cannot mutate three of the four and
+    // destroy the comparison this story exists to make.
+    <div className="flex w-[420px] max-w-full flex-col gap-8">
+      <figure className="m-0">
+        <figcaption className="mb-2 text-caption text-text-muted">
+          auto at the default 10/10: the plain transport glyph
+        </figcaption>
+        <Audio {...args} skipGlyph="auto" skipBackSeconds={10} skipForwardSeconds={10} />
+      </figure>
+      <figure className="m-0">
+        <figcaption className="mb-2 text-caption text-text-muted">
+          auto at 15/30: numbered, because either side differing is the case a reader needs
+        </figcaption>
+        <Audio {...args} skipGlyph="auto" skipBackSeconds={15} skipForwardSeconds={30} />
+      </figure>
+      <figure className="m-0">
+        <figcaption className="mb-2 text-caption text-text-muted">
+          numbered, forced at the default
+        </figcaption>
+        <Audio {...args} skipGlyph="numbered" skipBackSeconds={10} skipForwardSeconds={10} />
+      </figure>
+      <figure className="m-0">
+        <figcaption className="mb-2 text-caption text-text-muted">
+          120: the digits step down and are held inside the ring
+        </figcaption>
+        <Audio {...args} skipGlyph="auto" skipBackSeconds={120} skipForwardSeconds={120} />
+      </figure>
     </div>
   ),
 };

@@ -836,6 +836,136 @@ describe('error state', () => {
   });
 });
 
+/* -------------------------------------------------------------------------- the skip glyphs */
+
+describe('the skip glyphs', () => {
+  /** The numbered glyph is the only one that draws text, so its digits identify it. */
+  const glyphText = (name: RegExp | string) =>
+    screen.getByRole('button', { name }).querySelector('svg text')?.textContent ?? null;
+
+  /**
+   * `glyphText` returning null means "no digits", which is also what a button rendering NOTHING
+   * would give - so the plain assertions pair it with proof that a glyph is actually drawn.
+   */
+  const hasPlainGlyph = (name: RegExp | string) => {
+    const svg = screen.getByRole('button', { name }).querySelector('svg');
+    return (
+      Boolean(svg) && svg!.querySelector('text') === null && svg!.querySelector('path') !== null
+    );
+  };
+
+  it('draws the plain transport glyph at the default interval', async () => {
+    // Nothing to say at 10/10 that the double triangle does not already imply, so no number.
+    await renderLoaded();
+
+    expect(hasPlainGlyph(/Skip back/)).toBe(true);
+    expect(hasPlainGlyph(/Skip forward/)).toBe(true);
+  });
+
+  it('shows the interval as soon as either side stops being the default', async () => {
+    // The regression this exists for: back-15 / forward-30 used to be pixel-identical to 10/10,
+    // with the interval reaching only assistive tech.
+    await renderLoaded({ skipBackSeconds: 15, skipForwardSeconds: 30 });
+
+    expect(glyphText(/Skip back/)).toBe('15');
+    expect(glyphText(/Skip forward/)).toBe('30');
+  });
+
+  it('shows the interval when only ONE side is customised', async () => {
+    // A player at 10 back / 30 forward is asymmetric, so the reader needs both numbers, including
+    // the one that happens to be the default.
+    await renderLoaded({ skipForwardSeconds: 30 });
+
+    expect(glyphText(/Skip back/)).toBe('10');
+    expect(glyphText(/Skip forward/)).toBe('30');
+  });
+
+  it('shows the interval for symmetric non-default intervals too', async () => {
+    // 30/30 is symmetric but not standard: the glyph is still the only place to learn it.
+    await renderLoaded({ skipBackSeconds: 30, skipForwardSeconds: 30 });
+
+    expect(glyphText(/Skip back/)).toBe('30');
+  });
+
+  it('always shows the interval when asked, even at the default', async () => {
+    await renderLoaded({ skipGlyph: 'numbered' });
+
+    expect(glyphText(/Skip back/)).toBe('10');
+  });
+
+  it('never shows it when asked not to, even when customised', async () => {
+    await renderLoaded({ skipGlyph: 'plain', skipBackSeconds: 45, skipForwardSeconds: 45 });
+
+    expect(hasPlainGlyph(/Skip back/)).toBe(true);
+    // The interval still reaches assistive tech, which is the half that must not depend on styling.
+    expect(screen.getByRole('button', { name: 'Skip back 45 seconds' })).toBeInTheDocument();
+  });
+
+  it('keeps a three-digit interval inside the glyph', async () => {
+    // A long interval must shrink rather than overflow the circle it sits in. Asserted as an exact
+    // size: `toBeLessThan(10)` passed even with the whole step-down deleted, because the two-digit
+    // size is already 8.
+    await renderLoaded({ skipForwardSeconds: 120 });
+    const text = screen.getByRole('button', { name: /Skip forward/ }).querySelector('svg text');
+
+    expect(text?.textContent).toBe('120');
+    expect(Number(text?.getAttribute('font-size'))).toBe(6.5);
+    // The real guarantee: whatever the font resolves to, the digits are held to a width that fits
+    // inside the ring. Without this the size alone is a tuning against one font's metrics.
+    expect(text?.getAttribute('textLength')).toBe('11');
+  });
+
+  it('draws the same interval it announces and acts on', async () => {
+    // The glyph used to round while the name and the seek used the raw value, so 10.4 showed the
+    // NUMBERED glyph (because it is not 10) with `10` inside it, on a button saying "10.4 seconds"
+    // and jumping 10.4.
+    const { howl } = await renderLoaded({ skipForwardSeconds: 7.5 }, 180);
+    howl.position = 0;
+
+    expect(glyphText(/Skip forward/)).toBe('7.5');
+    expect(screen.getByRole('button', { name: 'Skip forward 7.5 seconds' })).toBeInTheDocument();
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /Skip forward/ }));
+    expect(howl.seek).toHaveBeenCalledWith(7.5);
+  });
+
+  it('falls back to the plain glyph rather than drawing a non-finite interval', async () => {
+    // NaN and Infinity are strings as far as SVG text is concerned, and both rendered literally
+    // inside the ring.
+    await renderLoaded({ skipForwardSeconds: Number.NaN });
+
+    expect(hasPlainGlyph(/Skip forward/)).toBe(true);
+  });
+
+  it('mirrors the back glyph rather than drawing a second one', async () => {
+    // The stated invariant is "one drawing, mirrored, so the pair cannot drift apart". Deleting the
+    // flip transform left every other test in this block green.
+    await renderLoaded({ skipBackSeconds: 15, skipForwardSeconds: 30 });
+    const svgOf = (name: RegExp) =>
+      screen.getByRole('button', { name }).querySelector('svg')!.innerHTML;
+
+    expect(svgOf(/Skip back/)).toContain('scale(-1 1)');
+    expect(svgOf(/Skip forward/)).not.toContain('scale(-1 1)');
+    // Same arc geometry on both, so the mirror is the ONLY difference in the drawing.
+    const arc = /d="(M12 4\.5[^"]*)"/;
+    expect(arc.exec(svgOf(/Skip back/))?.[1]).toBe(arc.exec(svgOf(/Skip forward/))?.[1]);
+  });
+
+  it('leaves the accessible name identical in every mode', async () => {
+    // The glyph is a sighted-reader affordance; it must not be load-bearing for anyone else.
+    for (const mode of ['auto', 'numbered', 'plain'] as const) {
+      const { unmount } = render(
+        <Audio src="clip.mp3" skipGlyph={mode} skipBackSeconds={15} skipForwardSeconds={30} />,
+      );
+      await loadMedia(180);
+      // Both buttons, since each builds its own name from its own interval.
+      expect(screen.getByRole('button', { name: 'Skip back 15 seconds' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Skip forward 30 seconds' })).toBeInTheDocument();
+      unmount();
+    }
+  });
+});
+
 /* ---------------------------------------------------------------------------- the scrub bar */
 
 describe('the scrub bar', () => {
