@@ -188,6 +188,19 @@ export interface AudioProps
   /** How far the forward button seeks, in seconds. Default `10`. */
   skipForwardSeconds?: number;
   /**
+   * How the skip buttons draw themselves.
+   *
+   * - `auto` (default) - the plain double triangle while both intervals are the standard 10
+   *   seconds, and the numbered circular arrow as soon as either is changed. The reasoning: at the
+   *   default there is nothing to tell the reader that the glyph does not already imply, and a
+   *   number would be noise; the moment a caller picks their own interval, the glyph is the only
+   *   place a sighted reader can learn it.
+   * - `numbered` - always show the interval, even at 10.
+   * - `plain` - never show it. The interval still reaches assistive tech through the button's
+   *   accessible name, which is built from the same value either way.
+   */
+  skipGlyph?: 'auto' | 'numbered' | 'plain';
+  /**
    * Accessible name for the play button while the media is loading, and the text a screen reader
    * announces for the busy state. Default `'Loading audio'`. A defaulted prop rather than a baked
    * string so a consumer can match their own wording or ship another language (learning 34).
@@ -367,6 +380,73 @@ function SkipForwardGlyph() {
   );
 }
 
+/**
+ * The numbered skip glyph: a circular arrow wrapping the interval, the convention every podcast app
+ * uses. It exists because the double triangle cannot say HOW FAR it jumps, so a player configured
+ * back-15 / forward-30 was pixel-identical to the 10/10 default and the interval lived only in the
+ * accessible name.
+ *
+ * Larger than the plain glyph (`h-5` against `h-4`) because it has to carry legible digits rather
+ * than two shapes: the arc is stroked, the arrowhead and digits are filled.
+ *
+ * The geometry is worth stating, because the obvious version does not work. The arc is a 300-degree
+ * sweep of an r=8 circle centred in the box, leaving a gap at the top for the arrowhead to sit ON
+ * the arc's own start rather than floating beside it. The digits then have to live inside r=8 minus
+ * the stroke, which is why the size steps down with the digit count rather than being fixed: at a
+ * fixed size, `15` already touched the arc and `120` broke out of it entirely.
+ */
+function NumberedSkipGlyph({
+  seconds,
+  direction,
+}: {
+  seconds: number;
+  direction: 'back' | 'forward';
+}) {
+  const label = String(Math.round(seconds));
+  // Sized to the widest string that must fit inside the ring, not to a guess.
+  let fontSize = 9;
+  if (label.length === 3) fontSize = 7;
+  if (label.length > 3) fontSize = 5.5;
+
+  // One drawing, mirrored for the back direction, so the pair are exact reflections rather than two
+  // shapes that have to be kept in agreement by hand.
+  const flip = direction === 'back' ? 'scale(-1 1) translate(-24 0)' : undefined;
+
+  return (
+    // h-6 rather than the plain glyph's h-4: the digits render at roughly 9px inside a 24px box,
+    // which is the smallest that stays comfortably legible. The button is 40px, so it still sits
+    // with room around it.
+    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <g transform={flip}>
+        {/* 300 degrees of r=8, from the top clockwise, leaving the last 60 for the head. */}
+        <path
+          d="M12 4 A 8 8 0 1 1 5.07 8"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+        {/* The head sits on the arc's start, pointing the way the arc travels. */}
+        <path d="M11.8 1.5 L15.2 4 L11.8 6.5 Z" fill="currentColor" />
+      </g>
+      <text
+        x="12"
+        // Baseline, not centre: roughly the centre plus a third of the size puts the digits'
+        // optical middle on the circle's.
+        y={12 + fontSize * 0.35}
+        textAnchor="middle"
+        fill="currentColor"
+        fontSize={fontSize}
+        fontWeight="700"
+        // The brand font would drag a webfont dependency into an icon; the system stack sets digits
+        // identically enough at this size and always resolves.
+        fontFamily="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+      >
+        {label}
+      </text>
+    </svg>
+  );
+}
+
 /* ---------------------------------------------------------------------------------- component */
 
 const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props, ref) {
@@ -379,6 +459,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
     preload,
     stream,
     startAtSeconds,
+    skipGlyph = 'auto',
     skipBackSeconds = 10,
     skipForwardSeconds = 10,
     loadingLabel = 'Loading audio',
@@ -701,6 +782,22 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
   if (loading) playLabel = loadingLabel;
   // Built from the same value the handler acts on, so a caller who changes an interval can never
   // leave the label disagreeing with the behaviour.
+  // `auto` shows the interval as soon as either side stops being the standard 10 seconds. At the
+  // default the plain triangle already says everything a number would; past it, the glyph is the
+  // only place a sighted reader can learn how far a press jumps.
+  const DEFAULT_SKIP = 10;
+  let showsInterval = skipGlyph === 'numbered';
+  if (skipGlyph === 'auto') {
+    showsInterval = skipBackSeconds !== DEFAULT_SKIP || skipForwardSeconds !== DEFAULT_SKIP;
+  }
+
+  let skipBackGlyph = <SkipBackGlyph />;
+  let skipForwardGlyph = <SkipForwardGlyph />;
+  if (showsInterval) {
+    skipBackGlyph = <NumberedSkipGlyph seconds={skipBackSeconds} direction="back" />;
+    skipForwardGlyph = <NumberedSkipGlyph seconds={skipForwardSeconds} direction="forward" />;
+  }
+
   const skipBackLabel = `Skip back ${skipBackSeconds} seconds`;
   const skipForwardLabel = `Skip forward ${skipForwardSeconds} seconds`;
 
@@ -771,7 +868,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
           disabled={!loaded}
           onClick={handleSkipBack}
         >
-          <SkipBackGlyph />
+          {skipBackGlyph}
         </Button>
         <Button
           type="button"
@@ -796,7 +893,7 @@ const Audio = React.forwardRef<HTMLDivElement, AudioProps>(function Audio(props,
           disabled={!loaded}
           onClick={handleSkipForward}
         >
-          <SkipForwardGlyph />
+          {skipForwardGlyph}
         </Button>
       </div>
     </div>
