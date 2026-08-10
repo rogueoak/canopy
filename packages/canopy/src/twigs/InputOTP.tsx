@@ -35,7 +35,7 @@ export type InputOTPProps = React.ComponentPropsWithoutRef<typeof OTPInput> & {
  * - and a caller passes an alphanumeric regex source to widen it. Value is controlled (`value` /
  * `onChange`) or uncontrolled, and `onComplete` fires when every slot is filled. When `disabled`,
  * the container flags `group` + the not-allowed cursor so each slot can dim to the shared field
- * disabled tokens (`bg-disabled` / `text-disabled-foreground`) via `group-has-[:disabled]:`,
+ * the single disabled treatment (a dim) via `group-has-[:disabled]:`,
  * matching a disabled `Input` rather than the toggle-control opacity wash.
  */
 export const InputOTP = React.forwardRef<React.ComponentRef<typeof OTPInput>, InputOTPProps>(
@@ -80,7 +80,7 @@ export interface InputOTPSlotProps extends React.ComponentPropsWithoutRef<'div'>
  * so reduced-motion users get a steady bar - no new keyframe). The glyph is sized `text-base
  * md:text-sm` to track the field type ramp `Input` / `Textarea` / `Select` use, and when the
  * root input is disabled the box dims to the shared field disabled tokens
- * (`bg-disabled` / `text-disabled-foreground`) via `group-has-[:disabled]:`, for Input parity.
+ * (a dim) via `group-has-[:disabled]:`, for Input parity.
  *
  * OWN LOGIC / boundary guard: the package's `slots` array is exactly `maxLength` long, so an
  * `index` outside `[0, maxLength)` has no entry - reading `slots[index]` there is `undefined` and
@@ -107,7 +107,7 @@ export const InputOTPSlot = React.forwardRef<HTMLDivElement, InputOTPSlotProps>(
         className={cn(
           'relative flex h-10 w-10 items-center justify-center border-y border-r border-border bg-control text-base md:text-sm text-text',
           'first:rounded-l-md first:border-l last:rounded-r-md',
-          'group- group-',
+          'group-has-[:disabled]:opacity-50',
           'aria-invalid:border-danger',
           'data-[active=true]:z-10 data-[active=true]:ring-2 data-[active=true]:ring-ring data-[active=true]:ring-offset-2 data-[active=true]:ring-offset-ring-offset',
           'data-[active=true]:aria-invalid:ring-danger',

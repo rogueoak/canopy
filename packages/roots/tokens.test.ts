@@ -448,7 +448,19 @@ describe('Roots control tokens - a control is never the colour of its surface', 
       // Light is the degenerate case on purpose: both are white, and the control reads by its
       // border instead. Only assert the separation where the fill is what carries it.
       if (hex(scope, 'surface') === primitives['base-white']) return;
-      expect(hex(scope, 'control')).not.toBe(hex(scope, 'bg'));
+      // Compared to `surface`, NOT to `bg`. The first version compared against the page and passed
+      // while every control on a `bg-surface` panel (SideNav, TopNav, Menubar) was 1.00:1 against
+      // it - a guard that measured the wrong pair and so proved nothing.
+      expect(hex(scope, 'control')).not.toBe(hex(scope, 'surface'));
+    });
+
+    it(`${label}: a raised control is distinct from its border and its hover fill`, () => {
+      // A fill equal to the border erases the control's edge; a fill equal to the hover fill erases
+      // the hover. The spec's whole point is that a control must be separable from what surrounds
+      // it, and "what surrounds it" includes its own border.
+      if (hex(scope, 'surface-raised') === primitives['base-white']) return;
+      expect(hex(scope, 'control-raised')).not.toBe(hex(scope, 'border'));
+      expect(hex(scope, 'control-raised')).not.toBe(hex(scope, 'muted-raised'));
     });
 
     it(`${label}: a control on a RAISED surface is separated from it`, () => {
