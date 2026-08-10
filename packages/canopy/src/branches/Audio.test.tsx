@@ -836,6 +836,80 @@ describe('error state', () => {
   });
 });
 
+/* -------------------------------------------------------------------------- the skip glyphs */
+
+describe('the skip glyphs', () => {
+  /** The numbered glyph is the only one that draws text, so its digits identify it. */
+  const glyphText = (name: RegExp | string) =>
+    screen.getByRole('button', { name }).querySelector('svg text')?.textContent ?? null;
+
+  it('draws the plain transport glyph at the default interval', async () => {
+    // Nothing to say at 10/10 that the double triangle does not already imply, so no number.
+    await renderLoaded();
+
+    expect(glyphText(/Skip back/)).toBeNull();
+    expect(glyphText(/Skip forward/)).toBeNull();
+  });
+
+  it('shows the interval as soon as either side stops being the default', async () => {
+    // The regression this exists for: back-15 / forward-30 used to be pixel-identical to 10/10,
+    // with the interval reaching only assistive tech.
+    await renderLoaded({ skipBackSeconds: 15, skipForwardSeconds: 30 });
+
+    expect(glyphText(/Skip back/)).toBe('15');
+    expect(glyphText(/Skip forward/)).toBe('30');
+  });
+
+  it('shows the interval when only ONE side is customised', async () => {
+    // A player at 10 back / 30 forward is asymmetric, so the reader needs both numbers, including
+    // the one that happens to be the default.
+    await renderLoaded({ skipForwardSeconds: 30 });
+
+    expect(glyphText(/Skip back/)).toBe('10');
+    expect(glyphText(/Skip forward/)).toBe('30');
+  });
+
+  it('shows the interval for symmetric non-default intervals too', async () => {
+    // 30/30 is symmetric but not standard: the glyph is still the only place to learn it.
+    await renderLoaded({ skipBackSeconds: 30, skipForwardSeconds: 30 });
+
+    expect(glyphText(/Skip back/)).toBe('30');
+  });
+
+  it('always shows the interval when asked, even at the default', async () => {
+    await renderLoaded({ skipGlyph: 'numbered' });
+
+    expect(glyphText(/Skip back/)).toBe('10');
+  });
+
+  it('never shows it when asked not to, even when customised', async () => {
+    await renderLoaded({ skipGlyph: 'plain', skipBackSeconds: 45, skipForwardSeconds: 45 });
+
+    expect(glyphText(/Skip back/)).toBeNull();
+    // The interval still reaches assistive tech, which is the half that must not depend on styling.
+    expect(screen.getByRole('button', { name: 'Skip back 45 seconds' })).toBeInTheDocument();
+  });
+
+  it('keeps a three-digit interval inside the glyph', async () => {
+    // A long interval must shrink rather than overflow the circle it sits in.
+    await renderLoaded({ skipForwardSeconds: 120 });
+    const text = screen.getByRole('button', { name: /Skip forward/ }).querySelector('svg text');
+
+    expect(text?.textContent).toBe('120');
+    expect(Number(text?.getAttribute('font-size'))).toBeLessThan(10);
+  });
+
+  it('leaves the accessible name identical in every mode', async () => {
+    // The glyph is a sighted-reader affordance; it must not be load-bearing for anyone else.
+    for (const mode of ['auto', 'numbered', 'plain'] as const) {
+      const { unmount } = render(<Audio src="clip.mp3" skipGlyph={mode} skipBackSeconds={15} />);
+      await loadMedia(180);
+      expect(screen.getByRole('button', { name: 'Skip back 15 seconds' })).toBeInTheDocument();
+      unmount();
+    }
+  });
+});
+
 /* ---------------------------------------------------------------------------- the scrub bar */
 
 describe('the scrub bar', () => {
