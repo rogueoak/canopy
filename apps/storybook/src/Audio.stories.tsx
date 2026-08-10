@@ -83,11 +83,33 @@ export const PodcastSkips: Story = {
  */
 export const SkipGlyphModes: Story = {
   render: (args) => (
+    // Each row pins its own skipGlyph so the toolbar control cannot mutate three of the four and
+    // destroy the comparison this story exists to make.
     <div className="flex w-[420px] max-w-full flex-col gap-8">
-      <Audio {...args} skipBackSeconds={10} skipForwardSeconds={10} />
-      <Audio {...args} skipBackSeconds={15} skipForwardSeconds={30} />
-      <Audio {...args} skipBackSeconds={10} skipForwardSeconds={10} skipGlyph="numbered" />
-      <Audio {...args} skipBackSeconds={120} skipForwardSeconds={120} />
+      <figure className="m-0">
+        <figcaption className="mb-2 text-caption text-text-muted">
+          auto at the default 10/10: the plain transport glyph
+        </figcaption>
+        <Audio {...args} skipGlyph="auto" skipBackSeconds={10} skipForwardSeconds={10} />
+      </figure>
+      <figure className="m-0">
+        <figcaption className="mb-2 text-caption text-text-muted">
+          auto at 15/30: numbered, because either side differing is the case a reader needs
+        </figcaption>
+        <Audio {...args} skipGlyph="auto" skipBackSeconds={15} skipForwardSeconds={30} />
+      </figure>
+      <figure className="m-0">
+        <figcaption className="mb-2 text-caption text-text-muted">
+          numbered, forced at the default
+        </figcaption>
+        <Audio {...args} skipGlyph="numbered" skipBackSeconds={10} skipForwardSeconds={10} />
+      </figure>
+      <figure className="m-0">
+        <figcaption className="mb-2 text-caption text-text-muted">
+          120: the digits step down and are held inside the ring
+        </figcaption>
+        <Audio {...args} skipGlyph="auto" skipBackSeconds={120} skipForwardSeconds={120} />
+      </figure>
     </div>
   ),
 };
