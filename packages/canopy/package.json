@@ -39,6 +39,10 @@
       "types": "./dist/branches/index.d.ts",
       "import": "./dist/branches/index.js"
     },
+    "./partial-date": {
+      "types": "./dist/partial-date.d.ts",
+      "import": "./dist/partial-date.js"
+    },
     "./video.css": "./video.css"
   },
   "scripts": {

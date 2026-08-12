@@ -327,6 +327,30 @@ export type {
 
 export { DatePicker, DatePickerTrigger, DatePickerContent } from './DatePicker';
 export type { DatePickerProps, DatePickerSingleProps, DatePickerRangeProps } from './DatePicker';
+
+export { PartialDatePicker } from './PartialDatePicker';
+export type {
+  PartialDatePickerProps,
+  PartialDatePickerView,
+  PartialDatePrecisionLabels,
+} from './PartialDatePicker';
+// The partial-date format (spec 0073), re-exported here so UI code importing the component can
+// reach its helpers in one import. The format also ships on its own `@rogueoak/canopy/partial-date`
+// subpath, which is what a consumer's SERVER should import: this barrel pulls in the whole Branch
+// layer (and React) to reach what is really a regex and some integer arithmetic.
+export {
+  parsePartialDate,
+  normalizePartialDate,
+  formatPartialDate,
+  formatPartialDateParts,
+  isPartialDateWithin,
+} from '../lib/partialDate';
+export type {
+  PartialDateParts,
+  PartialDatePrecision,
+  PartialDateBounds,
+  FormatPartialDateOptions,
+} from '../lib/partialDate';
 export {
   DataTable,
   DataTablePager,

@@ -1002,6 +1002,19 @@ input-otp). Where a component needed keyframed motion, the keyframes ship from t
   to Dialog).
 - **NavigationMenu** (0069) - a mega-menu with a dropdown per item, roving focus, and indicator
   tracking, on `@radix-ui/react-navigation-menu`.
+- **PartialDatePicker** (0073) - a date field for a date somebody **remembers** rather than
+  schedules. Its value is an ISO 8601 reduced-precision string - exactly `YYYY`, `YYYY-MM` or
+  `YYYY-MM-DD` - so `1968` stays `1968` instead of quietly becoming 1 January 1968, which in an
+  archive is a false fact about a real person rather than a harmless default. Precision is
+  expressed by **where you stop**: the popover opens on years, and each pick commits that
+  precision and offers the next one down, so a year-only answer is a year you chose and stopped
+  at, with no checkbox and no second field to drift. Typing stays first-class (lenient in,
+  canonical out; a two-digit year is refused rather than guessed). `min` / `max` are partial dates
+  too and compare as interval overlaps, so a maximum of today still admits `2026`. The **day level
+  is `Calendar` (0060)**, composed through its existing props - `DatePicker` (0065) and `Calendar`
+  are unchanged, and a consumer who wants a `Date` keeps using `DatePicker` exactly as before.
+  Ships its parser too: `parsePartialDate`, `normalizePartialDate`, `formatPartialDate` and
+  `isPartialDateWithin`, so a consumer's server and its UI share one definition of the format.
 
 ### API-preserving refactors (0066 / 0067 / 0069)
 

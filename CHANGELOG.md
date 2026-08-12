@@ -4,6 +4,47 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 1.7.0 - 2026-08-11
+
+### Added
+
+- **PartialDatePicker** - a new Branch: a date field for a date somebody **remembers** rather than
+  schedules. Its value is an ISO 8601 reduced-precision string - exactly `YYYY`, `YYYY-MM` or
+  `YYYY-MM-DD` - so `1968` stays `1968`. It never becomes 1 January 1968, which in a family archive
+  is not a harmless default but a false fact about a real person. `DatePicker` is untouched and
+  still right whenever you mean a day: its value is a `Date`, and a `Date` is always a specific one.
+
+  **Precision is where you stop.** The popover opens on a grid of years. Tap 1968 and the value is
+  `1968` - done. Carry on and it offers that year's months (`1968-05`), then that month's days
+  (`1968-05-14`), closing once there is nothing left to refine. Every tap is already a complete
+  answer, so there is no precision checkbox, no second field to keep in step, and no way to end up
+  with a day nobody chose. Zoom back out with the period button and re-pick the year to truncate.
+
+  **Typing keeps working**, because somebody who knows the date types it faster than they can click
+  it. `1968-5-4` and `1968/05/14` normalize to `1968-05-04`; a two-digit year is refused rather than
+  guessed, since inventing a century is the same mistake as inventing a day. Nothing is flagged
+  while you type - `1968-` is a legitimate halfway house - and the message arrives on blur.
+
+  `min` and `max` are partial dates too, and they compare as **interval overlaps**: a maximum of
+  today still admits `2026`, because the year has partly happened and saying "2026" claims nothing
+  about a future day, while `2027` and `2026-09` are refused. Out-of-range years and months render
+  unavailable rather than being rejected after the fact.
+
+  The day level **is** `Calendar`, composed through its existing props rather than rebuilt, so its
+  grid, keyboard model, month navigation and theming come along unchanged. Keyboard throughout
+  (arrows, Home/End, PageUp/PageDown, Enter/Space, Escape, and ArrowDown from the field to open it),
+  one live region announcing the selection with its precision, 44px targets on phones, and no iOS
+  auto-zoom. Empty is a legitimate state, with `Clear` to get back to it.
+
+  The parser ships with it - `parsePartialDate`, `normalizePartialDate`, `formatPartialDate`,
+  `formatPartialDateParts` and `isPartialDateWithin` - so your server and your UI can share one
+  definition of the format instead of two that disagree at the edges. No partial date is ever
+  parsed through `Date`, because `new Date('1974-06')` is May west of Greenwich. (spec 0073)
+
+- **`@rogueoak/canopy/partial-date`** - a new package export carrying that format on its own, with
+  no React and no dependencies, so a server can import it without pulling in the component layer.
+  The same four helpers are re-exported from `@rogueoak/canopy/branches` for UI code.
+
 ## 1.6.0 - 2026-08-10
 
 ### Added

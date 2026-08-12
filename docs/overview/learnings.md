@@ -932,3 +932,147 @@ type that disappears fails the extraction rather than passing vacuously.
 The test for whether you wrote the wrong one: name a future, reasonable change to the code and ask
 whether the guard would catch it. If the answer is in the same spec's deferred-work list, it will
 not.
+
+## Latch controlledness on the PROP, not on the value it happens to hold
+
+The common `useRef(value !== undefined)` latch reads a controlled parent that mounts with
+`value={undefined}` as **uncontrolled**, and then quietly fights it forever: the component keeps
+its own copy, the parent's later updates lose, and nothing errors. That is tolerable for a field
+whose empty state is unusual, and wrong for one whose empty state is the ordinary starting point -
+`PartialDatePicker` (0073) exists for dates like a birthday nobody has been told, so `undefined` at
+mount is the normal case, not an edge one. `useRef('value' in props)` asks the question actually
+being asked: did the caller take control, not are they currently holding something.
+
+Surfaced by mutation testing rather than by a test: replacing the latch with a per-render
+`valueProp !== undefined` left every test green, which is what prompted looking at the latch at all.
+
+**Apply it:** latch on the presence of the prop (`'value' in props`), and cover it with a test that
+renders **controlled with `value={undefined}`** and asserts the field does not move when the parent
+ignores the change. A controlled-mode test that always starts with a value cannot see this.
+
+## Composing a third-party widget means inheriting its ARIA, not just its markup
+
+`PartialDatePicker` (0073) puts `Calendar` (0060) inside a popover that already has a live region
+for announcing the selection. `react-day-picker`'s month caption is **itself** a
+`role="status" aria-live="polite"` element, so the composition silently shipped two live regions
+talking over each other - the failure mode of the "one live region" learning above, arrived at by
+composition rather than by writing a second region on purpose.
+
+The first fix was worse than it looked: hiding the caption with a `hidden` class. That leaves the
+node in the DOM, so whether it announces depends on a stylesheet the test environment does not load
+ - it looked fixed in jsdom and would have been fixed in the browser for the wrong reason. Removing
+the node through the library's `components` slot (`MonthCaption: () => null`) is the honest fix, and
+it is safe here only because react-day-picker sets the grid's `aria-label` on the table itself
+rather than through the caption - which had to be checked, not assumed.
+
+**Apply it:** when you mount a third-party widget inside your own, audit what it contributes to the
+accessibility tree - live regions, landmarks, labels, `aria-current` - not just how it looks. Prefer
+**removing** an unwanted node through the library's component slots over hiding it with a class,
+because a hidden node is still in the tree and its behaviour then depends on CSS. And guard it with
+a count assertion (`getAllByRole('status')` has length 1) at **every** state of the composition, not
+just the initial one.
+
+## A test that presses a key before focus has landed passes against anything
+
+A keyboard test in 0073 opened a popover, pressed PageUp, and asserted the calendar had not moved
+past its lower bound. It passed - and it passed just as happily with every bound removed, because
+the open helper returned as soon as the grid appeared and the keystroke went to `<body>`, where it
+did nothing. The assertion was "nothing happened", and nothing happening was guaranteed.
+
+Only the mutation run found it: the guards it was supposed to cover could all be deleted with the
+suite still green. The fix has two halves - the open helper now waits for focus to actually be
+inside the grid, and the test first proves the navigation is **live** (an unbounded picker moves
+from May to April on the same keystroke) before asserting the bounded one does not.
+
+**Apply it:** any test that drives the keyboard must **wait for focus to arrive** before pressing,
+and any test whose assertion is a negative ("did not move", "was not called") must first demonstrate
+the positive in a control case. Otherwise it is indistinguishable from a test of a key nobody
+received. This is the same shape as the timezone pin, which asserts `new Date('1974-06')` really is
+May in that zone before claiming the parser is not fooled by it.
+
+## Mutation testing tells you what to DELETE, not only what to test
+
+Running 112 mutations over 0073 killed 109. Of the three survivors, none wanted a new test: each was
+an **equivalent mutant** sitting on a redundant guard. Two of them - a bounds check in the day
+`onSelect` and one in `onMonthChange` - were shadowed by the `disabled` matcher already handed to
+`Calendar`, so no input could reach them; a third pair of guards had been masking each other so
+thoroughly that removing **both** was needed before any test noticed. They were deleted rather than
+tested, and the surviving mechanism is the one the suite actually pins.
+
+The same pass also found a guard that was wrong rather than merely redundant: `if (disabled) return`
+in the popover's `onOpenChange` blocked **closing** as well as opening, so a field that became
+disabled while its popover was open could not be dismissed. Narrowing it to `if (next && disabled)`
+turned an untestable line into a real, tested behaviour.
+
+**Apply it:** treat a surviving mutant as a question with three answers, not one - the test is
+missing, the code is unreachable and should go, or the guard is doing something you did not intend.
+Check the second before writing a test for the first: an unreachable branch that gains a test gains
+a test that proves nothing. And when two guards mask each other, mutate **both** before concluding
+either is covered.
+
+## Composing a Seed onto a raised surface also means inheriting its ARIA and its tap targets
+
+Learning 26 says the composing component must re-point every Seed token defined relative to the
+background. Dropping `Calendar` (0060) into `PartialDatePicker`'s popover (0073) showed the rule has
+two more halves that are easy to miss because neither is a colour.
+
+**The library's own ARIA comes with it.** `react-day-picker`'s month caption is a
+`role="status" aria-live="polite"` region, so composing it into a panel that already had one gave
+the component two live regions talking over each other. The first fix - a `hidden` class - was worse
+than it looked: the node stays in the accessibility tree, so whether it announced depended on a
+stylesheet the test environment never loads. It looked fixed in jsdom and would have been fixed in
+the browser for the wrong reason. Removing the node through the library's `components` slot is the
+honest fix, and it was only safe because react-day-picker sets the grid's `aria-label` on the table
+itself rather than through the caption - which had to be checked, not assumed.
+
+**Sizing is background-relative too.** The hand-rolled grids used `h-11 md:h-9` for a 44px phone
+target while the composed `Calendar` kept its flat `h-9`, so touch scale changed between levels of
+one panel. The claim "44px on phones" was true of the parts written by hand and false of the part
+composed in.
+
+**Apply it:** when mounting a third-party or cross-tier component inside your own surface, audit
+three things, not one - the tokens defined relative to the background (fills, ring offsets), what it
+contributes to the **accessibility tree** (live regions, landmarks, labels), and whether its
+**metrics** still match the claims the composing component makes. Prefer removing an unwanted node
+through the library's component slots over hiding it with a class: a hidden node is still in the
+tree, and its behaviour then depends on CSS your tests do not load.
+
+## A shared format must ship on an entry a server can actually import
+
+0073 exports its partial-date parser so a consumer's server and its UI agree on one definition of
+the format. Publishing it only from `@rogueoak/canopy/branches` defeated exactly that: the Branch
+barrel statically imports 24 packages - recharts, cmdk, vaul, embla, react-day-picker, TanStack
+Table, ten Radix packages - so a Node process importing `isPartialDateWithin` evaluated the whole
+organism layer, and needed React installed, to reach a regex and a tuple comparison. The promise
+only held inside a bundler that could tree-shake it back out, which a server is not.
+
+The fix is a dedicated `./partial-date` package entry (a tsup entry plus an `exports` key) that
+builds to a self-contained 4KB module with zero imports. Worth deciding **before** publishing: once
+a barrel is a published home for a name it has to stay one, so a second home added later leaves the
+format with two import paths.
+
+**Apply it:** when a package exports something whose value is that **both sides of a network
+boundary use it**, check what its import path actually drags in - `node -e "import(...)"` in a bare
+Node process, or just count the imports in the built entry. Cross-cutting, framework-free utilities
+get their own entry; a tier barrel is for that tier's components.
+
+## Assert the trap is live before asserting the code is not fooled
+
+Three separate tests in 0073 could not fail. A keyboard test pressed PageUp before focus had reached
+the grid, so the key went to `<body>` and "the calendar did not move past its bound" was guaranteed.
+A `today()` test compared local getters against local getters, which is a tautology on a UTC CI
+runner - a `toISOString()` implementation, the exact trap its own doc comment names, passed byte for
+byte. And the component's `Calendar` bridge was never exercised in a non-UTC zone, so swapping it to
+`Date.UTC` + `getUTC*` kept the whole suite green in CI while breaking in every real user's browser.
+
+All three share a shape: **the assertion is a negative, and nothing established that the positive
+was reachable.** The fix is the same in each case - demonstrate the mechanism first. An unbounded
+picker moves May to April on that keystroke; `new Date('1974-06').getMonth()` really is 4 in
+Los Angeles; `new Date(1974, 5, 3).toISOString()` really does say 2 June in Tokyo. Then assert the
+code under test is not fooled.
+
+**Apply it:** any test whose assertion is "did not move", "was not called", or "still says X" needs
+a control that proves the thing it is guarding against can happen in that environment. For anything
+timezone-sensitive, pin `process.env.TZ` (Node re-reads it per operation) and run it **both**
+westward and eastward - only a western zone catches a UTC-parsed month, and only an eastern one
+catches a UTC-serialized day. A UTC CI runner makes the entire class invisible.

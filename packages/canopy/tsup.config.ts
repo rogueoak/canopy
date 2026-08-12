@@ -6,6 +6,11 @@ export default defineConfig({
     'seeds/index': 'src/seeds/index.ts',
     'twigs/index': 'src/twigs/index.ts',
     'branches/index': 'src/branches/index.ts',
+    // The partial-date format (spec 0073) as its own entry. It is React-free and dependency-free,
+    // and its whole point is that a consumer's SERVER shares it with the UI - importing it from
+    // `./branches` would drag the entire Branch layer (and React) into a Node process to reach a
+    // regex.
+    'partial-date': 'src/lib/partialDate.ts',
   },
   format: ['esm'],
   dts: true,
