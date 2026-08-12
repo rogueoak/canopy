@@ -23,12 +23,13 @@ Every component tier ships on its own subpath, so imports stay self-documenting 
 layer. The layer boundary is one-way: twigs import seeds, branches import twigs and seeds, never the
 reverse.
 
-| Subpath                     | What it is                               |
-| --------------------------- | ---------------------------------------- |
-| `@rogueoak/canopy`          | the package root re-export               |
-| `@rogueoak/canopy/seeds`    | **Seeds** (atoms) - 18 components        |
-| `@rogueoak/canopy/twigs`    | **Twigs** (molecules) - 14 components    |
-| `@rogueoak/canopy/branches` | **Branches** (organisms) - 29 components |
+| Subpath                         | What it is                                          |
+| ------------------------------- | --------------------------------------------------- |
+| `@rogueoak/canopy`              | the package root re-export                          |
+| `@rogueoak/canopy/seeds`        | **Seeds** (atoms) - 18 components                   |
+| `@rogueoak/canopy/twigs`        | **Twigs** (molecules) - 14 components               |
+| `@rogueoak/canopy/branches`     | **Branches** (organisms) - 30 components            |
+| `@rogueoak/canopy/partial-date` | the partial-date format - no React, no dependencies |
 
 ```tsx
 import { Button } from '@rogueoak/canopy/seeds';
@@ -127,6 +128,42 @@ composition + token styling.
 | `Toast`             | Transient notifications with auto-dismiss and a `useToast` hook.     |
 | `TopNav`            | Responsive top navigation bar (composes NavigationMenu).             |
 | `Video`             | video.js player, token-skinned controls (needs two stylesheets).     |
+
+### Two date pickers, and which is which
+
+`DatePicker` selects a **`Date`**, which is always a specific day. Reach for it whenever a day is
+what you mean: a due date, a booking, a filter.
+
+`PartialDatePicker` selects a **partial date** - the string `1968`, `1968-05` or `1968-05-14` -
+for a date somebody remembers rather than schedules. A year on its own is a complete answer, and
+it stays a year: it never becomes 1 January 1968, which in an archive is a false fact about a real
+person rather than a harmless default. Precision is expressed by where you stop, and typing works
+throughout.
+
+```tsx
+import { PartialDatePicker } from '@rogueoak/canopy/branches';
+
+<PartialDatePicker
+  value={birthday} // '1968' | '1968-05' | '1968-05-14' | undefined
+  onValueChange={setBirthday}
+  max="2026-08-11"
+/>;
+```
+
+The format itself ships separately so your server can share it, rather than reimplementing a
+parser that disagrees at the edges. That entry pulls in no React and no dependencies:
+
+```ts
+import { parsePartialDate, isPartialDateWithin } from '@rogueoak/canopy/partial-date';
+
+parsePartialDate('1968'); // { year: 1968, precision: 'year' } - no month, no day
+isPartialDateWithin('2026', { max: '2026-08-11' }); // true: the year has partly happened
+isPartialDateWithin('2027', { max: '2026-08-11' }); // false
+```
+
+Bounds are interval overlaps, not point comparisons, which is why a maximum of today still admits
+`2026`. Nothing here parses a date through `Date` - `new Date('1974-06')` is May west of
+Greenwich.
 
 ## Wiring the styles (Tailwind v4)
 

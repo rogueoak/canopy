@@ -36,10 +36,14 @@ publish in lockstep at the tag version.
   one live region announcing the selection with its precision, 44px targets on phones, and no iOS
   auto-zoom. Empty is a legitimate state, with `Clear` to get back to it.
 
-  The parser ships with it - `parsePartialDate`, `normalizePartialDate`, `formatPartialDate` and
-  `isPartialDateWithin` - so your server and your UI can share one definition of the format instead
-  of two that disagree at the edges. No partial date is ever parsed through `Date`, because
-  `new Date('1974-06')` is May west of Greenwich. (spec 0073)
+  The parser ships with it - `parsePartialDate`, `normalizePartialDate`, `formatPartialDate`,
+  `formatPartialDateParts` and `isPartialDateWithin` - so your server and your UI can share one
+  definition of the format instead of two that disagree at the edges. No partial date is ever
+  parsed through `Date`, because `new Date('1974-06')` is May west of Greenwich. (spec 0073)
+
+- **`@rogueoak/canopy/partial-date`** - a new package export carrying that format on its own, with
+  no React and no dependencies, so a server can import it without pulling in the component layer.
+  The same four helpers are re-exported from `@rogueoak/canopy/branches` for UI code.
 
 ## 1.6.0 - 2026-08-10
 

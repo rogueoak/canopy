@@ -69,16 +69,20 @@ dates, a photo's date, when you joined, a historical event, an approximate start
   years, months and days render unavailable rather than being refused after the fact. The day level
   passes them to `Calendar` as `startMonth` / `endMonth` / `disabled`.
 
-- **The parser ships with it.** `parsePartialDate`, `normalizePartialDate`, `formatPartialDate` and
-  `isPartialDateWithin` are exported, so a consumer's server and its UI agree on one definition
-  instead of a second parser that disagrees at the edges.
+- **The parser ships with it, on its own entry.** `parsePartialDate`, `normalizePartialDate`,
+  `formatPartialDate`, `formatPartialDateParts` and `isPartialDateWithin` ship from
+  `@rogueoak/canopy/partial-date` - React-free and dependency-free, because the whole point is that
+  a consumer's **server** shares them with the UI, and reaching them through `./branches` would
+  evaluate the entire organism layer to get at a regex. They are re-exported from `./branches` too,
+  for UI code that is importing the component anyway.
 
 ## Scope
 
 ### In
 
 - `packages/canopy/src/lib/partialDate.ts` (+ test) - the format: parse, normalize, format for
-  humans, range containment. Pure functions, no React, no `Date` in any parsing path.
+  humans, range containment. Pure functions, no React, no `Date` in any parsing path. Shipped as
+  its own `./partial-date` package export.
 - `packages/canopy/src/branches/PartialDatePicker.tsx` (+ test) - the component, exported from the
   Branch barrel with the four helpers and their types.
 - A year grid (a page of 20) and a month grid (12), hand-rolled because nothing in the system has
@@ -175,6 +179,17 @@ the disabled state of every year and month cell, the header's step buttons, the 
 point: the consumer's server refuses a future memory date with the same function the grid greys it
 out with, instead of a second implementation that disagrees about 2026.
 
+**Composing on a raised surface.** `Calendar` is tuned for the page canvas, so dropping it into a
+portalled panel means the composing component re-points every token defined *relative to the
+background*: `hover:bg-muted` is darker than `surface-raised` in dark and would make a hovered day
+recede while a hovered year lifts, and `ring-offset-ring-offset` draws the page-canvas halo inside a
+raised card. Both are corrected through `Calendar`'s public `classNames` (which replaces rather than
+merges), along with the 44px phone target the hand-rolled grids use, so touch scale does not change
+between levels. Composing also means inheriting the library's ARIA: `react-day-picker`'s month
+caption is itself a `role="status"` live region, so it is **removed** through the `components` slot
+rather than hidden with a class - a `display:none` node stays in the tree and whether it announces
+would then depend on a stylesheet.
+
 **Accessibility.** The day level is `Calendar`'s grid, unchanged. The year and month grids follow
 the same APG rules on a real `<table role="grid">`: roving tabindex, arrows within, Home/End for
 the row, PageUp/PageDown for the enclosing period, Enter/Space to select, Escape to close. Two
@@ -209,9 +224,11 @@ never drop focus. One always-mounted live region carries both the selection anno
 
 - [ ] `DatePicker` (0065) and `Calendar` (0060) source, props and tests are **unchanged** by this
       PR, proved by the diff.
-- [ ] `PartialDatePicker` ships from `@rogueoak/canopy/branches` with `parsePartialDate`,
-      `normalizePartialDate`, `formatPartialDate`, `isPartialDateWithin` and their types. No new
-      dependency and no new `tsup` external.
+- [ ] `PartialDatePicker` ships from `@rogueoak/canopy/branches`; the format ships from
+      `@rogueoak/canopy/partial-date` (React-free, dependency-free) and is re-exported from
+      `./branches`. No new dependency and no new `tsup` external.
+- [ ] The composed `Calendar` is re-pointed for the raised surface (interaction fill, ring offset)
+      and the panel carries exactly one live region at every level.
 - [ ] The day level renders `Calendar` (0060), driven by its existing public props.
 - [ ] The value is only ever `YYYY`, `YYYY-MM`, `YYYY-MM-DD` or `undefined` - proved by a test
       driving every path that can emit (typing, each of the three levels, clear).
@@ -220,9 +237,12 @@ never drop focus. One always-mounted live region carries both the selection anno
 - [ ] Typing `1968`, `1968-05`, `1968-05-14` each set the value; `1968-5-4` and `1968/05/14`
       normalize; `68`, `1968-13`, `1969-02-29`, `1968-05-32` do not, and raise the message on blur
       rather than during typing.
-- [ ] No parsing path calls `Date`, pinned by a test that mutates `process.env.TZ` to a
-      negative-offset zone, asserts `new Date('1974-06').getMonth() === 4` there, and asserts both
-      the parser and the `Calendar` round trip still read June.
+- [ ] No parsing path calls `Date`, pinned by tests that mutate `process.env.TZ` and assert the
+      trap is **live** in that zone before asserting the code is not fooled - for the parser, and
+      for the `Calendar` round trip driven end to end, once westward and once eastward (CI runs in
+      UTC, where local and UTC fields are identical and the bug would be invisible).
+- [ ] Early years the four-digit format admits (`0079`) survive the `Date` bridge, which remaps
+      years 0-99 onto 1900-1999 unless the year is set explicitly.
 - [ ] `min` / `max` accept partial dates with interval-overlap semantics (`max="2026-08-11"` admits
       `2026`, refuses `2027`); out-of-range years and months are `aria-disabled` and ignore
       activation; the day level receives `startMonth` / `endMonth`; header step buttons disable at

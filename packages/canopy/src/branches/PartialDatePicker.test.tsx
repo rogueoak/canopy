@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { StrictMode, createRef, useState } from 'react';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { PartialDatePicker } from './PartialDatePicker';
 
 // Radix Popover drives open / close on Pointer Events and positions its content with a
@@ -79,7 +79,8 @@ describe('PartialDatePicker: the value is only ever a partial date', () => {
   it('renders an empty field with the format in the placeholder', () => {
     render(<PartialDatePicker aria-label="Birthday" />);
     expect(field()).toHaveValue('');
-    expect(field()).toHaveAttribute('placeholder', 'YYYY, YYYY-MM or YYYY-MM-DD');
+    // Examples, not a schema: the placeholder is also where somebody learns a year alone is legal.
+    expect(field()).toHaveAttribute('placeholder', '1968, 1968-05 or 1968-05-14');
   });
 
   it('emits exactly the year when a year is picked, inventing no month and no day', async () => {
@@ -267,13 +268,42 @@ describe('PartialDatePicker: typing', () => {
 
   it('distinguishes an out-of-range date from an unreadable one', async () => {
     const user = userEvent.setup();
-    render(<PartialDatePicker aria-label="Memory date" min="1900" max="2026-08-11" />);
+    render(
+      <PartialDatePicker aria-label="Memory date" min="1900" max="2026-08-11" locale="en-GB" />,
+    );
 
     await user.type(field(), '2027');
     await user.tab();
 
-    expect(screen.getByText(/outside the allowed range/)).toBeInTheDocument();
+    // The default names the bounds rather than only refusing.
+    expect(screen.getByText('Enter a date between 1900 and 11 August 2026.')).toBeInTheDocument();
     expect(screen.queryByText(/Enter a year/)).not.toBeInTheDocument();
+  });
+
+  it('names only the bound that exists', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <PartialDatePicker aria-label="d" max="2026-08-11" locale="en-GB" />,
+    );
+    await user.type(field(), '2027');
+    await user.tab();
+    expect(screen.getByText('Enter a date no later than 11 August 2026.')).toBeInTheDocument();
+    unmount();
+
+    render(<PartialDatePicker aria-label="d" min="1900" locale="en-GB" />);
+    await user.type(field(), '1899');
+    await user.tab();
+    expect(screen.getByText('Enter a date no earlier than 1900.')).toBeInTheDocument();
+  });
+
+  it('lets a caller replace the range message', async () => {
+    const user = userEvent.setup();
+    render(<PartialDatePicker aria-label="d" max="2026" outOfRangeMessage="Not in the future." />);
+
+    await user.type(field(), '2027');
+    await user.tab();
+
+    expect(screen.getByText('Not in the future.')).toBeInTheDocument();
   });
 
   it('emits undefined while the draft does not name a date, so the parent never holds a stale value', async () => {
@@ -702,6 +732,48 @@ describe('PartialDatePicker: keyboard', () => {
     await waitFor(() => expect(field()).toHaveFocus());
   });
 
+  it('commits a month with Enter and with Space', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const { unmount } = render(
+      <PartialDatePicker
+        aria-label="Birthday"
+        defaultValue="1968-05"
+        onValueChange={onValueChange}
+      />,
+    );
+
+    await openPanel(user);
+    await user.keyboard('{ArrowLeft}{Enter}');
+    expect(onValueChange).toHaveBeenLastCalledWith('1968-04');
+    unmount();
+
+    const onValueChange2 = vi.fn();
+    render(
+      <PartialDatePicker
+        aria-label="Birthday"
+        defaultValue="1968-05"
+        onValueChange={onValueChange2}
+      />,
+    );
+    await openPanel(user);
+    await user.keyboard('{ArrowUp}[Space]');
+    expect(onValueChange2).toHaveBeenLastCalledWith('1968-02');
+  });
+
+  it('covers the rest of the month grid map: End and PageDown', async () => {
+    const user = userEvent.setup();
+    render(<PartialDatePicker aria-label="Birthday" defaultValue="1968-05" />);
+
+    await openPanel(user);
+    // May sits in the row Apr-May-Jun, so End is June.
+    await user.keyboard('{End}');
+    await waitFor(() => expect(cell('Jun')).toHaveFocus());
+
+    await user.keyboard('{PageDown}');
+    expect(screen.getByRole('grid')).toHaveAttribute('aria-label', '1969');
+  });
+
   it('descends a level on Enter and lands focus in the grid below', async () => {
     const user = userEvent.setup();
     render(<PartialDatePicker aria-label="Birthday" defaultValue="1968" />);
@@ -711,6 +783,133 @@ describe('PartialDatePicker: keyboard', () => {
 
     await waitFor(() => expect(screen.getByRole('grid')).toHaveAttribute('aria-label', '1968'));
     await waitFor(() => expect(document.activeElement?.tagName).toBe('BUTTON'));
+  });
+});
+
+/**
+ * The `Calendar` bridge is the one place a `Date` exists, so it is the one place the timezone bug
+ * can come back. CI runs in UTC, where local and UTC calendar fields are identical by definition -
+ * so without pinning the zone here, swapping the bridge to `Date.UTC` + `getUTC*` passes the whole
+ * suite. Each test asserts its own trap is LIVE before asserting the component is not fooled.
+ */
+describe('PartialDatePicker: the Calendar bridge is read by fields, not by UTC', () => {
+  const originalTz = process.env.TZ;
+
+  afterEach(() => {
+    process.env.TZ = originalTz;
+  });
+
+  it('round-trips a day west of Greenwich, where a UTC-parsed month reads a month early', async () => {
+    process.env.TZ = 'America/Los_Angeles';
+    expect(new Date('1974-06').getMonth(), 'the trap must be live').toBe(4);
+
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <PartialDatePicker
+        aria-label="Memory date"
+        defaultValue="1974-06-15"
+        onValueChange={onValueChange}
+      />,
+    );
+
+    await openPanel(user);
+    expect(gridLabel()).toBe('June 1974');
+    await user.click(dayCell(3));
+
+    expect(onValueChange).toHaveBeenLastCalledWith('1974-06-03');
+  });
+
+  it('round-trips a day east of Greenwich, where a UTC-serialized day reads a day early', async () => {
+    process.env.TZ = 'Asia/Tokyo';
+    expect(new Date(1974, 5, 3).toISOString().slice(0, 10), 'the trap must be live').toBe(
+      '1974-06-02',
+    );
+
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(
+      <PartialDatePicker
+        aria-label="Memory date"
+        defaultValue="1974-06-15"
+        onValueChange={onValueChange}
+      />,
+    );
+
+    await openPanel(user);
+    expect(gridLabel()).toBe('June 1974');
+    await user.click(dayCell(3));
+
+    expect(onValueChange).toHaveBeenLastCalledWith('1974-06-03');
+  });
+
+  it('shows the month the value names, not the one a UTC parse would land on', async () => {
+    process.env.TZ = 'America/Los_Angeles';
+    const user = userEvent.setup();
+    render(<PartialDatePicker aria-label="Memory date" defaultValue="1974-01-01" />);
+
+    await openPanel(user);
+
+    // A UTC-parsed 1974-01-01 renders as December 1973 in this zone.
+    expect(gridLabel()).toBe('January 1974');
+  });
+});
+
+describe('PartialDatePicker: closing by clicking away', () => {
+  it('does not pull focus back to the field when the user deliberately clicks elsewhere', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <button type="button">elsewhere</button>
+        <PartialDatePicker aria-label="Birthday" defaultValue="1968" />
+      </>,
+    );
+
+    await openPanel(user);
+    const elsewhere = screen.getByRole('button', { name: 'elsewhere' });
+    await user.click(elsewhere);
+
+    await waitFor(() => expect(screen.queryByRole('grid')).not.toBeInTheDocument());
+    expect(field()).not.toHaveFocus();
+  });
+
+  it('still returns focus to the field on Escape after a previous click-away close', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <button type="button">elsewhere</button>
+        <PartialDatePicker aria-label="Birthday" defaultValue="1968" />
+      </>,
+    );
+
+    await openPanel(user);
+    await user.click(screen.getByRole('button', { name: 'elsewhere' }));
+    await waitFor(() => expect(screen.queryByRole('grid')).not.toBeInTheDocument());
+
+    // Reopening must clear the latched reason, or Escape declines to restore focus.
+    await openPanel(user);
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByRole('grid')).not.toBeInTheDocument());
+    await waitFor(() => expect(field()).toHaveFocus());
+  });
+
+  it('reopens at the value precision when opened from the keyboard, not just the button', async () => {
+    const user = userEvent.setup();
+    render(<PartialDatePicker aria-label="Birthday" defaultValue="1968-05" />);
+
+    // Wander up to the year grid, close, then reopen with ArrowDown rather than the trigger.
+    await openPanel(user);
+    await user.click(screen.getByRole('button', { name: /^1968/ }));
+    expect(gridLabel()).toBe('1960 - 1979');
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('grid')).not.toBeInTheDocument());
+
+    await user.click(field());
+    await user.keyboard('{ArrowDown}');
+
+    await screen.findByRole('grid');
+    expect(gridLabel()).toBe('1968');
   });
 });
 
@@ -773,6 +972,23 @@ describe('PartialDatePicker: accessibility', () => {
     expect(liveRegion()).not.toHaveClass('sr-only');
     // One message, one element - the copy must not also exist somewhere else.
     expect(screen.getAllByText(/Enter a year/)).toHaveLength(1);
+  });
+
+  it('re-points the composed Calendar for the raised surface it is dropped onto', async () => {
+    const user = userEvent.setup();
+    render(<PartialDatePicker aria-label="Birthday" defaultValue="1968-05-14" />);
+
+    await openPanel(user);
+    const day = dayCell(14);
+
+    // Calendar is tuned for the page canvas: base `muted` is DARKER than `surface-raised` in dark,
+    // so its hover would recede here, and its ring offset would draw the canvas halo inside the
+    // panel. jsdom resolves no CSS, so the class string is the only thing assertable - and it is
+    // what actually regresses.
+    expect(day).toHaveClass('hover:bg-muted-raised', 'focus-visible:ring-offset-surface-raised');
+    expect(day).not.toHaveClass('hover:bg-muted', 'focus-visible:ring-offset-ring-offset');
+    // and the phone tap target does not change scale between levels of the same panel
+    expect(day).toHaveClass('h-11', 'w-11', 'md:h-9', 'md:w-9');
   });
 
   it('has exactly one live region at every level, including over the day grid', async () => {
@@ -1046,19 +1262,51 @@ describe('PartialDatePicker: the rest of the contract', () => {
       <PartialDatePicker
         aria-label="Birthday"
         defaultValue="1968"
+        locale="en-GB"
         placeholder="When?"
         openLabel="Open the picker"
+        previousLabel="Back"
+        nextLabel="Forward"
+        zoomOutLabel="widen"
         clearLabel="Forget it"
         doneLabel="That will do"
         hint="Stop wherever you like."
+        clearedLabel="Forgotten"
+        precisionLabels={{ year: 'just the year' }}
       />,
     );
 
+    expect(field()).toHaveAttribute('placeholder', 'When?');
     await user.click(screen.getByRole('button', { name: 'Open the picker' }));
 
-    expect(screen.getByRole('button', { name: 'Forget it' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Forward' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'That will do' })).toBeInTheDocument();
     expect(screen.getByText('Stop wherever you like.')).toBeInTheDocument();
+
+    // precisionLabels is the only MERGED prop, so a caller's partial override must win on the key
+    // it names and fall back on the ones it does not.
+    await user.click(cell('1970'));
+    expect(liveRegion()).toHaveTextContent('1970, just the year');
+    await user.click(cell('May'));
+    expect(liveRegion()).toHaveTextContent('May 1970, month and year');
+
+    await user.click(screen.getByRole('button', { name: /^May 1970/ }));
+    await user.click(screen.getByRole('button', { name: /^1970/ }));
+    await user.click(screen.getByRole('button', { name: 'Forget it' }));
+    expect(liveRegion()).toHaveTextContent('Forgotten');
+  });
+
+  it('names the zoom-out affordance without running two sentences together', async () => {
+    const user = userEvent.setup();
+    render(<PartialDatePicker aria-label="Birthday" defaultValue="1968-05" />);
+
+    await openPanel(user);
+
+    // The comma matters: without it the name runs "1968 Choose a broader period" together.
+    expect(screen.getByRole('button', { name: /^1968/ })).toHaveAccessibleName(
+      /^1968\s*,\s*Choose a broader period$/,
+    );
   });
 
   it('survives a StrictMode remount and still picks a date', async () => {

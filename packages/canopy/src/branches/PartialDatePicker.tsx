@@ -13,10 +13,10 @@ import {
   normalizePartialDate,
   parsePartialDate,
   partialDateRange,
+  toCalendarDate,
   today,
   type PartialDateBounds,
   type PartialDateParts,
-  type PartialDatePrecision,
 } from '../lib/partialDate';
 
 /**
@@ -49,8 +49,12 @@ import {
  * common path. It sits in Branches because it owns interaction state and portals its content.
  */
 
-/** Which of the three grids the popover is showing. */
-export type PartialDatePickerView = PartialDatePrecision;
+/**
+ * Which of the three grids the popover is showing. Deliberately its own union rather than an alias
+ * of `PartialDatePrecision`: a view is a UI affordance and the precision is the value contract, so
+ * adding, say, a decade page must not widen the wire format.
+ */
+export type PartialDatePickerView = 'year' | 'month' | 'day';
 
 /** Overridable wording for how much of a date is known, used in the selection announcement. */
 export interface PartialDatePrecisionLabels {
@@ -105,7 +109,7 @@ export interface PartialDatePickerProps extends Omit<
    * `<input>`.
    */
   className?: string;
-  /** Placeholder for the empty field. Default `'YYYY, YYYY-MM or YYYY-MM-DD'`. */
+  /** Placeholder for the empty field. Default `'1968, 1968-05 or 1968-05-14'`. */
   placeholder?: string;
   /** Accessible name for the button that opens the popover. Default `'Choose a date'`. */
   openLabel?: string;
@@ -126,7 +130,11 @@ export interface PartialDatePickerProps extends Omit<
   hint?: string;
   /** Shown on blur when the text does not name a date. */
   invalidFormatMessage?: string;
-  /** Shown on blur when the text names a date outside `min` / `max`. */
+  /**
+   * Shown on blur when the text names a date outside `min` / `max`. Defaults to a message that
+   * names the bounds, since "outside the allowed range" tells somebody they are wrong without
+   * telling them how to be right.
+   */
   outOfRangeMessage?: string;
   /** Announced when the value is cleared. Default `'Date cleared'`. */
   clearedLabel?: string;
@@ -177,6 +185,24 @@ function dayValue(year: number, month: number, day: number): string {
   return formatPartialDateParts({ year, month, day, precision: 'day' });
 }
 
+/**
+ * The default out-of-range message. It names the bounds rather than only refusing, because the
+ * bounds are never otherwise shown as text and "outside the allowed range" leaves somebody guessing
+ * which end they hit.
+ */
+function describeRange(
+  min: string | undefined,
+  max: string | undefined,
+  locale: string | string[] | undefined,
+): string {
+  const from = formatPartialDate(min, { locale });
+  const to = formatPartialDate(max, { locale });
+  if (from && to) return `Enter a date between ${from} and ${to}.`;
+  if (to) return `Enter a date no later than ${to}.`;
+  if (from) return `Enter a date no earlier than ${from}.`;
+  return 'That date is outside the allowed range.';
+}
+
 function pageStartFor(year: number): number {
   return Math.floor(year / YEARS_PER_PAGE) * YEARS_PER_PAGE;
 }
@@ -204,11 +230,6 @@ function clampYear(year: number, bounds: PartialDateBounds): number {
   return year;
 }
 
-/** A local-field `Date` for `Calendar`. Never a parsed string - that is the timezone trap. */
-function toLocalDate(fields: [number, number, number]): Date {
-  return new Date(fields[0], fields[1] - 1, fields[2]);
-}
-
 /**
  * react-day-picker's month caption is itself a `role="status" aria-live="polite"` region. This
  * panel already has one live region under the field, and the header above already names the month,
@@ -219,6 +240,23 @@ function toLocalDate(fields: [number, number, number]): Date {
  */
 // An empty fragment rather than `null`: react-day-picker types the slot as returning an Element.
 const NoMonthCaption = () => <></>;
+
+/**
+ * Calendar (0060) is tuned for the page canvas, and this panel is a raised surface, so the two
+ * tokens it defines RELATIVE to the background have to be re-pointed by the composing component -
+ * the Seed cannot know where it was dropped. `hover:bg-muted` is one step up from `bg-bg` but is
+ * DARKER than `surface-raised` in dark, so a hovered day would recede while a hovered year lifts;
+ * and `ring-offset-ring-offset` draws the page-canvas halo inside a raised card.
+ *
+ * These replace Calendar's strings wholesale (it spreads the caller's `classNames` last), so they
+ * are complete and literal. The range selectors from Calendar's own `day` are dropped because this
+ * composition is always `mode="single"`. Sizing also carries the 44px phone target the year and
+ * month grids use, so the panel does not change touch scale between levels.
+ */
+const CALENDAR_DAY =
+  'rdp-day relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:rounded-md [&:has([aria-selected])]:bg-muted-raised';
+const CALENDAR_DAY_BUTTON =
+  'rdp-day_button inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-md p-0 text-sm font-normal text-text transition-colors hover:bg-muted-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface-raised aria-selected:opacity-100 md:h-9 md:w-9';
 NoMonthCaption.displayName = 'NoMonthCaption';
 
 const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerProps>(
@@ -235,7 +273,7 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
       defaultView = 'year',
       locale,
       className,
-      placeholder = 'YYYY, YYYY-MM or YYYY-MM-DD',
+      placeholder = '1968, 1968-05 or 1968-05-14',
       openLabel = 'Choose a date',
       previousLabel = 'Previous',
       nextLabel = 'Next',
@@ -244,7 +282,7 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
       doneLabel = 'Done',
       hint = 'Stop at any level - a year on its own is a complete answer.',
       invalidFormatMessage = 'Enter a year (1968), a year and month (1968-05), or a full date (1968-05-14).',
-      outOfRangeMessage = 'That date is outside the allowed range.',
+      outOfRangeMessage,
       clearedLabel = 'Date cleared',
       precisionLabels,
       id: idProp,
@@ -453,22 +491,6 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
       [bounds, onBlur, text],
     );
 
-    const handleInputKeyDown = React.useCallback(
-      (event: React.KeyboardEvent<HTMLInputElement>) => {
-        onKeyDown?.(event);
-        if (event.defaultPrevented || disabled) return;
-        if (event.key !== 'ArrowDown') return;
-        event.preventDefault();
-        if (open) {
-          focusPanelCell();
-          return;
-        }
-        pendingFocus.current = true;
-        setOpen(true);
-      },
-      [disabled, focusPanelCell, onKeyDown, open],
-    );
-
     /* --------------------------------------------------------------- popover open */
 
     const handleOpenChange = React.useCallback(
@@ -487,6 +509,25 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
         setOpen(next);
       },
       [anchor, defaultView, disabled, selected?.precision],
+    );
+
+    const handleInputKeyDown = React.useCallback(
+      (event: React.KeyboardEvent<HTMLInputElement>) => {
+        onKeyDown?.(event);
+        if (event.defaultPrevented || disabled) return;
+        if (event.key !== 'ArrowDown') return;
+        event.preventDefault();
+        if (open) {
+          focusPanelCell();
+          return;
+        }
+        pendingFocus.current = true;
+        // Through `handleOpenChange`, not `setOpen`: Radix only calls `onOpenChange` for ITS own
+        // interactions, so opening the state directly here would skip the view, cursor and
+        // close-reason resets that every other way in goes through.
+        handleOpenChange(true);
+      },
+      [disabled, focusPanelCell, handleOpenChange, onKeyDown, open],
     );
 
     /* ------------------------------------------------------------------- the grids */
@@ -652,7 +693,7 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
       messageClassName = 'mt-1 text-caption text-danger';
     }
     if (errorKind === 'range') {
-      messageText = outOfRangeMessage;
+      messageText = outOfRangeMessage ?? describeRange(min, max, locale);
       messageClassName = 'mt-1 text-caption text-danger';
     }
 
@@ -661,12 +702,16 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
     const minRange = partialDateRange(min);
     const maxRange = partialDateRange(max);
     const disabledDays: Matcher[] = [];
-    if (minRange) disabledDays.push({ before: toLocalDate(minRange.start) });
-    if (maxRange) disabledDays.push({ after: toLocalDate(maxRange.end) });
+    if (minRange) disabledDays.push({ before: toCalendarDate(minRange.start) });
+    if (maxRange) disabledDays.push({ after: toCalendarDate(maxRange.end) });
 
     let selectedDay: Date | undefined;
     if (selected?.precision === 'day') {
-      selectedDay = toLocalDate([selected.year, selected.month as number, selected.day as number]);
+      selectedDay = toCalendarDate([
+        selected.year,
+        selected.month as number,
+        selected.day as number,
+      ]);
     }
 
     let periodControl = (
@@ -682,7 +727,7 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
           className="h-9 flex-1 text-sm font-medium hover:bg-muted-raised active:bg-muted-raised focus-visible:ring-offset-surface-raised"
         >
           {periodLabel}
-          <span className="sr-only">{` ${zoomOutLabel}`}</span>
+          <span className="sr-only">{`, ${zoomOutLabel}`}</span>
         </Button>
       );
     }
@@ -729,7 +774,7 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
       level = (
         <Calendar
           mode="single"
-          month={toLocalDate([cursor.year, cursor.month, 1])}
+          month={toCalendarDate([cursor.year, cursor.month, 1])}
           onMonthChange={(month) =>
             setCursor({ year: month.getFullYear(), month: month.getMonth() + 1 })
           }
@@ -737,56 +782,67 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
           onSelect={(day) => {
             if (day) selectDay(day);
           }}
-          startMonth={minRange ? toLocalDate(minRange.start) : undefined}
-          endMonth={maxRange ? toLocalDate(maxRange.end) : undefined}
+          startMonth={minRange ? toCalendarDate(minRange.start) : undefined}
+          endMonth={maxRange ? toCalendarDate(maxRange.end) : undefined}
           disabled={disabledDays}
           hideNavigation
           autoFocus
           className="p-2"
           components={{ MonthCaption: NoMonthCaption }}
+          classNames={{ day: CALENDAR_DAY, day_button: CALENDAR_DAY_BUTTON }}
         />
       );
     }
 
     return (
       <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
-        <InputGroup
-          size={size}
-          disabled={disabled}
-          aria-invalid={invalid || undefined}
-          className={className}
-        >
-          <InputGroupInput
-            ref={inputRef}
-            id={id}
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            spellCheck={false}
-            value={text}
-            placeholder={placeholder}
-            aria-describedby={describedBy}
-            onChange={handleTextChange}
-            onBlur={handleBlur}
-            onKeyDown={handleInputKeyDown}
-            {...inputProps}
-          />
-          <PopoverPrimitive.Trigger asChild>
-            <InputGroupButton aria-label={openLabel} className="w-11 px-0 md:w-10">
-              <CalendarGlyph />
-            </InputGroupButton>
-          </PopoverPrimitive.Trigger>
-        </InputGroup>
+        {/*
+          One in-flow root. `Popover.Root` renders no DOM, so without this wrapper the field and its
+          message would be two siblings, and a caller dropping the component into a flex row or a
+          grid would get the message as its own track beside the field rather than a line under it.
+          `sr-only` is `position: absolute`, so the region still takes no space while it is only
+          carrying an announcement.
+        */}
+        <div className="flex flex-col">
+          <InputGroup
+            size={size}
+            disabled={disabled}
+            aria-invalid={invalid || undefined}
+            className={className}
+          >
+            <InputGroupInput
+              ref={inputRef}
+              id={id}
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              spellCheck={false}
+              value={text}
+              placeholder={placeholder}
+              aria-describedby={describedBy}
+              onChange={handleTextChange}
+              onBlur={handleBlur}
+              onKeyDown={handleInputKeyDown}
+              {...inputProps}
+            />
+            <PopoverPrimitive.Trigger asChild>
+              <InputGroupButton aria-label={openLabel} className="w-11 px-0 md:w-10">
+                <CalendarGlyph />
+              </InputGroupButton>
+            </PopoverPrimitive.Trigger>
+          </InputGroup>
 
-        <p id={messageId} role="status" className={messageClassName}>
-          {messageText}
-        </p>
+          <p id={messageId} role="status" className={messageClassName}>
+            {messageText}
+          </p>
+        </div>
 
         <PopoverPrimitive.Portal>
           <PopoverPrimitive.Content
             ref={panelRef}
             align="start"
             sideOffset={4}
+            collisionPadding={8}
             aria-label={openLabel}
             onOpenAutoFocus={(event) => {
               event.preventDefault();
@@ -802,7 +858,7 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
               if (closeReason.current === 'outside') return;
               inputRef.current?.focus();
             }}
-            className="z-50 w-72 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-surface-raised p-0 text-text shadow-md data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none"
+            className="z-50 w-[22rem] max-w-[calc(100vw-1rem)] rounded-md border border-border bg-surface-raised p-0 text-text shadow-md md:w-72 data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out motion-reduce:animate-none"
           >
             <div className="flex items-center gap-1 border-b border-border p-2">
               <Button
@@ -830,11 +886,12 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
               </Button>
             </div>
 
+            <p className="px-3 pt-2 text-caption text-text-muted">{hint}</p>
+
             {level}
 
             <div className="border-t border-border p-2">
-              <p className="text-caption text-text-muted">{hint}</p>
-              <div className="mt-2 flex items-center justify-end gap-2">
+              <div className="flex items-center justify-end gap-2">
                 {clearControl}
                 <Button
                   type="button"
@@ -922,7 +979,7 @@ function PartialDateGridCell({ cell, focused, onActivate }: PartialDateGridCellP
         aria-current={current}
         onClick={() => onActivate(cell)}
         className={cn(
-          'inline-flex h-11 w-full items-center justify-center rounded-md text-sm font-normal text-text transition-colors hover:bg-muted-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface-raised aria-disabled:pointer-events-none aria-disabled:opacity-50 md:h-9',
+          'inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-md text-sm font-normal text-text transition-colors hover:bg-muted-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface-raised aria-disabled:pointer-events-none aria-disabled:opacity-50 md:h-9',
           cell.selected && 'bg-primary text-primary-foreground hover:bg-primary-hover',
           cell.current && !cell.selected && 'ring-1 ring-ring',
         )}

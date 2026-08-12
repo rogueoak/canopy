@@ -334,12 +334,15 @@ export type {
   PartialDatePickerView,
   PartialDatePrecisionLabels,
 } from './PartialDatePicker';
-// The partial-date format itself (spec 0073), exported so a consumer's server and its UI share one
-// definition instead of a second parser that disagrees at the edges.
+// The partial-date format (spec 0073), re-exported here so UI code importing the component can
+// reach its helpers in one import. The format also ships on its own `@rogueoak/canopy/partial-date`
+// subpath, which is what a consumer's SERVER should import: this barrel pulls in the whole Branch
+// layer (and React) to reach what is really a regex and some integer arithmetic.
 export {
   parsePartialDate,
   normalizePartialDate,
   formatPartialDate,
+  formatPartialDateParts,
   isPartialDateWithin,
 } from '../lib/partialDate';
 export type {

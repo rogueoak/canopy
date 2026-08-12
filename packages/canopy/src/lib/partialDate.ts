@@ -196,6 +196,20 @@ export function partialDateRange(
 }
 
 /**
+ * A `Date` at the given calendar fields, in the local zone. The one sanctioned way to build a
+ * `Date` from a partial date - a string is never parsed into one.
+ *
+ * `setFullYear` is not decoration: `new Date(79, 7, 24)` is **1979**, because the constructor
+ * remaps years 0-99 onto 1900-1999. That would corrupt exactly the early years the four-digit wire
+ * format advertises, so the year is always set explicitly afterwards.
+ */
+export function toCalendarDate(fields: Ymd): Date {
+  const date = new Date(fields[0], fields[1] - 1, fields[2]);
+  date.setFullYear(fields[0]);
+  return date;
+}
+
+/**
  * A month's name, 1-12. Built from a local-field `Date` in an arbitrary year (only the month is
  * read from it), never from a parsed string.
  */
@@ -221,11 +235,13 @@ export function formatPartialDate(
   const parts = parsePartialDate(value);
   if (!parts) return '';
   const { locale } = options;
-  if (parts.precision === 'year') return String(parts.year);
+  const date = toCalendarDate(startOf(parts));
+  const year = new Intl.DateTimeFormat(locale, { year: 'numeric' }).format(date);
+  if (parts.precision === 'year') return year;
   const month = parts.month as number;
-  if (parts.precision === 'month') return `${monthName(month, 'long', locale)} ${parts.year}`;
+  if (parts.precision === 'month') return `${monthName(month, 'long', locale)} ${year}`;
   return new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long', day: 'numeric' }).format(
-    new Date(parts.year, month - 1, parts.day as number),
+    date,
   );
 }
 

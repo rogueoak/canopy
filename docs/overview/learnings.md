@@ -1009,3 +1009,70 @@ missing, the code is unreachable and should go, or the guard is doing something 
 Check the second before writing a test for the first: an unreachable branch that gains a test gains
 a test that proves nothing. And when two guards mask each other, mutate **both** before concluding
 either is covered.
+
+## Composing a Seed onto a raised surface also means inheriting its ARIA and its tap targets
+
+Learning 26 says the composing component must re-point every Seed token defined relative to the
+background. Dropping `Calendar` (0060) into `PartialDatePicker`'s popover (0073) showed the rule has
+two more halves that are easy to miss because neither is a colour.
+
+**The library's own ARIA comes with it.** `react-day-picker`'s month caption is a
+`role="status" aria-live="polite"` region, so composing it into a panel that already had one gave
+the component two live regions talking over each other. The first fix - a `hidden` class - was worse
+than it looked: the node stays in the accessibility tree, so whether it announced depended on a
+stylesheet the test environment never loads. It looked fixed in jsdom and would have been fixed in
+the browser for the wrong reason. Removing the node through the library's `components` slot is the
+honest fix, and it was only safe because react-day-picker sets the grid's `aria-label` on the table
+itself rather than through the caption - which had to be checked, not assumed.
+
+**Sizing is background-relative too.** The hand-rolled grids used `h-11 md:h-9` for a 44px phone
+target while the composed `Calendar` kept its flat `h-9`, so touch scale changed between levels of
+one panel. The claim "44px on phones" was true of the parts written by hand and false of the part
+composed in.
+
+**Apply it:** when mounting a third-party or cross-tier component inside your own surface, audit
+three things, not one - the tokens defined relative to the background (fills, ring offsets), what it
+contributes to the **accessibility tree** (live regions, landmarks, labels), and whether its
+**metrics** still match the claims the composing component makes. Prefer removing an unwanted node
+through the library's component slots over hiding it with a class: a hidden node is still in the
+tree, and its behaviour then depends on CSS your tests do not load.
+
+## A shared format must ship on an entry a server can actually import
+
+0073 exports its partial-date parser so a consumer's server and its UI agree on one definition of
+the format. Publishing it only from `@rogueoak/canopy/branches` defeated exactly that: the Branch
+barrel statically imports 24 packages - recharts, cmdk, vaul, embla, react-day-picker, TanStack
+Table, ten Radix packages - so a Node process importing `isPartialDateWithin` evaluated the whole
+organism layer, and needed React installed, to reach a regex and a tuple comparison. The promise
+only held inside a bundler that could tree-shake it back out, which a server is not.
+
+The fix is a dedicated `./partial-date` package entry (a tsup entry plus an `exports` key) that
+builds to a self-contained 4KB module with zero imports. Worth deciding **before** publishing: once
+a barrel is a published home for a name it has to stay one, so a second home added later leaves the
+format with two import paths.
+
+**Apply it:** when a package exports something whose value is that **both sides of a network
+boundary use it**, check what its import path actually drags in - `node -e "import(...)"` in a bare
+Node process, or just count the imports in the built entry. Cross-cutting, framework-free utilities
+get their own entry; a tier barrel is for that tier's components.
+
+## Assert the trap is live before asserting the code is not fooled
+
+Three separate tests in 0073 could not fail. A keyboard test pressed PageUp before focus had reached
+the grid, so the key went to `<body>` and "the calendar did not move past its bound" was guaranteed.
+A `today()` test compared local getters against local getters, which is a tautology on a UTC CI
+runner - a `toISOString()` implementation, the exact trap its own doc comment names, passed byte for
+byte. And the component's `Calendar` bridge was never exercised in a non-UTC zone, so swapping it to
+`Date.UTC` + `getUTC*` kept the whole suite green in CI while breaking in every real user's browser.
+
+All three share a shape: **the assertion is a negative, and nothing established that the positive
+was reachable.** The fix is the same in each case - demonstrate the mechanism first. An unbounded
+picker moves May to April on that keystroke; `new Date('1974-06').getMonth()` really is 4 in
+Los Angeles; `new Date(1974, 5, 3).toISOString()` really does say 2 June in Tokyo. Then assert the
+code under test is not fooled.
+
+**Apply it:** any test whose assertion is "did not move", "was not called", or "still says X" needs
+a control that proves the thing it is guarding against can happen in that environment. For anything
+timezone-sensitive, pin `process.env.TZ` (Node re-reads it per operation) and run it **both**
+westward and eastward - only a western zone catches a UTC-parsed month, and only an eastern one
+catches a UTC-serialized day. A UTC CI runner makes the entire class invisible.

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   formatPartialDate,
   formatPartialDateParts,
@@ -7,6 +7,7 @@ import {
   normalizePartialDate,
   parsePartialDate,
   partialDateRange,
+  toCalendarDate,
   today,
 } from './partialDate';
 
@@ -219,6 +220,29 @@ describe('partialDateRange', () => {
   });
 });
 
+describe('early years, which the Date constructor silently remaps', () => {
+  it('builds a Date at the year it was given', () => {
+    // The trap: the constructor maps years 0-99 onto 1900-1999.
+    expect(new Date(79, 7, 24).getFullYear()).toBe(1979);
+
+    const date = toCalendarDate([79, 8, 24]);
+    expect([date.getFullYear(), date.getMonth() + 1, date.getDate()]).toEqual([79, 8, 24]);
+  });
+
+  it('renders an early year as itself at every precision', () => {
+    expect(formatPartialDate('0079', { locale: 'en-GB' })).toBe('79');
+    expect(formatPartialDate('0079-08', { locale: 'en-GB' })).toBe('August 79');
+    expect(formatPartialDate('0079-08-24', { locale: 'en-GB' })).toBe('24 August 79');
+    // The bug this guards: 1905, from `new Date(5, 0, 1)`.
+    expect(formatPartialDate('0005-01-01', { locale: 'en-GB' })).toBe('1 January 5');
+  });
+
+  it('keeps an early year inside its bounds', () => {
+    expect(isPartialDateWithin('0079', { min: '0001', max: '0100' })).toBe(true);
+    expect(isPartialDateWithin('0079', { min: '1900' })).toBe(false);
+  });
+});
+
 describe('formatPartialDate', () => {
   it('renders each precision without inventing the fields it does not have', () => {
     expect(formatPartialDate('1968', { locale: 'en-GB' })).toBe('1968');
@@ -245,22 +269,58 @@ describe('formatPartialDate', () => {
 
 describe('monthName', () => {
   it('names every month at both widths, off by no months', () => {
-    expect(monthName(1, 'long', 'en-GB')).toBe('January');
-    expect(monthName(12, 'long', 'en-GB')).toBe('December');
-    expect(monthName(5, 'short', 'en-GB')).toBe('May');
-    expect(monthName(2, 'long', 'en-GB')).toBe('February');
+    const long = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    // en-GB abbreviates September as 'Sept', not 'Sep'.
+    const short = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sept',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    for (let month = 1; month <= 12; month += 1) {
+      expect(monthName(month, 'long', 'en-GB'), `long ${month}`).toBe(long[month - 1]);
+      // Asserted on every month, not just May - whose short and long forms are identical, so it
+      // cannot tell the two widths apart.
+      expect(monthName(month, 'short', 'en-GB'), `short ${month}`).toBe(short[month - 1]);
+    }
   });
 });
 
 describe('today', () => {
-  it('reads the local calendar, matching a locally constructed Date', () => {
-    const now = new Date();
-    expect(today()).toEqual({
-      year: now.getFullYear(),
-      month: now.getMonth() + 1,
-      day: now.getDate(),
-      precision: 'day',
-    });
+  it('reads the LOCAL calendar, not the UTC one', () => {
+    const originalTz = process.env.TZ;
+    process.env.TZ = 'America/Los_Angeles';
+    vi.useFakeTimers();
+    // 03:00 UTC on 2 June is still 1 June in Los Angeles, so the two calendars disagree here.
+    vi.setSystemTime(new Date('1974-06-02T03:00:00Z'));
+    try {
+      expect(new Date().getUTCDate(), 'the trap must be live').toBe(2);
+      expect(today()).toEqual({ year: 1974, month: 6, day: 1, precision: 'day' });
+    } finally {
+      vi.useRealTimers();
+      process.env.TZ = originalTz;
+    }
   });
 });
 
