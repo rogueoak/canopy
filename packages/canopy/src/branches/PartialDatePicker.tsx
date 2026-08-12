@@ -167,6 +167,10 @@ interface GridCell {
   label: string;
   /** The partial date this cell commits when activated. */
   value: string;
+  /** What activating this cell does. Carried rather than re-derived from `value`, which would mean
+   * parsing a string the grid itself just formatted - and grid navigation is deliberately
+   * unbounded, so not every cell a page can build is a valid partial date. */
+  activate: () => void;
   selected: boolean;
   /** Whether this cell covers today, for the `aria-current` marker. */
   current: boolean;
@@ -544,13 +548,14 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
           key: `year-${year}`,
           label: String(year),
           value: cellValue,
+          activate: () => selectYear(year),
           selected: selected?.year === year,
           current: todayParts.year === year,
           disabled: !isPartialDateWithin(cellValue, bounds),
         });
       }
       return cells;
-    }, [pageStart, pageEnd, selected?.year, todayParts.year, bounds]);
+    }, [pageStart, pageEnd, selected?.year, todayParts.year, bounds, selectYear]);
 
     const monthCells = React.useMemo<GridCell[]>(() => {
       const cells: GridCell[] = [];
@@ -560,6 +565,7 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
           key: `month-${cursor.year}-${month}`,
           label: monthName(month, 'short', locale),
           value: cellValue,
+          activate: () => selectMonth(cursor.year, month),
           selected: selected?.year === cursor.year && selected?.month === month,
           current: todayParts.year === cursor.year && todayParts.month === month,
           disabled: !isPartialDateWithin(cellValue, bounds),
@@ -574,6 +580,7 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
       todayParts.month,
       bounds,
       locale,
+      selectMonth,
     ]);
 
     /* ------------------------------------------------------------ header navigation */
@@ -752,7 +759,6 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
         label={periodLabel}
         rows={chunk(yearCells, YEAR_COLUMNS)}
         focusedValue={yearValue(cursor.year)}
-        onActivate={(cell) => selectYear(Number(cell.label))}
         onKeyDown={handleYearGridKeyDown}
       />
     );
@@ -762,10 +768,6 @@ const PartialDatePicker = React.forwardRef<HTMLInputElement, PartialDatePickerPr
           label={periodLabel}
           rows={chunk(monthCells, MONTH_COLUMNS)}
           focusedValue={monthValue(cursor.year, cursor.month)}
-          onActivate={(cell) => {
-            const parts = parsePartialDate(cell.value) as PartialDateParts;
-            selectMonth(parts.year, parts.month as number);
-          }}
           onKeyDown={handleMonthGridKeyDown}
         />
       );
@@ -919,7 +921,6 @@ interface PartialDateGridProps {
   rows: GridCell[][];
   /** The cell that carries `tabIndex={0}` - the grid has exactly one tab stop (roving tabindex). */
   focusedValue: string;
-  onActivate: (cell: GridCell) => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLTableElement>) => void;
 }
 
@@ -928,13 +929,7 @@ interface PartialDateGridProps {
  * out-of-range cells that take `aria-disabled` (still reachable, activation ignored) rather than
  * the `disabled` attribute, so exploring the grid can never drop focus onto nothing.
  */
-function PartialDateGrid({
-  label,
-  rows,
-  focusedValue,
-  onActivate,
-  onKeyDown,
-}: PartialDateGridProps) {
+function PartialDateGrid({ label, rows, focusedValue, onKeyDown }: PartialDateGridProps) {
   return (
     <table
       role="grid"
@@ -950,7 +945,6 @@ function PartialDateGrid({
                 key={cell.key}
                 cell={cell}
                 focused={cell.value === focusedValue}
-                onActivate={onActivate}
               />
             ))}
           </tr>
@@ -963,10 +957,9 @@ function PartialDateGrid({
 interface PartialDateGridCellProps {
   cell: GridCell;
   focused: boolean;
-  onActivate: (cell: GridCell) => void;
 }
 
-function PartialDateGridCell({ cell, focused, onActivate }: PartialDateGridCellProps) {
+function PartialDateGridCell({ cell, focused }: PartialDateGridCellProps) {
   let current: 'date' | undefined;
   if (cell.current) current = 'date';
 
@@ -977,7 +970,7 @@ function PartialDateGridCell({ cell, focused, onActivate }: PartialDateGridCellP
         tabIndex={focused ? 0 : -1}
         aria-disabled={cell.disabled || undefined}
         aria-current={current}
-        onClick={() => onActivate(cell)}
+        onClick={cell.activate}
         className={cn(
           'inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-md text-sm font-normal text-text transition-colors hover:bg-muted-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface-raised aria-disabled:pointer-events-none aria-disabled:opacity-50 md:h-9',
           cell.selected && 'bg-primary text-primary-foreground hover:bg-primary-hover',
