@@ -734,6 +734,39 @@ themed by the layers it composes and the tokens already provisioned.
   styles at runtime and re-read on a theme change - which is exactly the failure mode `video.css`
   exists to avoid, arrived at from the other direction.
 
+- **When the VALUE TYPE is the reason for a second component (PartialDatePicker, spec 0073).** The
+  30th Branch is a date field whose value is an ISO 8601 reduced-precision **string** (`YYYY`,
+  `YYYY-MM`, `YYYY-MM-DD`), for a date somebody remembers rather than schedules. It sits beside
+  `DatePicker` (0065) rather than inside it, and the reason generalises: 0065's `mode` already
+  discriminates **cardinality** (`single` | `range`), so precision could not ride the same prop
+  without one prop meaning two unrelated things and a second value type appearing behind the same
+  `value` - which turns 0065's props into a three-way discriminated union and changes inference for
+  every existing caller, for a feature they did not ask for. **A different value contract is a
+  different component.** 0065 and `Calendar` (0060) are byte-for-byte unchanged by 0073.
+
+  What is *not* duplicated is the expensive part: the **day level renders `Calendar` (0060)**,
+  driven through its existing public props (`month` / `onMonthChange` / `selected` / `onSelect` /
+  `startMonth` / `endMonth` / `disabled`), so the day grid, its roving-tabindex keyboard model, its
+  month navigation and its whole theme are reused. Only the year and month grids are new, because
+  nothing in the system has them and `react-day-picker`'s dropdown caption **navigates without
+  committing** - and "navigate here, then press a separate button to mean it" is exactly the
+  bolted-on precision control the component exists to avoid. The field is the `InputGroup` Twig
+  (0044), so it inherits the frame, the `focus-within` ring, the disabled tokens, the
+  `aria-invalid` overrides and the >=16px mobile font size.
+
+  **Two seams are worth carrying forward.** (1) `Date` is confined to the `Calendar` bridge and is
+  only ever built from local calendar *fields* (`new Date(year, month - 1, day)`) and read back with
+  `getFullYear` / `getMonth` / `getDate`; a partial date is never parsed into a `Date`, because
+  `new Date('1974-06')` is May west of Greenwich. (2) Composing a third-party grid means inheriting
+  its ARIA: `react-day-picker`'s month caption is itself a `role="status"` live region, so it is
+  **removed** through the `components` slot rather than hidden with a class - a `display:none` node
+  would leave a second live region in the DOM and make whether it announces depend on a stylesheet.
+
+  The format itself lives in `src/lib/partialDate.ts` (no React) and is **exported from the Branch
+  barrel** - `parsePartialDate`, `normalizePartialDate`, `formatPartialDate`, `isPartialDateWithin` -
+  so a consumer's server refuses a future date with the same function the grid greys it out with,
+  rather than a second implementation that disagrees at the edges.
+
 ## Showcase + theming (Storybook)
 
 **Storybook 8** (`@storybook/react-vite`) with `@tailwindcss/vite`. A global CSS imports

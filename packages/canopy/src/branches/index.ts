@@ -327,6 +327,27 @@ export type {
 
 export { DatePicker, DatePickerTrigger, DatePickerContent } from './DatePicker';
 export type { DatePickerProps, DatePickerSingleProps, DatePickerRangeProps } from './DatePicker';
+
+export { PartialDatePicker } from './PartialDatePicker';
+export type {
+  PartialDatePickerProps,
+  PartialDatePickerView,
+  PartialDatePrecisionLabels,
+} from './PartialDatePicker';
+// The partial-date format itself (spec 0073), exported so a consumer's server and its UI share one
+// definition instead of a second parser that disagrees at the edges.
+export {
+  parsePartialDate,
+  normalizePartialDate,
+  formatPartialDate,
+  isPartialDateWithin,
+} from '../lib/partialDate';
+export type {
+  PartialDateParts,
+  PartialDatePrecision,
+  PartialDateBounds,
+  FormatPartialDateOptions,
+} from '../lib/partialDate';
 export {
   DataTable,
   DataTablePager,

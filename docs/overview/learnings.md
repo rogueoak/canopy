@@ -932,3 +932,80 @@ type that disappears fails the extraction rather than passing vacuously.
 The test for whether you wrote the wrong one: name a future, reasonable change to the code and ask
 whether the guard would catch it. If the answer is in the same spec's deferred-work list, it will
 not.
+
+## Latch controlledness on the PROP, not on the value it happens to hold
+
+The common `useRef(value !== undefined)` latch reads a controlled parent that mounts with
+`value={undefined}` as **uncontrolled**, and then quietly fights it forever: the component keeps
+its own copy, the parent's later updates lose, and nothing errors. That is tolerable for a field
+whose empty state is unusual, and wrong for one whose empty state is the ordinary starting point -
+`PartialDatePicker` (0073) exists for dates like a birthday nobody has been told, so `undefined` at
+mount is the normal case, not an edge one. `useRef('value' in props)` asks the question actually
+being asked: did the caller take control, not are they currently holding something.
+
+Surfaced by mutation testing rather than by a test: replacing the latch with a per-render
+`valueProp !== undefined` left every test green, which is what prompted looking at the latch at all.
+
+**Apply it:** latch on the presence of the prop (`'value' in props`), and cover it with a test that
+renders **controlled with `value={undefined}`** and asserts the field does not move when the parent
+ignores the change. A controlled-mode test that always starts with a value cannot see this.
+
+## Composing a third-party widget means inheriting its ARIA, not just its markup
+
+`PartialDatePicker` (0073) puts `Calendar` (0060) inside a popover that already has a live region
+for announcing the selection. `react-day-picker`'s month caption is **itself** a
+`role="status" aria-live="polite"` element, so the composition silently shipped two live regions
+talking over each other - the failure mode of the "one live region" learning above, arrived at by
+composition rather than by writing a second region on purpose.
+
+The first fix was worse than it looked: hiding the caption with a `hidden` class. That leaves the
+node in the DOM, so whether it announces depends on a stylesheet the test environment does not load
+ - it looked fixed in jsdom and would have been fixed in the browser for the wrong reason. Removing
+the node through the library's `components` slot (`MonthCaption: () => null`) is the honest fix, and
+it is safe here only because react-day-picker sets the grid's `aria-label` on the table itself
+rather than through the caption - which had to be checked, not assumed.
+
+**Apply it:** when you mount a third-party widget inside your own, audit what it contributes to the
+accessibility tree - live regions, landmarks, labels, `aria-current` - not just how it looks. Prefer
+**removing** an unwanted node through the library's component slots over hiding it with a class,
+because a hidden node is still in the tree and its behaviour then depends on CSS. And guard it with
+a count assertion (`getAllByRole('status')` has length 1) at **every** state of the composition, not
+just the initial one.
+
+## A test that presses a key before focus has landed passes against anything
+
+A keyboard test in 0073 opened a popover, pressed PageUp, and asserted the calendar had not moved
+past its lower bound. It passed - and it passed just as happily with every bound removed, because
+the open helper returned as soon as the grid appeared and the keystroke went to `<body>`, where it
+did nothing. The assertion was "nothing happened", and nothing happening was guaranteed.
+
+Only the mutation run found it: the guards it was supposed to cover could all be deleted with the
+suite still green. The fix has two halves - the open helper now waits for focus to actually be
+inside the grid, and the test first proves the navigation is **live** (an unbounded picker moves
+from May to April on the same keystroke) before asserting the bounded one does not.
+
+**Apply it:** any test that drives the keyboard must **wait for focus to arrive** before pressing,
+and any test whose assertion is a negative ("did not move", "was not called") must first demonstrate
+the positive in a control case. Otherwise it is indistinguishable from a test of a key nobody
+received. This is the same shape as the timezone pin, which asserts `new Date('1974-06')` really is
+May in that zone before claiming the parser is not fooled by it.
+
+## Mutation testing tells you what to DELETE, not only what to test
+
+Running 112 mutations over 0073 killed 109. Of the three survivors, none wanted a new test: each was
+an **equivalent mutant** sitting on a redundant guard. Two of them - a bounds check in the day
+`onSelect` and one in `onMonthChange` - were shadowed by the `disabled` matcher already handed to
+`Calendar`, so no input could reach them; a third pair of guards had been masking each other so
+thoroughly that removing **both** was needed before any test noticed. They were deleted rather than
+tested, and the surviving mechanism is the one the suite actually pins.
+
+The same pass also found a guard that was wrong rather than merely redundant: `if (disabled) return`
+in the popover's `onOpenChange` blocked **closing** as well as opening, so a field that became
+disabled while its popover was open could not be dismissed. Narrowing it to `if (next && disabled)`
+turned an untestable line into a real, tested behaviour.
+
+**Apply it:** treat a surviving mutant as a question with three answers, not one - the test is
+missing, the code is unreachable and should go, or the guard is doing something you did not intend.
+Check the second before writing a test for the first: an unreachable branch that gains a test gains
+a test that proves nothing. And when two guards mask each other, mutate **both** before concluding
+either is covered.

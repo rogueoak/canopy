@@ -95,37 +95,38 @@ Self-contained pieces of UI that own interaction state and (often) a portal. A B
 behavioural primitive (Radix, cmdk, vaul, embla, recharts, TanStack Table) for the core and adds
 composition + token styling.
 
-| Component          | What it is                                                           |
-| ------------------ | -------------------------------------------------------------------- |
-| `Accordion`        | Multi-section inline disclosure (single/multiple expansion).         |
-| `AlertDialog`      | Blocking confirmation modal for destructive actions.                 |
-| `Audio`            | Audio player - play/pause, skip, scrubbable progress bar.            |
-| `AudioRecorder`    | Microphone recorder - live waveform, hands back a `Blob`.            |
-| `Calendar`         | Month grid with single/range/multiple selection and keyboard nav.    |
-| `Carousel`         | Draggable, snapping item carousel with prev/next controls.           |
-| `Chart`            | recharts wrapper with token-driven colours and styled tooltip.       |
-| `Combobox`         | Filterable, type-to-filter multi-select (consumes Command).          |
-| `Command`          | Filterable command palette on cmdk, inline or in a dialog.           |
-| `ContextMenu`      | Right-click menu anchored at the pointer, with submenus.             |
-| `DataTable`        | Headless `useDataTable` + styled grid (sorting, selection, filters). |
-| `DatePicker`       | Popover date/range picker composing Calendar.                        |
-| `Dialog`           | Focus-trapping, portalled centred modal.                             |
-| `Drawer`           | Vaul-backed edge-anchored panel with drag-to-dismiss.                |
-| `DropdownMenu`     | Button-triggered actions menu with typeahead and submenus.           |
-| `HoverCard`        | Rich preview surface on hover/focus, non-modal.                      |
-| `Menubar`          | Horizontal app menu bar with hover-to-open siblings.                 |
-| `NavigationMenu`   | Mega-menu with a dropdown per item and indicator tracking.           |
-| `Resizable`        | Draggable panel dividers with arrow-key resize.                      |
-| `ResponsiveDialog` | Centred modal on desktop, bottom sheet on mobile (consumes Drawer).  |
-| `ScrollArea`       | Themed cross-browser scrollbar.                                      |
-| `Sheet`            | Radix Dialog-based edge panel with slide motion.                     |
-| `SideNav`          | Collapsible, responsive side rail (mobile drawer consumes Drawer).   |
-| `SubscribeForm`    | Transport-agnostic email-capture box you wire yourself.              |
-| `Table`            | Semantic table parts styled with token borders and row hover.        |
-| `Tabs`             | Tab switcher with roving focus and arrow navigation.                 |
-| `Toast`            | Transient notifications with auto-dismiss and a `useToast` hook.     |
-| `TopNav`           | Responsive top navigation bar (composes NavigationMenu).             |
-| `Video`            | video.js player, token-skinned controls (needs two stylesheets).     |
+| Component           | What it is                                                           |
+| ------------------- | -------------------------------------------------------------------- |
+| `Accordion`         | Multi-section inline disclosure (single/multiple expansion).         |
+| `AlertDialog`       | Blocking confirmation modal for destructive actions.                 |
+| `Audio`             | Audio player - play/pause, skip, scrubbable progress bar.            |
+| `AudioRecorder`     | Microphone recorder - live waveform, hands back a `Blob`.            |
+| `Calendar`          | Month grid with single/range/multiple selection and keyboard nav.    |
+| `Carousel`          | Draggable, snapping item carousel with prev/next controls.           |
+| `Chart`             | recharts wrapper with token-driven colours and styled tooltip.       |
+| `Combobox`          | Filterable, type-to-filter multi-select (consumes Command).          |
+| `Command`           | Filterable command palette on cmdk, inline or in a dialog.           |
+| `ContextMenu`       | Right-click menu anchored at the pointer, with submenus.             |
+| `DataTable`         | Headless `useDataTable` + styled grid (sorting, selection, filters). |
+| `DatePicker`        | Popover date/range picker composing Calendar. Value is a `Date`.     |
+| `PartialDatePicker` | Date at the precision you know - `1968`, `1968-05`, `1968-05-14`.    |
+| `Dialog`            | Focus-trapping, portalled centred modal.                             |
+| `Drawer`            | Vaul-backed edge-anchored panel with drag-to-dismiss.                |
+| `DropdownMenu`      | Button-triggered actions menu with typeahead and submenus.           |
+| `HoverCard`         | Rich preview surface on hover/focus, non-modal.                      |
+| `Menubar`           | Horizontal app menu bar with hover-to-open siblings.                 |
+| `NavigationMenu`    | Mega-menu with a dropdown per item and indicator tracking.           |
+| `Resizable`         | Draggable panel dividers with arrow-key resize.                      |
+| `ResponsiveDialog`  | Centred modal on desktop, bottom sheet on mobile (consumes Drawer).  |
+| `ScrollArea`        | Themed cross-browser scrollbar.                                      |
+| `Sheet`             | Radix Dialog-based edge panel with slide motion.                     |
+| `SideNav`           | Collapsible, responsive side rail (mobile drawer consumes Drawer).   |
+| `SubscribeForm`     | Transport-agnostic email-capture box you wire yourself.              |
+| `Table`             | Semantic table parts styled with token borders and row hover.        |
+| `Tabs`              | Tab switcher with roving focus and arrow navigation.                 |
+| `Toast`             | Transient notifications with auto-dismiss and a `useToast` hook.     |
+| `TopNav`            | Responsive top navigation bar (composes NavigationMenu).             |
+| `Video`             | video.js player, token-skinned controls (needs two stylesheets).     |
 
 ## Wiring the styles (Tailwind v4)
 

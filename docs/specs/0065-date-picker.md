@@ -90,6 +90,10 @@ range variant falls out of the same `Calendar` (0060) `mode` for free.
   the calendar grid only; a parse-on-type input is a separate concern.
 - Changing `Calendar` (0060) or `Button` (0005) - `DatePicker` is additive and composes them
   unchanged; it does **not** modify any existing component's public API.
+- **Partial dates** (`1968`, `1968-05`) - this component's value is a `Date`, which is always a
+  specific day, so a less-precise answer cannot survive it. Picked up, along with the masked text
+  entry deferred above, by [0073 - PartialDatePicker](0073-partial-date-picker.md), which is a
+  separate component and changes nothing here.
 
 ## Approach
 
