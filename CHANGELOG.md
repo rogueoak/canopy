@@ -4,6 +4,26 @@ All notable changes to Canopy are recorded here. Releases are tag-driven (a bare
 release), and the three packages - `@rogueoak/roots`, `@rogueoak/canopy`, `@rogueoak/icons` -
 publish in lockstep at the tag version.
 
+## 1.7.1 - 2026-08-13
+
+### Fixed
+
+- **Every centred dialog opened off screen and snapped into place.** `Dialog`, `AlertDialog`,
+  `CommandDialog` and `ResponsiveDialog` on desktop all centre their content with
+  `-translate-x-1/2 -translate-y-1/2`, and the `dialog-content-in` / `-out` keyframes repeated that
+  centring in a `transform`. Tailwind v4 compiles those utilities to the individual `translate`
+  property, which **composes** with `transform` rather than being replaced by it, so the content was
+  offset by a full 100% of its own size for the length of the animation and jumped to the centre
+  when it ended. On a 390px viewport a dialog sat at left -187 while animating and left 0 once
+  settled - most visible on a phone, where the content is nearly as wide as the screen.
+
+  The keyframes now animate the individual `scale` and `opacity` properties, which compose with
+  `translate` instead of overwriting it, so the content holds its position throughout however a
+  consumer centres it. Nothing about the motion changes: it is still a 0.96 scale and a fade.
+
+  No API change, and no change is needed in any consumer. Any application on 1.7.0 or earlier that
+  shows a dialog on a phone wants this release. `docs/feedback/0032` has the measurements.
+
 ## 1.7.0 - 2026-08-11
 
 ### Added

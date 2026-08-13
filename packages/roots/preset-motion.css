@@ -60,24 +60,43 @@
     opacity: 0;
   }
 }
+/**
+ * The dialog scale animates through the `scale` PROPERTY, and never through `transform`.
+ *
+ * These two keyframes used to carry `transform: translate(-50%, -50%) scale(...)`, repeating the
+ * centring that `DialogContent`'s own `-translate-x-1/2 -translate-y-1/2` already applies. Repeating
+ * it is the older recipe, from when a translate utility compiled to `transform` and a running
+ * animation simply replaced it, so the keyframe had to restore the centring itself or lose it.
+ * Tailwind v4 compiles those utilities to the individual `translate` property, and `translate` and
+ * `transform` COMPOSE rather than replace - so the centring was applied twice for the length of the
+ * animation and once after it. Every dialog in the system opened half off the screen and snapped
+ * into place when the animation ended: measured on a 390px viewport, the content box sat at left
+ * -187 while animating and left 0 the moment it stopped.
+ *
+ * So a keyframe here may only animate a channel no positioning utility owns. `scale` and `opacity`
+ * are individual properties that compose WITH `translate` instead of replacing it, which is what
+ * makes this correct rather than merely fixed: a consumer centring by any means keeps its position
+ * throughout. `canopy/src/branches/dialogMotion.test.tsx` reads this file as a consumer gets it and
+ * fails the build if `transform` returns to either keyframe while the content is translate-centred.
+ */
 @keyframes dialog-content-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.96);
+    scale: 0.96;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    scale: 1;
   }
 }
 @keyframes dialog-content-out {
   from {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    scale: 1;
   }
   to {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.96);
+    scale: 0.96;
   }
 }
 @keyframes drawer-in {
