@@ -1076,3 +1076,36 @@ a control that proves the thing it is guarding against can happen in that enviro
 timezone-sensitive, pin `process.env.TZ` (Node re-reads it per operation) and run it **both**
 westward and eastward - only a western zone catches a UTC-parsed month, and only an eastern one
 catches a UTC-serialized day. A UTC CI runner makes the entire class invisible.
+
+## A defect can live in the join between two correct files
+
+Every dialog in the system opened offset by 100% of its own size and snapped into place when the
+animation ended (feedback 0032). Three files were involved and each was defensible read alone:
+`DialogContent` centred itself with `-translate-x-1/2 -translate-y-1/2`, roots' `dialog-content-in`
+keyframes carried `transform: translate(-50%, -50%) scale(...)`, and Tailwind v4 compiles those
+utilities to the individual `translate` property. `translate` and `transform` compose, so the
+centring was applied twice. Component tests render the component; lint reads the source; CSS is not
+read at all. **Nothing we own reads two files at once, so nothing could have found it.**
+
+The framework change is the second half. Splitting `transform` into `translate` / `rotate` / `scale`
+is strictly better, and it silently converted every "restate the transform inside the keyframes"
+workaround - necessary under the old engine, where the animation replaced the utility - into a bug.
+
+**Apply it:** when a component's classes and a stylesheet's keyframes address the same visual
+channel, that pairing is an interface with nothing checking it, and it needs one test holding both
+ends - render the element, read its `animate-*` classes, resolve them to keyframes **through the
+`--animate-*` declaration** rather than by assuming the names match, and assert the invariant across
+the two. After any framework upgrade that moves a property, search for the workarounds the old
+behaviour justified.
+
+## Motion that removes its own evidence has to be measured, not watched
+
+The settled dialog was always correct. Every screenshot, every static check and every review passed,
+and a human watching saw a flicker and filed it under "animation" - it survived every release since
+Dialog shipped. Two `getBoundingClientRect()` calls, one during the animation and one after, found
+it in a minute and then proved the fix.
+
+**Apply it:** for anything that only misbehaves mid-transition, sample mid-transition. Restart the
+animation (`el.style.animation = 'none'; void el.offsetWidth;` then reassign), measure, and compare
+against the settled box. It is cheap enough that any "it looks odd for a moment" report deserves it
+before a single line is read.
