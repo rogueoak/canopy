@@ -56,7 +56,12 @@ beforeAll(() => {
  */
 function keyframeBody(name: string): string {
   const opensAt = PRESET.indexOf(`@keyframes ${name} {`);
-  expect(opensAt, `roots defines no @keyframes ${name}`).toBeGreaterThan(-1);
+  expect(
+    opensAt,
+    `the built roots preset defines no @keyframes ${name} - if that name exists in ` +
+      `packages/roots/preset-motion.css, roots has not been built (turbo does it; a bare vitest ` +
+      `in this package does not)`,
+  ).toBeGreaterThan(-1);
 
   let depth = 0;
   for (let at = PRESET.indexOf('{', opensAt); at < PRESET.length; at += 1) {
@@ -146,6 +151,51 @@ describe('centred overlay motion', () => {
       }
     },
   );
+
+  /**
+   * The same rule, over every component rather than the two rendered above.
+   *
+   * The table catches a regression in Dialog and AlertDialog. It cannot catch the NEXT component to
+   * pair a translate utility with an animation - `pop-in` and `pop-out` still write `transform`,
+   * correctly, because everything that uses them today is positioned by Radix rather than by a
+   * translate. The moment something centred reaches for `animate-pop-in`, this bug is back and a
+   * two-row table is looking the other way.
+   *
+   * So this reads the source for the pairing itself: any class string that centres with a translate
+   * utility AND runs a named animation, wherever it is written. A string built by concatenation
+   * would slip past, which is the known limit - every component in this package writes its classes
+   * as one literal, because Tailwind's scanner needs full literals too.
+   */
+  it('no component pairs a translate utility with transform-writing keyframes', async () => {
+    const sources = import.meta.glob('../**/*.tsx', { query: '?raw', import: 'default' });
+    let checked = 0;
+
+    for (const [path, load] of Object.entries(sources)) {
+      if (path.includes('.test.')) {
+        continue;
+      }
+      const source = (await load()) as string;
+      for (const [, literal] of source.matchAll(/'([^']*animate-[^']*)'/g)) {
+        if (!/(^|[:\s])-?translate-[xy]-/.test(literal)) {
+          continue;
+        }
+        for (const [, utility] of literal.matchAll(/animate-([a-z0-9-]+)/g)) {
+          if (utility === 'none') {
+            continue;
+          }
+          checked += 1;
+          expect(
+            keyframeBody(keyframesNameFor(utility)),
+            `${path} centres with translate and runs ${utility}, which writes transform`,
+          ).not.toMatch(/\btransform\s*:/);
+        }
+      }
+    }
+
+    // The scan found the pairings it is for. A glob that silently matched nothing - a moved file, a
+    // renamed extension - would otherwise pass this test by checking zero components.
+    expect(checked).toBeGreaterThan(0);
+  });
 
   it('still scales the dialog in and out', () => {
     // The fix must not become "delete the animation". `scale` is an individual property, so it

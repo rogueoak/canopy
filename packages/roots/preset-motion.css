@@ -73,6 +73,11 @@
  * into place when the animation ended: measured on a 390px viewport, the content box sat at left
  * -187 while animating and left 0 the moment it stopped.
  *
+ * `scale` as an individual property is Chrome 104, Safari 14.1, Firefox 72. Older engines drop the
+ * declaration and the dialog fades in without scaling - which is why it is the right trade and not
+ * merely the convenient one: the failure mode of being unsupported is losing the flourish, and the
+ * failure mode it replaces was putting the content off the screen.
+ *
  * So a keyframe here may only animate a channel no positioning utility owns. `scale` and `opacity`
  * are individual properties that compose WITH `translate` instead of replacing it, which is what
  * makes this correct rather than merely fixed: a consumer centring by any means keeps its position
